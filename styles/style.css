@@ -298,3 +298,65 @@ align-items: flex-start;
     bottom: -20px;
    
 }
+.guide-page {
+    padding: 42px 34px 36px;
+}
+
+.guide-text-card {
+    display: block;
+    margin-bottom: 28px;
+}
+
+.guide-text-card:hover {
+    transform: none;
+    filter: brightness(1.03);
+}
+
+.guide-text-card .card-content {
+    padding: 26px 28px;
+}
+
+.guide-text-card h3 {
+    margin: 22px 0 8px;
+    color: #ffdc9b;
+    font-size: 1.45rem;
+}
+
+.guide-text-card ul,
+.toc-list {
+    margin: 16px 0 0;
+    padding-left: 24px;
+    color: #f2dfbf;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.guide-text-card li {
+    margin-bottom: 8px;
+}
+
+.guide-text-card a {
+    color: #ffdc9b;
+}
+
+.guide-text-card a:hover {
+    color: #fff1d6;
+}
+
+.toc-list {
+    columns: 2;
+}
+
+.toc-list li {
+    break-inside: avoid;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@media (max-width: 700px) {
+    .toc-list {
+        columns: 1;
+    }
+}
