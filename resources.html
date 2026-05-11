@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Useful Information | Dungeon Defenders Progression Hub</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <div class="site-shell">
+        <header class="topbar">
+            <div class="logo-wrap">
+                <img src="images/IMG_8478.png" alt="Dungeon Defenders Progression Guide logo">
+            </div>
+
+                <nav class="main-nav">
+                    <a href="index.html">Home</a>
+                    <a href="progression.html">Progression Guide</a>
+                    <a href="eternal-defender.html">Eternal Defender</a>
+                    <a href="resources.html">Useful Info</a>
+                </nav>
+        </header>
+
+        <main>
+            <section class="hero panel">
+                <h1>Useful Information</h1>
+                <p>
+                    Extra Dungeon Defenders tips, setup notes, wiki links, and general information
+                    that support the progression guide without interrupting the main route.
+                </p>
+                <a class="cta-button" href="#resource-sections">Start Reading</a>
+            </section>
+
+            <section class="guide-page" id="resource-sections">
+
+                <article class="guide-card guide-text-card">
+                    <div class="card-content">
+                        <h2>Page Sections</h2>
+                        <p>
+                            These sections are helpful for new and returning players, but they are kept
+                            separate from the main progression route so that page stays easier to follow.
+                        </p>
+
+                        <ul class="toc-list">
+                            <li><a href="#common-issues">Common Issues and Account Reset</a></li>
+                            <li><a href="#before-starting">Before Starting - DLCs, Settings, and Hotkeys</a></li>
+                            <li><a href="#emulator">Built-in Emulator</a></li>
+                            <li><a href="#item-box">Item Box Management</a></li>
+                            <li><a href="#wiki">Dungeon Defenders Wiki</a></li>
+                            <li><a href="#other-info">Other Useful Information</a></li>
+                            <li><a href="#original-guides">Original Steam Guides</a></li>
+                        </ul>
+                    </div>
+                </article>
+
+<article class="guide-card guide-text-card" id="common-issues">
+    <div class="card-content">
+        <h2>Common Issues and Account Reset</h2>
+
+        <p>
+            This section covers account reset options, save file issues, hosting problems,
+            audio bugs, crashes, workshop map problems, and ranked account issues.
+        </p>
+
+        <h3>Resetting a Local Save</h3>
+        <p>
+            If you are using local saves and want to reset your account, turn off Steam Cloud
+            first. Then delete the local Dungeon Defenders save files.
+        </p>
+
+        <ol>
+            <li>Turn off <strong>Steam Cloud</strong>.</li>
+            <li>
+                Delete <strong>DunDefHeroes.dun</strong> and
+                <strong>DunDefHeroes.dun.bak</strong> from your Steam userdata folder.
+            </li>
+            <li>
+                Delete the same save files from the Dungeon Defenders game folder under
+                <strong>Binaries/Win32</strong>.
+            </li>
+        </ol>
+
+        <div class="guide-warning">
+            <h3>Save File Warning</h3>
+            <p>
+                Be careful when deleting save files. If you are unsure, make a backup first.
+            </p>
+        </div>
+
+        <h3>Resetting a Ranked Save</h3>
+        <p>
+            Ranked saves cannot really be reset normally. The closest option is a soft reset:
+            delete heroes, delete items, and get rid of your mana.
+        </p>
+
+        <p>
+            This will not reset map progression or achievements. Another option is to use
+            another Steam account and either buy the game again or use family sharing.
+        </p>
+
+        <h3>Basic Troubleshooting</h3>
+        <p>
+            Before trying more specific fixes, start with the simple options.
+        </p>
+
+        <ul>
+            <li>Verify game files through Steam.</li>
+            <li>Restart your computer.</li>
+            <li>Reinstall the game if needed.</li>
+            <li>Try the 64-bit version of the game from the game files.</li>
+        </ul>
+
+        <h3>Steam Maintenance</h3>
+        <p>
+            Steam maintenance usually happens on Tuesdays around 5 PM CST. During maintenance,
+            players may be kicked off the server. Usually it only takes a few minutes, but
+            sometimes it can take longer.
+        </p>
+
+        <h3>Can Join Games but Cannot Host</h3>
+        <p>
+            VPNs, Hamachi, tunneling software, or extra network adapters can interfere with
+            hosting. Dungeon Defenders may choose the wrong network connection.
+        </p>
+
+        <ol>
+            <li>Open <strong>Control Panel</strong>.</li>
+            <li>Go to <strong>Network and Sharing Center</strong>.</li>
+            <li>Open <strong>Change Adapter Settings</strong>.</li>
+            <li>Disable extra adapters and leave only your main internet connection enabled.</li>
+        </ol>
+
+        <p>
+            Special characters in your Steam name may also cause hosting issues.
+        </p>
+
+        <h3>Intro Has Sound but the Game Does Not</h3>
+        <p>
+            Bluetooth headphones or speakers can sometimes cause the intro or cutscenes to have
+            sound while the actual game has no audio.
+        </p>
+
+        <p>
+            A possible fix is to disable the headset device as both recording and playback, so
+            Windows only uses the headphones device.
+        </p>
+
+        <h3>Crashing on Launch</h3>
+        <p>
+            Audio settings can sometimes make Dungeon Defenders crash when the intro cutscene starts.
+        </p>
+
+        <ol>
+            <li>Open <strong>Sound Control Panel</strong>.</li>
+            <li>Click your main playback device.</li>
+            <li>Open <strong>Properties</strong>.</li>
+            <li>Go to <strong>Advanced</strong>.</li>
+            <li>Change the frequency to <strong>44 kHz</strong>.</li>
+        </ol>
+
+        <p>
+            You can also unplug or disable sound devices temporarily to test if audio is causing
+            the crash.
+        </p>
+
+        <h3>Random Crashing While Playing</h3>
+        <p>
+            If the game randomly crashes, open Command Prompt and run:
+        </p>
+
+        <div class="code-box">
+            <p>sfc /scannow</p>
+        </div>
+
+        <p>
+            If Windows finds corrupt files, verify Dungeon Defenders game files and restart your PC.
+        </p>
+
+        <h3>Network Connection Lost Every Few Minutes</h3>
+        <p>
+            If you crash often and get a message like “Your network connection has been lost,”
+            try adding a Steam launch option.
+        </p>
+
+        <ol>
+            <li>Right-click <strong>Dungeon Defenders</strong> in Steam.</li>
+            <li>Open <strong>Properties</strong>.</li>
+            <li>Find <strong>Launch Options</strong>.</li>
+            <li>Type <strong>-tcp</strong>.</li>
+        </ol>
+
+        <h3>Flickering Characters or Black Screen Multi-box</h3>
+        <p>
+            If you see z-fighting, flickering characters, or a black screen while multi-boxing,
+            open your NVIDIA Control Panel and toggle anti-aliasing settings.
+        </p>
+
+        <h3>Package Mismatch Errors</h3>
+        <p>
+            Package mismatch errors commonly happen after using workshop maps or joining someone
+            who has used workshop maps. Usually, both players restarting their game fixes it.
+        </p>
+
+        <p>
+            If workshop maps keep causing issues, unsubscribe from workshop maps and delete files
+            from the CookedMods folder.
+        </p>
+
+        <h3>“Banned from the Current Game Session” Message</h3>
+        <p>
+            This usually does not mean you are actually banned. It often means you tried to join
+            a game you were kicked from, or you tried to join a hidden game.
+        </p>
+
+        <h3>Corrupted Saves or Lost Progress</h3>
+        <p>
+            If you randomly lose progress or think your save is corrupted, stop logging in.
+            Continuing to log in can keep creating new saves and may make the progress loss permanent.
+        </p>
+
+        <div class="build-link">
+            <h3>Lost Progress Form</h3>
+            <p>
+                Use this form if your save is corrupted or you lost progress.
+            </p>
+
+            <a href="https://forms.gle/TtWMBKBu5S3MUqJK9" target="_blank">
+                Open Lost Progress Form
+            </a>
+        </div>
+
+        <h3>Visual Studio Redistributables</h3>
+        <p>
+            Reinstalling the latest Visual Studio redistributable packages can fix some random
+            issues.
+        </p>
+
+        <div class="build-link">
+            <h3>Visual C++ Redistributable</h3>
+            <p>
+                Download the latest supported Microsoft Visual C++ Redistributable packages here.
+            </p>
+
+            <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170" target="_blank">
+                Open Microsoft Visual C++ Redistributable Page
+            </a>
+        </div>
+
+        <h3>Banned from Ranked</h3>
+        <p>
+            If the game literally tells you that you are banned from ranked, you can contact
+            Chromatic Games support. They may do an unban, but only after five years, and your
+            ranked save will be wiped.
+        </p>
+
+        <div class="build-link">
+            <h3>Chromatic Support</h3>
+            <p>
+                Use this support page for ranked ban help.
+            </p>
+
+            <a href="https://support.chromatic.games/hc/en-us/requests/new" target="_blank">
+                Open Chromatic Support
+            </a>
+        </div>
+
+        <div class="guide-warning">
+            <h3>Steam Ban Note</h3>
+            <p>
+                If your Steam ban causes the Play Online button to be grayed out and unclickable,
+                the Chromatic support link will not fix that.
+            </p>
+        </div>
+    </div>
+</article>
+
+<article class="guide-card guide-text-card" id="before-starting">
+    <div class="card-content">
+        <h2>Before Starting - DLCs, Settings, and Hotkeys</h2>
+
+        <h3>Play on Ranked</h3>
+        <p>
+            Chiku strongly recommends playing on the <strong>Ranked server</strong>.
+            It is the same game, and you can still play privately or with friends.
+        </p>
+
+        <p>
+            Ranked is recommended because it gives you cloud saves, access to the main
+            community, and Steam achievements. You can also copy your Ranked save over
+            to Open or Local if needed.
+        </p>
+
+        <div class="guide-warning">
+            <h3>Ranked Recommendation</h3>
+            <p>
+                The only real reason not to play Ranked is if your internet connection is
+                not good enough.
+            </p>
+        </div>
+
+        <h3>Required and Recommended DLC</h3>
+        <p>
+            This progression route requires DLC. Chiku recommends buying the
+            <strong>Ultimate Collection</strong> when the game goes on sale, but these are
+            the most important DLCs and heroes in order.
+        </p>
+
+        <ol>
+            <li>
+                <strong>The Quest for the Lost Eternia Shards:</strong>
+                Unlocks Nightmare difficulty. This is basically mandatory because Nightmare
+                unlocks a huge amount of content and power.
+            </li>
+            <li>
+                <strong>Series EV:</strong>
+                Probably the most important hero for mid to late-game because of beams and utility.
+            </li>
+            <li>
+                <strong>Summoner:</strong>
+                Very useful late-game. Minions can act like self-healing walls, and Summoner
+                can force only armor to drop.
+            </li>
+            <li>
+                <strong>Tinkerers Lab:</strong>
+                A great map for leveling quickly at almost any stage of progression.
+            </li>
+            <li>
+                <strong>Hermit:</strong>
+                Adds to the late-game meta, helps against tanky enemies, and is one of the
+                best early-game heroes.
+            </li>
+            <li>
+                <strong>Warden:</strong>
+                A strong alternative to Apprentice or Adept towers, especially on more open maps.
+            </li>
+            <li>
+                <strong>Hero Pack:</strong>
+                Includes Adept, Countess, Initiate, and Ranger. Adept is great for upgrading,
+                Countess is useful much later for Assault DPS, Initiate can replace Monk for
+                aura building, and Ranger is not very useful.
+            </li>
+            <li>
+                <strong>Jester:</strong>
+                A strong DPS hero with one of the best general wave-combat utility abilities.
+            </li>
+            <li>
+                <strong>Guardian:</strong>
+                Not required yet, but adds another fun hero option.
+            </li>
+            <li>
+                <strong>Gunwitch and Barbarian:</strong>
+                These are not high priority for this route because they are pure DPS heroes
+                and do not place towers.
+            </li>
+        </ol>
+
+        <h3>Settings to Consider Turning Off</h3>
+        <p>
+            These settings can make the game feel cleaner and less distracting.
+        </p>
+
+        <ul>
+            <li>Show Tutorial</li>
+            <li>Auto Show Level Up</li>
+            <li>Camera Shake</li>
+            <li>Step Toward Melee Target</li>
+            <li>Enemy Spawn Notifications</li>
+            <li>Auto Adjust Camera</li>
+        </ul>
+
+        <h3>Settings to Consider Turning On</h3>
+        <ul>
+            <li>Fast Gameplay Menu Transitions</li>
+            <li>
+                Enable Censor Items, especially if you are streaming, recording,
+                or posting screenshots of rare items.
+            </li>
+        </ul>
+
+        <p>
+            Chiku also plays with the FOV zoomed out almost all the way. This mostly helps
+            with the Great Old One boss and its variants, but it can make top-down building
+            feel zoomed out too far.
+        </p>
+
+        <h3>Menu Hotkeys</h3>
+        <ul>
+            <li><strong>Escape:</strong> Menu</li>
+            <li><strong>Tab:</strong> Chat</li>
+            <li><strong>F1:</strong> Chat and chat log</li>
+            <li><strong>killme:</strong> Type this in chat to kill your player if stuck</li>
+            <li><strong>F2-F8:</strong> In-game emulator</li>
+            <li><strong>F11:</strong> Toggle windowed/fullscreen</li>
+            <li><strong>1-0:</strong> Number hotkeys</li>
+            <li>
+                <strong>Change number hotkeys:</strong> Hover over an option in the hero wheel
+                and hold the number you want to assign it to.
+            </li>
+            <li><strong>1-8:</strong> Select heroes in hero selection</li>
+            <li><strong>9 and 0:</strong> Change pages in hero selection</li>
+            <li><strong>Hold Alt in hero selection:</strong> Swap characters around</li>
+            <li><strong>U:</strong> Open trade window</li>
+            <li><strong>L:</strong> Lock a single item while hovering over it</li>
+            <li><strong>T while trading:</strong> Add or remove an item from trade</li>
+            <li><strong>Ctrl + T:</strong> Add or remove a page of items from trade</li>
+            <li><strong>Ctrl + Drag:</strong> Move a full page of items into a folder</li>
+        </ul>
+
+        <h3>Upgrading Stats Faster</h3>
+        <ul>
+            <li>
+                <strong>Hero stats:</strong> Hold Shift to upgrade up to 5 at a time,
+                or Ctrl to upgrade up to 100 at a time.
+            </li>
+            <li>
+                <strong>Item stats:</strong> Hold Shift to upgrade up to 10 at a time,
+                or Ctrl to upgrade up to 50 at a time.
+            </li>
+            <li><strong>Unequip All Gear:</strong> Unequips all gear from the character stat screen.</li>
+            <li><strong>Ctrl + Unequip All Gear:</strong> Unequips accessories.</li>
+            <li><strong>Shift + Unequip All Gear:</strong> Unequips armor.</li>
+        </ul>
+
+        <h3>Defending a Dungeon Hotkeys</h3>
+        <ul>
+            <li><strong>O:</strong> Toggle mob cards</li>
+            <li><strong>G:</strong> Ready up for the wave</li>
+            <li><strong>Ctrl + G:</strong> Force start the wave as host</li>
+            <li><strong>V:</strong> Skip boss timer</li>
+            <li><strong>Ctrl + Shift:</strong> Show a minimap on the left side of the screen</li>
+        </ul>
+
+        <h3>General Gameplay Hotkeys</h3>
+        <ul>
+            <li><strong>Mouse Wheel:</strong> Zoom in and out</li>
+            <li><strong>Middle Mouse Button:</strong> Open hero wheel</li>
+            <li><strong>T:</strong> Open hero wheel</li>
+            <li><strong>Plus / Minus:</strong> Change trap and aura sizes while placing them</li>
+            <li>
+                <strong>Plus / Minus or E:</strong> Swap between selected towers when hovering
+                over multiple towers for selling, upgrading, repairing, and similar actions.
+            </li>
+            <li>
+                <strong>Hold Alt + Scroll Wheel:</strong> Swap between selected towers when
+                hovering over multiple towers.
+            </li>
+            <li><strong>P:</strong> Toggle towers on the map</li>
+            <li><strong>Q:</strong> Look around</li>
+            <li><strong>R:</strong> Same as right-click</li>
+            <li><strong>I:</strong> Character information and level-up screen</li>
+            <li><strong>H:</strong> HUD</li>
+            <li><strong>Shift:</strong> Open map</li>
+            <li><strong>X:</strong> Swap weapons on Series EV or Jester</li>
+            <li><strong>C:</strong> Ping</li>
+            <li><strong>B:</strong> Toggle item color beams</li>
+            <li><strong>M:</strong> Drop mana</li>
+            <li><strong>N:</strong> Drop half your mana</li>
+            <li><strong>Ctrl + M:</strong> Locally drop mana</li>
+            <li><strong>Ctrl + P:</strong> Toggle green arrows</li>
+            <li><strong>Ctrl + C:</strong> Toggle censor items</li>
+            <li><strong>Ctrl + B:</strong> Toggle EV beams snapping to DU</li>
+            <li><strong>Hold Ctrl:</strong> Move camera with mouse</li>
+            <li><strong>Ctrl + O:</strong> Toggle item quality borders</li>
+            <li><strong>Ctrl + Z:</strong> Toggle Step Toward Melee Target</li>
+        </ul>
+
+        <h3>Summoner Overlord Mode</h3>
+        <ul>
+            <li><strong>Mouse Wheel / R3:</strong> Change camera height</li>
+            <li>Click and drag to move items around in your tavern.</li>
+            <li>Abilities cast where your cursor is.</li>
+            <li>
+                You can cast different minions, repair, upgrade, and use abilities at the same
+                time as long as you have enough mana.
+            </li>
+            <li>You can pick up items in build phase with mouse controls.</li>
+            <li><strong>Controller R3:</strong> Opens or closes the map.</li>
+            <li>You can click the map to move your camera to that location.</li>
+        </ul>
+
+        <h3>Tower Stacking</h3>
+        <p>
+            If you are the host, you can stack towers by pressing the tower hotkey and
+            <strong>spacebar</strong> at almost the same time. If timed correctly, this lets
+            you place towers inside each other.
+        </p>
+
+        <p>
+            Some players use a macro for this, but Chiku does it manually and has also figured
+            out how to do it with Steam Controller Input.
+        </p>
+
+        <div class="guide-warning">
+            <h3>Minion Stacking Tip</h3>
+            <p>
+                In Summoner Overlord Mode, minions are easier to stack. You can place minions
+                inside each other as long as you do not move your mouse.
+            </p>
+        </div>
+
+        <div class="build-link">
+            <h3>Tower Stacking Script Tutorial</h3>
+            <p>
+                This video shows the tower stacking script/tutorial that Chiku referenced.
+            </p>
+
+            <a href="https://www.youtube.com/watch?v=fveBB6p4qBE" target="_blank">
+                Open Tower Stacking Tutorial
+            </a>
+        </div>
+    </div>
+</article>
+
+<article class="guide-card guide-text-card" id="emulator">
+    <div class="card-content">
+        <h2>A Built-in Emulator</h2>
+
+        <p>
+            If you are returning to Dungeon Defenders, you might remember using multiple
+            controllers or a third-party emulator to bring in extra heroes. You do not need
+            those anymore because the game now has a built-in emulator.
+        </p>
+
+        <p>
+            The built-in emulator lets you spawn in extra players and swap your controls to
+            the hero you want to play. It also has controller support.
+        </p>
+
+        <h3>Built-in Emulator Hotkeys</h3>
+
+        <ul>
+            <li><strong>F2:</strong> Swap to player 1.</li>
+            <li><strong>F3:</strong> Spawn in and/or swap to player 2.</li>
+            <li><strong>F4:</strong> Spawn in and/or swap to player 3.</li>
+            <li><strong>F5:</strong> Spawn in and/or swap to player 4.</li>
+            <li><strong>F6:</strong> Spawn in splits using the first few heroes listed.</li>
+            <li><strong>F7:</strong> Remove all splits.</li>
+            <li><strong>F8:</strong> Hide splits and show only player 1.</li>
+        </ul>
+
+        <div class="guide-warning">
+            <h3>Best Feature</h3>
+            <p>
+                Chiku points out that <strong>F8</strong>, hiding splits and showing only
+                player 1, is one of the best emulator features added to the game.
+            </p>
+        </div>
+
+        <h3>Auto-Fire Trick</h3>
+
+        <p>
+            If player 2, 3, or 4 has a right-click attack, you can hold right-click and
+            then swap back to player 1. This can make that hero keep firing automatically.
+        </p>
+
+        <p>
+            With Apprentice, you can hold both left-click and right-click to auto-fire.
+            This only works with one hero at a time.
+        </p>
+
+        <p>
+            You can also use this same method to keep your map open.
+        </p>
+    </div>
+</article>
+
+<article class="guide-card guide-text-card" id="item-box">
+    <div class="card-content">
+        <h2>Item Box Management</h2>
+
+        <h3>Keep Your Main Page Clear</h3>
+        <p>
+            Chiku recommends keeping your main item box page clear of items.
+            This makes it much easier to see new rewards when you receive them.
+        </p>
+
+        <div class="guide-warning">
+            <h3>Main Rule</h3>
+            <p>
+                Keep your main page clear and use folders for organization.
+            </p>
+        </div>
+
+        <h3>Why Use Folders?</h3>
+        <p>
+            Dungeon Defenders gives you a lot of loot. If your main page is full,
+            it becomes harder to tell what new rewards you just received.
+        </p>
+
+        <p>
+            Folders help keep your forge cleaner and make sorting items less stressful.
+        </p>
+
+        <h3>How Folders Work</h3>
+        <p>
+            In the forge inventory, folder options are on the left side of the screen.
+            You can make, delete, and rename folders there.
+        </p>
+
+        <ul>
+            <li>You can make up to six folders per page.</li>
+            <li>You can make folders inside folders.</li>
+            <li>You can keep nesting folders many layers deep.</li>
+            <li>Chiku usually only goes about three layers deep.</li>
+        </ul>
+
+        <h3>Moving Items With Mouse</h3>
+        <p>
+            With mouse controls, click and drag items into folders.
+        </p>
+
+        <p>
+            To move an item up one folder level, drag the item to the folder option in
+            the top-left area.
+        </p>
+
+        <h3>Moving Items With Controller</h3>
+        <p>
+            With controller, select a folder using <strong>Y</strong> on Xbox or
+            <strong>Triangle</strong> on PlayStation.
+        </p>
+
+        <ul>
+            <li>
+                Press <strong>L3</strong> on an item to move it up one folder.
+            </li>
+            <li>
+                Select a folder, then press <strong>L3</strong> to move items into it.
+            </li>
+        </ul>
+
+        <h3>Recommended Basic Folder Setup</h3>
+        <p>
+            You can organize your forge however you want, but this is the minimum setup
+            Chiku recommends.
+        </p>
+
+        <ul>
+            <li>
+                <strong>To Sort Later:</strong> A folder for items you do not want to sort
+                right away.
+            </li>
+            <li>
+                <strong>Equipment:</strong> A folder for items you regularly swap between
+                or use often.
+            </li>
+            <li>
+                <strong>Other:</strong> A folder for bulk items you do not want to throw
+                away yet.
+            </li>
+        </ul>
+
+        <h3>Armor Farming Note</h3>
+        <p>
+            The <strong>Other</strong> folder is especially useful while armor farming.
+            Since you need full armor sets for multiple heroes, you may end up holding
+            many pieces until you can finish the sets you need.
+        </p>
+
+        <h3>Sorting Preference</h3>
+        <p>
+            Chiku prefers keeping folders simple and using the
+            <strong>Type and Quality</strong> sorting option.
+        </p>
+
+        <p>
+            This avoids needing separate folders for Leather, Pristine, Mail, Plate,
+            and other armor types. Being that organized can become too much work.
+        </p>
+    </div>
+</article>
+
+<article class="guide-card guide-text-card" id="wiki">
+    <div class="card-content">
+        <h2>Dungeon Defenders Wiki</h2>
+
+        <h3>More Information</h3>
+        <p>
+            The <strong>Dungeon Defenders Wiki</strong> is a great source for extra information.
+            Chiku mostly recommends it for achievements, but it also has information about pets,
+            map rewards, costume stats, armor set bonuses, and more.
+        </p>
+
+        <p>
+            Some older information is still correct, but the wiki may need updates in some areas.
+            This section lists useful wiki pages that can help newer players who do not already
+            have most of the game memorized.
+        </p>
+
+        <div class="build-link">
+            <h3>Main Wiki Page</h3>
+            <p>
+                Use this as the main starting point for Dungeon Defenders information.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Dungeon_Defenders_Wiki" target="_blank">
+                Open Dungeon Defenders Wiki
+            </a>
+        </div>
+
+        <h3>Useful Wiki Links</h3>
+
+        <div class="build-link">
+            <h3>Armor</h3>
+            <p>
+                Shows armor set bonuses and explains how to upgrade resistances efficiently.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Armor" target="_blank">
+                Open Armor Guide
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Costume Stats</h3>
+            <p>
+                Different costumes have different stats. This is why some costumes are recommended
+                in the hero setup and meta sections.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Costume_Stats" target="_blank">
+                Open Costume Stats
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Pet Achievement List</h3>
+            <p>
+                Lists the 31 specific pets needed for the pet achievement.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/I%27ve_Got_Monsters_in_My_Pocket" target="_blank">
+                Open Pet Achievement List
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Achievements</h3>
+            <p>
+                Lists achievements and explains how to complete them.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Achievements_-_PC" target="_blank">
+                Open Achievement Guide
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Glossary</h3>
+            <p>
+                A list of Dungeon Defenders jargon and common community terms.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Glossary" target="_blank">
+                Open Glossary
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Best in Slot Guide</h3>
+            <p>
+                Lists some of the best items in the game for each hero.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Best_in_Slot_Guide" target="_blank">
+                Open Best in Slot Guide
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Jester Wheel O' Fortuna</h3>
+            <p>
+                Explains Jester's Wheel O' Fortuna abilities.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Best_in_Slot_Guide/Jester" target="_blank">
+                Open Jester Wheel Guide
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Guides Page</h3>
+            <p>
+                The wiki guides page also includes Chiku's guide.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Guides" target="_blank">
+                Open Wiki Guides Page
+            </a>
+        </div>
+    </div>
+</article>
+
+<article class="guide-card guide-text-card" id="other-info">
+    <div class="card-content">
+        <h2>Other Useful Information</h2>
+
+        <h3>Gameplay Info</h3>
+        <p>
+            This section covers extra Dungeon Defenders information that does not fit cleanly
+            into the main progression route, but is still useful to know.
+        </p>
+
+        <h3>Ultimate Quality Rolls</h3>
+        <p>
+            Ruthless does not increase the overall ultimate drop rate or quality rate. Instead,
+            it changes the distribution within the Ultimate tier.
+        </p>
+
+        <h4>Of all Ultimates obtained on Ruthless:</h4>
+        <ul>
+            <li><strong>Ultimate 90:</strong> ~58%</li>
+            <li><strong>Ultimate 93:</strong> ~26.88%</li>
+            <li><strong>Ultimate+:</strong> ~11.7936%</li>
+            <li><strong>Ultimate++:</strong> ~3.3264%</li>
+        </ul>
+
+        <h4>Of all Ultimates obtained on Nightmare:</h4>
+        <ul>
+            <li><strong>Ultimate 90:</strong> ~60%</li>
+            <li><strong>Ultimate 93:</strong> ~26.8%</li>
+            <li><strong>Ultimate+:</strong> ~10.56%</li>
+            <li><strong>Ultimate++:</strong> ~2.64%</li>
+        </ul>
+
+        <p>
+            For example, Dice pets from King's Game Ruthless Hardcore will roll Ultimate++
+            about every <strong>1/42 ultimate drops</strong> instead of Nightmare's average
+            of about <strong>1/50 ultimate drops</strong>.
+        </p>
+
+        <div class="guide-warning">
+            <h3>Hardcore Timer Note</h3>
+            <p>
+                If you hate the timer, do not play Hardcore.
+            </p>
+        </div>
+
+        <h3>Important Nightmare Changes</h3>
+        <p>
+            Nightmare difficulty changes several player, pet, and tower values compared to
+            Insane or lower.
+        </p>
+
+        <ul>
+            <li>Hero HP is buffed.</li>
+            <li>Hero resistances are nerfed.</li>
+            <li>Hero damage is nerfed.</li>
+            <li>Pet damage is buffed.</li>
+            <li>Weapon projectile speed is nerfed.</li>
+            <li>Tower damage is buffed.</li>
+            <li>Tower range is nerfed.</li>
+        </ul>
+
+        <h3>Player Scaling</h3>
+        <p>
+            The more heroes you have in play, the harder the game becomes. More players can
+            add mobs and increase enemy HP. This scaling only goes up to four players.
+        </p>
+
+        <div class="guide-warning">
+            <h3>Six Player Map Note</h3>
+            <p>
+                On six-player maps, only the host can spawn players 5 and 6. Have friends
+                spawn their split-screen characters first, then the host can spawn the rest.
+            </p>
+        </div>
+
+        <h3>Builder Bonus</h3>
+        <p>
+            When your builder hero is active in the map, the towers that hero built get a
+            <strong>33% damage bonus</strong>. If the builder dies, the bonus only stays active
+            until the hero avatar disappears.
+        </p>
+
+        <h3>Best Experience Bonuses</h3>
+        <p>
+            These bonuses each give around <strong>33% extra experience per wave</strong>.
+            Other bonuses do not come close.
+        </p>
+
+        <ol>
+            <li>Do not get hit.</li>
+            <li>Hit something.</li>
+            <li>Do not let the core get hit.</li>
+        </ol>
+
+        <h3>Quality Table</h3>
+        <p>
+            This table shows level requirements, set bonuses, and stat upgrade caps by item quality.
+        </p>
+
+        <div class="table-wrap">
+            <table>
+                <tr>
+                    <th>Quality</th>
+                    <th>Level Requirement</th>
+                    <th>Set Bonus</th>
+                    <th>Stat Upgrade Cap</th>
+                </tr>
+                <tr><td>Cursed</td><td>0</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Torn</td><td>0</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Stocky</td><td>6</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Solid</td><td>8</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Sturdy</td><td>10</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Polished</td><td>12</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Shining</td><td>14</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Powerful</td><td>20</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Amazing</td><td>27</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Epic</td><td>34</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Legendary</td><td>45</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Godly</td><td>60</td><td>25%</td><td>360 (450)</td></tr>
+                <tr><td>Mythical</td><td>74</td><td>30%</td><td>360 (468)</td></tr>
+                <tr><td>Transcendent</td><td>78</td><td>~33%</td><td>420 (559)</td></tr>
+                <tr><td>Supreme</td><td>83</td><td>~36%</td><td>500 (680)</td></tr>
+                <tr><td>Ultimate</td><td>90</td><td>40%</td><td>600 (840)</td></tr>
+                <tr><td>Ultimate93</td><td>93</td><td>40%</td><td>600 (840)</td></tr>
+                <tr><td>Ultimate+</td><td>100</td><td>40%</td><td>700 (980)</td></tr>
+                <tr><td>Ultimate++</td><td>100</td><td>40%</td><td>999 (1398)</td></tr>
+            </table>
+        </div>
+
+        <h3>Unlocks</h3>
+
+        <h4>Experience Orbs</h4>
+        <p>
+            You need the <strong>Ultimate Defender</strong> achievement to use experience orbs.
+            You earn one from getting Ultimate Defender, and you can earn another from each
+            True Boss Rush clear.
+        </p>
+
+        <h4>True Boss Rush and Great Old One</h4>
+        <p>
+            To access <strong>True Boss Rush</strong>, you need to complete
+            <strong>Eternal Defender</strong> and defeat <strong>Great Old One</strong> in CR3.
+        </p>
+
+        <p>
+            The required maps for unlocking Great Old One are:
+        </p>
+
+        <ul>
+            <li>Crystalline Dimension</li>
+            <li>Dread Dungeon</li>
+            <li>Arcane Library</li>
+            <li>Buccaneer Bay</li>
+            <li>Pirate Invasion</li>
+            <li>Embermount Volcano</li>
+            <li>Temple of Water</li>
+            <li>Temple of Polybius</li>
+            <li>Crystalline Resurgence Parts 1-3 on NMHC</li>
+        </ul>
+
+        <p>
+            After meeting the requirements, a button appears next to the Experience Orb
+            in the basement. Press it to enter True Boss Rush.
+        </p>
+
+        <h4>Changing the Tavern</h4>
+        <ul>
+            <li>Requires the <strong>Mythical Defender</strong> achievement.</li>
+            <li>Requires specific map completions for specific taverns.</li>
+            <li>Click the option and re-enter the tavern to change it successfully.</li>
+        </ul>
+
+        <h3>All One-Time Rewards</h3>
+        <ul>
+            <li><strong>Entering Your Tavern:</strong> Four TF2 pets and Aperture Science HPD</li>
+            <li><strong>Main Campaign Clear:</strong> Secret Room and Parents Weapons</li>
+            <li><strong>Legendary Defender:</strong> Chicken Pet</li>
+            <li><strong>Warping Core Pack 1:</strong> Four Zamira Fairies</li>
+            <li><strong>Mythical Defender:</strong> Tavern Changing</li>
+            <li><strong>Hardcore Mythical Defender:</strong> Aperture Science HPD Mk2</li>
+            <li><strong>Tropics of Etheria Secret:</strong> Wicked Glasses</li>
+            <li><strong>Clear all Original Challenges on Nightmare:</strong> Companion Cube</li>
+            <li><strong>Ultimate Defender:</strong> Secret Basement Room</li>
+            <li><strong>Eternal Defender:</strong> Defender's Party Hat, Celebration Horn, and Eternal Gift accessories</li>
+            <li><strong>Great Old One:</strong> Ultimate Crystalline Defender Shield</li>
+            <li>
+                <strong>Great Old One no armor clear:</strong> Glass Accessory Set.
+                This must be done solo with no splits and no armor equipped.
+            </li>
+            <li>
+                <strong>Love Machine Magi:</strong> Reach the required wave based on heroes in play:
+                1 hero wave 17, 2 heroes wave 20, 3 heroes wave 23, 4 heroes wave 26,
+                and 5-6 heroes wave 29.
+            </li>
+        </ul>
+
+        <h3>Inventory Increases</h3>
+        <ul>
+            <li><strong>Ultimate Defender:</strong> 600 slots</li>
+            <li><strong>Ultimate Defender + Eternal Defender:</strong> 800 slots</li>
+            <li><strong>Ultimate Defender + Eternal Defender + Ruthless Defender:</strong> 1000 slots</li>
+        </ul>
+
+        <p>
+            Total possible storage, if you do not overcap:
+        </p>
+
+        <ul>
+            <li>+250 from your personal mana shop</li>
+            <li>+230 from your tavern floor</li>
+            <li>+9 or +10 per hero, with up to 48 heroes</li>
+            <li><strong>With everything unlocked:</strong> 1912-1960 total storage</li>
+            <li><strong>Without Ultimate Defender:</strong> 1232-1280 total storage</li>
+        </ul>
+
+        <h3>Useful Files</h3>
+        <p>
+            These files can be useful:
+        </p>
+
+        <div class="code-box">
+            <p>C:\Program Files (x86)\Steam\steamapps\common\Dungeon Defenders\UDKGame\Config</p>
+        </div>
+
+        <ul>
+            <li>
+                <strong>UDKInput:</strong> Useful for saving custom hotkeys. If an update resets
+                your hotkeys, you can paste your saved copy back in.
+            </li>
+            <li>
+                <strong>UDKCDTSettings:</strong> Lets you manually change item beam colors,
+                upgrade order, and item box page size.
+            </li>
+        </ul>
+
+        <p>
+            Item box page size options include default <strong>5x3</strong>, old <strong>4x3</strong>,
+            and experimental <strong>6x4</strong>.
+        </p>
+
+        <h3>Good Information Sources</h3>
+
+        <div class="build-link">
+            <h3>Dungeon Defenders Runs and Giveaways Discord</h3>
+            <p>
+                Chiku calls this the heart of the DD1 community. If you have questions,
+                people there can usually answer them.
+            </p>
+
+            <a href="https://discord.gg/FE4cRCs" target="_blank">
+                Open DD1 Discord
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>DunDefPlanner</h3>
+            <p>
+                Great for map builds and planning.
+            </p>
+
+            <a href="https://dundefplanner.com/list.php" target="_blank">
+                Open DunDefPlanner
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Dungeon Defenders Wiki</h3>
+            <p>
+                Useful for general information.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Dungeon_Defenders_Wiki" target="_blank">
+                Open Dungeon Defenders Wiki
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Best in Slot Guide</h3>
+            <p>
+                Lists meta stats, best items, character builds, and where to get important gear.
+            </p>
+
+            <a href="https://dungeondefenders.wiki.gg/wiki/Best_in_Slot_Guide" target="_blank">
+                Open Best in Slot Guide
+            </a>
+        </div>
+    </div>
+</article>
+<article class="guide-card guide-text-card" id="original-guides">
+    <div class="card-content">
+        <h2>Original Steam Guides</h2>
+
+        <p>
+            These are the original Steam guides by Chiku. This site ports and reorganizes
+            the guide content into a uniform website layout, but the original guides are
+            still linked here for reference.
+        </p>
+
+        <div class="build-link">
+            <h3>Chiku Progression Guide</h3>
+            <p>
+                The original 0 to early late-game progression guide on Steam.
+            </p>
+
+            <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=2968079729" target="_blank">
+                Open Original Progression Guide
+            </a>
+        </div>
+
+        <div class="build-link">
+            <h3>Chiku Eternal Defender Guide</h3>
+            <p>
+                The original Eternal Defender achievement guide on Steam.
+            </p>
+
+            <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3412098381" target="_blank">
+                Open Original Eternal Defender Guide
+            </a>
+        </div>
+    </div>
+</article>
+            </section>
+
+            <div class="divider">
+                <span class="gem"></span>
+            </div>
+
+            <section class="planner panel">
+                <h2>Credit</h2>
+                <p>
+                    Useful information and guide content used with permission from Chiku.
+                    This page keeps extra notes separate from the main progression route.
+                </p>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>
+                Dungeon Defenders Progression Hub | Useful information and guide content used with permission from Chiku.
+            </p>
+
+            <div class="footer-icons">
+                <a href="#" aria-label="Mail">✉</a>
+                <a href="#" aria-label="Settings">⚙</a>
+                <a href="#" aria-label="More">◉</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
