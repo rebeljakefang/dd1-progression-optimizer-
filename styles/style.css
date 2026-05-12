@@ -27,23 +27,35 @@ body {
         0 20px 50px rgba(195, 40, 40, 0.55);
 }
 
+/* Header and navigation */
+
 .topbar {
     display: flex;
-    align-items: flex-start;
-    gap: 18px;
-    padding: 22px 24px 8px;
+    align-items: center;
+    gap: 24px;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255, 203, 128, 0.18);
+}
+
+.logo-wrap {
+    flex: 0 0 190px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .logo-wrap img {
-    width: 240px;
+    width: 175px;
     max-width: 100%;
+    height: auto;
     display: block;
 }
 
 .main-nav {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: stretch;
     background: linear-gradient(to bottom, rgba(16, 16, 16, 0.88), rgba(34, 20, 12, 0.88));
     border: 1px solid #4c2f1e;
     box-shadow: 0 0 0 1px #84532d inset;
@@ -52,8 +64,10 @@ body {
 .main-nav a {
     color: #f7edd8;
     text-decoration: none;
-    padding: 16px 22px;
+    text-align: center;
+    padding: 16px 10px;
     font-weight: 700;
+    white-space: nowrap;
     border-right: 1px solid rgba(211, 168, 107, 0.22);
     transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
@@ -66,6 +80,8 @@ body {
     background: rgba(194, 114, 45, 0.12);
     color: #ffdc9b;
 }
+
+/* Main panels */
 
 .panel {
     text-align: center;
@@ -121,6 +137,8 @@ body {
         0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
+/* Home page cards */
+
 .card-section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -148,34 +166,23 @@ body {
     filter: brightness(1.05);
 }
 
+.card-image,
 .card-images {
     background: #1c120d;
     border-bottom: 2px solid #7a5332;
-    position: relative;
-    top: -30px;
+    height: 230px;
+    overflow: hidden;
+    position: static;
 }
 
-.card-image {
-    background: #1c120d;
-    border-bottom: 2px solid #7a5332;
-    position: relative;
-    top: -65px;
-}
-
-.card-image img {
-    width: 465px;
-    max-width: none;
-    position: relative;
-    right: 91px;
-    bottom: -35px;
-}
-
+.card-image img,
 .card-images img {
-    width: 410px;
-    max-width: none;
-    position: relative;
-    right: 63px;
-    bottom: -20px;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    display: block;
+    position: static;
+    object-fit: cover;
 }
 
 .card-content {
@@ -196,6 +203,8 @@ body {
     line-height: 1.45;
     color: #f2dfbf;
 }
+
+/* Divider */
 
 .divider {
     display: flex;
@@ -224,6 +233,8 @@ body {
     flex-shrink: 0;
 }
 
+/* Planner */
+
 .planner {
     padding-top: 28px;
     padding-bottom: 34px;
@@ -243,6 +254,8 @@ body {
     width: 100%;
     height: auto;
 }
+
+/* Footer */
 
 .footer {
     display: flex;
@@ -430,50 +443,281 @@ body {
     background: rgba(113, 32, 14, 0.35);
 }
 
-/* Tablet layout */
+/* Checklist page */
 
-@media (max-width: 900px) {
+.checklist-group {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+    margin-bottom: 24px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(24, 12, 8, 0.65);
+    border: 1px solid rgba(255, 220, 155, 0.25);
+    color: #f2dfbf;
+    line-height: 1.45;
+    cursor: pointer;
+}
+
+.checklist-item:hover {
+    background: rgba(113, 32, 14, 0.28);
+    border-color: rgba(255, 220, 155, 0.45);
+}
+
+.checklist-item input {
+    margin-top: 4px;
+    transform: scale(1.25);
+    accent-color: #e18a32;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.checklist-item span {
+    display: block;
+}
+
+.checklist-item strong {
+    color: #ffdc9b;
+}
+
+.checklist-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: rgba(113, 32, 14, 0.25);
+    border-left: 4px solid #e18a32;
+    box-shadow: 0 0 0 1px rgba(255, 220, 155, 0.15) inset;
+}
+
+.checklist-note p {
+    margin: 0;
+}
+
+/* Master checklist items */
+
+.achievement-master {
+    background: rgba(113, 32, 14, 0.45);
+    border: 2px solid #e18a32;
+}
+
+.achievement-master strong {
+    color: #fff1d6;
+}
+
+/* General checklist tables */
+
+.check-table .check-cell,
+.pet-check-table .check-cell {
+    width: 70px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.check-table input[type="checkbox"],
+.pet-check-table input[type="checkbox"] {
+    transform: scale(1.2);
+    accent-color: #e18a32;
+    cursor: pointer;
+}
+
+.check-table td,
+.check-table th,
+.pet-check-table td,
+.pet-check-table th {
+    vertical-align: middle;
+}
+
+.guide-text-card ul label {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.guide-text-card ul input[type="checkbox"] {
+    margin-top: 4px;
+    transform: scale(1.15);
+    accent-color: #e18a32;
+    cursor: pointer;
+}
+
+/* Large desktop layout */
+
+@media (min-width: 1200px) {
     .site-shell {
-        width: min(1000px, 95%);
-        margin: 24px auto;
+        width: min(1550px, 94%);
+    }
+
+    .topbar {
+        flex-direction: row;
+        align-items: center;
+        gap: 28px;
+        padding: 22px 28px;
+    }
+
+    .logo-wrap {
+        flex: 0 0 220px;
+    }
+
+    .logo-wrap img {
+        width: 190px;
+    }
+
+    .main-nav {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .main-nav a {
+        font-size: 1.05rem;
+        padding: 17px 14px;
+        white-space: nowrap;
+    }
+
+    .hero {
+        padding: 34px 48px 60px;
+    }
+
+    .hero h1 {
+        font-size: clamp(2.5rem, 3vw, 3.8rem);
+    }
+
+    .hero p {
+        max-width: 950px;
+        font-size: 1.25rem;
+    }
+
+    .card-section {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 52px;
+        padding: 64px 72px 58px;
+    }
+
+    .card-image,
+    .card-images {
+        height: 300px;
+    }
+
+    .card-content {
+        padding: 24px 24px 30px;
+    }
+
+    .card-content h2 {
+        font-size: 2.1rem;
+    }
+
+    .card-content p {
+        font-size: 1.2rem;
+    }
+
+    .guide-page {
+        padding: 60px 72px 54px;
+    }
+
+    .planner-image-wrap {
+        max-width: 1200px;
+    }
+}
+
+/* Medium screens: tablets, Surface Pro, small laptops */
+
+@media (min-width: 701px) and (max-width: 1199px) {
+    .site-shell {
+        width: min(1050px, 88%);
+        margin: 32px auto;
     }
 
     .topbar {
         flex-direction: column;
         align-items: center;
-        padding: 20px 18px 8px;
+        gap: 18px;
+        padding: 22px 24px;
+    }
+
+    .logo-wrap {
+        flex: none;
+    }
+
+    .logo-wrap img {
+        width: 165px;
     }
 
     .main-nav {
         width: 100%;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .main-nav a {
-        flex: 1 1 auto;
-        text-align: center;
-        padding: 14px 16px;
+        padding: 14px 10px;
+        font-size: 0.95rem;
+        white-space: normal;
+        line-height: 1.25;
+        border-right: 1px solid rgba(211, 168, 107, 0.22);
+        border-bottom: 1px solid rgba(211, 168, 107, 0.22);
+    }
+
+    .main-nav a:nth-child(2n) {
+        border-right: none;
+    }
+
+    .main-nav a:last-child {
+        grid-column: 1 / -1;
+        border-right: none;
+        border-bottom: none;
+    }
+
+    .hero {
+        padding: 26px 30px 46px;
+    }
+
+    .hero h1 {
+        font-size: clamp(2rem, 4vw, 2.7rem);
+    }
+
+    .hero p {
+        max-width: 720px;
+        font-size: 1.1rem;
     }
 
     .card-section {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 28px;
-    }
-
-    .guide-card:hover {
-        transform: none;
+        padding: 44px 38px 40px;
     }
 
     .card-image,
     .card-images {
-        top: 0;
+        height: 210px;
     }
 
     .card-image img,
     .card-images img {
         width: 100%;
-        max-width: 100%;
-        position: static;
-        display: block;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .card-content {
+        padding: 18px 16px 22px;
+    }
+
+    .card-content h2 {
+        font-size: 1.55rem;
+    }
+
+    .card-content p {
+        font-size: 1.05rem;
+    }
+
+    .guide-page {
+        padding: 42px 38px;
+    }
+
+    .planner-image-wrap {
+        max-width: 850px;
     }
 
     .footer {
@@ -497,7 +741,14 @@ body {
     }
 
     .topbar {
+        flex-direction: column;
+        align-items: center;
         padding: 16px 12px 8px;
+        gap: 14px;
+    }
+
+    .logo-wrap {
+        flex: none;
     }
 
     .logo-wrap img {
@@ -505,7 +756,8 @@ body {
     }
 
     .main-nav {
-        flex-direction: column;
+        width: 100%;
+        grid-template-columns: 1fr;
     }
 
     .main-nav a {
@@ -513,6 +765,7 @@ body {
         padding: 13px 12px;
         border-right: none;
         border-bottom: 1px solid rgba(211, 168, 107, 0.22);
+        white-space: normal;
     }
 
     .main-nav a:last-child {
@@ -546,7 +799,28 @@ body {
     }
 
     .card-section {
+        grid-template-columns: 1fr;
+        gap: 28px;
         padding: 30px 18px;
+    }
+
+    .guide-card:hover {
+        transform: none;
+    }
+
+    .card-image,
+    .card-images {
+        height: auto;
+    }
+
+    .card-image img,
+    .card-images img {
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+        position: static;
+        display: block;
+        object-fit: contain;
     }
 
     .card-content h2 {
@@ -590,6 +864,8 @@ body {
     }
 
     .footer {
+        flex-direction: column;
+        align-items: flex-start;
         padding: 22px 18px;
     }
 
