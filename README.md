@@ -73,13 +73,17 @@ Future improvements may include:
 
 ## Credits
 
-This website and progression concepts were inspired by community guides created by The Yandere Darkling (Chiku) and EntangledMage.
+Website, layout, rewritten guide pages, and checklist system created by Jacob Lewis.
 
-Chiku’s Dungeon Defenders guide content helped shape the progression and achievement route structure used throughout this site.
+Progression and achievement route information was built with reference to community resources, especially guides created by The Yandere Darkling (Chiku). Chiku’s Dungeon Defenders guide content helped shape the progression and achievement route structure used throughout this site.
+
+EntangledMage’s gear optimizer and Dungeon Defenders resources helped inspire the planning and optimization side of this project.
 
 Additional achievement information was checked with the Dungeon Defenders Wiki, especially the Eternal Defender page:
 
 - https://dungeondefenders.wiki.gg/wiki/Eternal_Defender
+
+Dundef.gg and Dundef Planner are linked as external Dungeon Defenders community tools and resources.
 
 ChatGPT was used to help port, rewrite, organize, and format the guide information into website pages.
 
