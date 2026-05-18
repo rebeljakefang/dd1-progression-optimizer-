@@ -10,12 +10,13 @@
 <body>
     <div class="site-shell">
         <header class="topbar">
-            <div class="logo-wrap">
+            <a class="logo-wrap" href="index.html">
                 <img src="images/IMG_8478.png" alt="Dungeon Defenders Progression Guide logo">
-            </div>
+            </a>
 
             <nav class="main-nav">
                 <a href="index.html">Home</a>
+                <a href="optimizer.html">Progression Optimizer</a>
                 <a href="progression.html">Progression Guide</a>
                 <a href="completion-guide.html">100% Completion Guide</a>
                 <a href="completion-checklist.html">100% Checklist</a>
@@ -30,7 +31,7 @@
                     Optimize your Dungeon Defenders progression with step-by-step guides,
                     achievement routes, useful tools, and powerful planning resources.
                 </p>
-                <a class="cta-button" href="progression.html">Start Progression Guide</a>
+                <a class="cta-button" href="optimizer.html">Start Progression Optimizer</a>
             </section>
 
             <section class="card-section">
@@ -60,7 +61,7 @@
                     </div>
                     <div class="card-content">
                         <h2>Gear Optimizer</h2>
-                        <p>Find the best possible stat setup for each hero and plan stronger gear builds.
+                        <p>Find the best possible stat setup for each hero and plan stronger gear builds.</p>
                     </div>
                 </a>
             </section>
@@ -94,27 +95,11 @@
             </p>
         </footer>
     </div>
+
     <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-    ↑
-</button>
+        ↑
+    </button>
 
-<script>
-    const backToTopButton = document.getElementById("back-to-top");
-
-    window.addEventListener("scroll", () => {
-        if (window.scrollY > 400) {
-            backToTopButton.classList.add("show");
-        } else {
-            backToTopButton.classList.remove("show");
-        }
-    });
-
-    backToTopButton.addEventListener("click", () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "instant"
-        });
-    });
-</script>
+<script src="scripts/main.js"></script>
 </body>
 </html>

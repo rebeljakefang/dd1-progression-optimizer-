@@ -16,6 +16,7 @@
 
             <nav class="main-nav">
                 <a href="index.html">Home</a>
+                <a href="optimizer.html">Progression Optimizer</a>
                 <a href="progression.html">Progression Guide</a>
                 <a href="completion-guide.html">100% Completion Guide</a>
                 <a href="completion-checklist.html">100% Checklist</a>
@@ -662,23 +663,6 @@
     ↑
 </button>
 
-<script>
-    const backToTopButton = document.getElementById("back-to-top");
-
-    window.addEventListener("scroll", () => {
-        if (window.scrollY > 400) {
-            backToTopButton.classList.add("show");
-        } else {
-            backToTopButton.classList.remove("show");
-        }
-    });
-
-    backToTopButton.addEventListener("click", () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "instant"
-        });
-    });
-</script>
+<script src="scripts/main.js"></script>
 </body>
 </html>

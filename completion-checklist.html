@@ -16,6 +16,7 @@
 
             <nav class="main-nav">
                 <a href="index.html">Home</a>
+                <a href="optimizer.html">Progression Optimizer</a>
                 <a href="progression.html">Progression Guide</a>
                 <a href="completion-guide.html">100% Completion Guide</a>
                 <a href="completion-checklist.html">100% Checklist</a>
@@ -62,6 +63,7 @@
                             <li><a href="#shards-checklist">Shards and Summoner Checklist</a></li>
                             <li><a href="#lost-quest-checklist">Lost Quest / Eternal Defender</a></li>
                             <li><a href="#extra-checklist">Extra Cleanup</a></li>
+                            <li><a href="#ruthless-checklist">Ruthless Progression</a></li>
                         </ol>
                     </div>
                 </div>
@@ -72,22 +74,22 @@
 
                         <div class="checklist-group">
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="legendary">
+                                <input type="checkbox" data-checks="legendary" data-master="legendary">
                                 <span><strong>Legendary Defender:</strong> Complete achievements 0 through 57.</span>
                             </label>
 
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="legendary ultimate">
+                                <input type="checkbox" data-checks="legendary ultimate" data-master="ultimate" data-prerequisites="legendary">
                                 <span><strong>Ultimate Defender:</strong> Complete achievements 0 through 89, except Boss Rush and Anti-Cupid.</span>
                             </label>
 
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="legendary ultimate eternal">
+                                <input type="checkbox" data-checks="legendary ultimate eternal" data-master="eternal" data-prerequisites="legendary ultimate">
                                 <span><strong>Eternal Defender:</strong> After Ultimate Defender, complete the required Lost Quest maps on Nightmare.</span>
                             </label>
 
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="ruthless">
+                                <input type="checkbox" data-checks="ruthless" data-master="ruthless">
                                 <span><strong>Ruthless Defender:</strong> Complete classic campaign and classic challenges on Ruthless.</span>
                             </label>
                         </div>
@@ -105,22 +107,22 @@
                         <h3>Area 1</h3>
                         <div class="checklist-group">
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>The Deeper Well:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Foundries and Forges:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Magus Quarters:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Alchemical Laboratory:</strong> Complete required campaign clears and boss-related progress.</span>
                             </label>
                         </div>
@@ -128,22 +130,22 @@
                         <h3>Area 2</h3>
                         <div class="checklist-group">
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Servants Quarters:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Castle Armory:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Hall of Court:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>The Throne Room:</strong> Complete required campaign clears and boss-related progress.</span>
                             </label>
                         </div>
@@ -151,22 +153,22 @@
                         <h3>Area 3</h3>
                         <div class="checklist-group">
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Royal Gardens:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>The Ramparts:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>Endless Spires:</strong> Complete required campaign clears.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate ruthless">
+                                <input type="checkbox" data-achievement="legendary ultimate">
                                 <span><strong>The Summit:</strong> Complete required campaign clears, dragon boss, and A Matter of Perspective.</span>
                             </label>
                         </div>
@@ -343,67 +345,67 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>No Towers Allowed</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Unlikely Allies</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Warping Core</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Raining Goblins</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Wizardry</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Ogre Crush</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Zippy Terror</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Chicken</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Moving Core</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Death From Above</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Assault</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Treasure Hunt</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate ruthless challenge-champion"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate challenge-champion"></td>
                                         <td>Monster Fest</td>
                                         <td>Complete challenge progress</td>
                                     </tr>
@@ -1180,6 +1182,187 @@
                         </div>
                     </div>
                 </div>
+                <div id="ruthless-checklist" class="guide-card guide-text-card">
+    <div class="card-content">
+        <h2>Ruthless Progression</h2>
+        <p>
+            Ruthless Defender is a separate late-game goal. It is not required for
+            Legendary Defender, Ultimate Defender, or Eternal Defender. Save this
+            section for after your Nightmare progression and major completion cleanup
+            are in a good place.
+        </p>
+
+        <div class="checklist-group">
+            <label class="checklist-item achievement-master">
+                <input type="checkbox" data-checks="ruthless" data-master="ruthless">
+                <span><strong>Ruthless Defender:</strong> Complete the classic campaign and classic challenges on Ruthless.</span>
+            </label>
+        </div>
+
+        <div class="guide-warning">
+            <h3>Important Note</h3>
+            <p>
+                Ruthless Defender is separate from Eternal Defender. Checking Legendary,
+                Ultimate, or Eternal should not automatically complete this section.
+            </p>
+        </div>
+
+        <h3>Classic Campaign on Ruthless</h3>
+        <div class="table-wrap">
+            <table class="check-table">
+                <thead>
+                    <tr>
+                        <th>Done</th>
+                        <th>Map</th>
+                        <th>Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>The Deeper Well</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Foundries and Forges</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Magus Quarters</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Alchemical Laboratory</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Servants Quarters</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Castle Armory</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Hall of Court</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>The Throne Room</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Royal Gardens</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>The Ramparts</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Endless Spires</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>The Summit</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Classic Challenges on Ruthless</h3>
+        <div class="table-wrap">
+            <table class="check-table">
+                <thead>
+                    <tr>
+                        <th>Done</th>
+                        <th>Challenge</th>
+                        <th>Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>No Towers Allowed</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Unlikely Allies</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Warping Core</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Raining Goblins</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Wizardry</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Ogre Crush</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Zippy Terror</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Chicken</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Moving Core</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Death From Above</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Assault</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Treasure Hunt</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                        <td>Monster Fest</td>
+                        <td>Complete on Ruthless</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
             </section>
         </main>
 
@@ -1192,55 +1375,14 @@
                 Dungeon Defenders is owned by Chromatic Games. This is a fan-made project and is not
                 officially affiliated with Chromatic Games.
             </p>
-
-
         </footer>
     </div>
 
-    <script>
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-
-        checkboxes.forEach((checkbox) => {
-            checkbox.addEventListener("change", () => {
-                const groupsToCheck = checkbox.dataset.checks;
-
-                if (groupsToCheck) {
-                    const groups = groupsToCheck.split(" ");
-
-                    groups.forEach((group) => {
-                        const relatedItems = document.querySelectorAll(
-                            `input[data-achievement~="${group}"]`
-                        );
-
-                        relatedItems.forEach((item) => {
-                            item.checked = checkbox.checked;
-                        });
-                    });
-                }
-            });
-        });
-    </script>
     <button id="back-to-top" class="back-to-top" aria-label="Back to top">
     ↑
-</button>
+    </button>
 
-<script>
-    const backToTopButton = document.getElementById("back-to-top");
-
-    window.addEventListener("scroll", () => {
-        if (window.scrollY > 400) {
-            backToTopButton.classList.add("show");
-        } else {
-            backToTopButton.classList.remove("show");
-        }
-    });
-
-    backToTopButton.addEventListener("click", () => {
-        window.scrollTo({
-            top: 0,
-            behavior: "instant"
-        });
-    });
-</script>
+    <script src="scripts/checklist.js"></script>
+    <script src="scripts/main.js"></script>
 </body>
 </html>

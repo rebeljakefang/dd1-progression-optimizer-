@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progression Optimizer | Dungeon Defenders Progression Hub</title>
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="logo-wrap" href="index.html">
+        <img src="images/IMG_8478.png" alt="Dungeon Defenders Progression Hub Logo">
+      </a>
+
+      <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="optimizer.html">Progression Optimizer</a>
+        <a href="progression.html">Progression Guide</a>
+        <a href="completion-guide.html">100% Completion Guide</a>
+        <a href="completion-checklist.html">100% Checklist</a>
+        <a href="resources.html">Useful Info</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="panel hero optimizer-hero">
+        <h1>Progression Optimizer</h1>
+        <p>
+          Enter your current Dungeon Defenders 1 progress and the optimizer will suggest
+          what you should do next.
+        </p>
+      </section>
+
+      <section class="guide-page optimizer-page">
+        <section class="guide-card guide-text-card optimizer-card">
+          <div class="card-content">
+            <h2>Player Info</h2>
+
+            <form id="optimizer-form" class="optimizer-form">
+              <label for="hero-level">Hero Level</label>
+              <input id="hero-level" type="number" min="0" max="100" required>
+
+              <label for="tower-damage">Main Tower Damage</label>
+              <input id="tower-damage" type="number" min="0" max="10000" required>
+
+              <label for="main-goal">Main Goal</label>
+              <select id="main-goal" required>
+                <option value="leveling">Leveling</option>
+                <option value="gear">Gear</option>
+                <option value="pets">Pets</option>
+                <option value="achievements">Achievements</option>
+                <option value="100%">100% Completion</option>
+              </select>
+
+              <fieldset>
+                <legend>Pets Owned</legend>
+
+                <label class="optimizer-check">
+                  <input id="has-genie" type="checkbox">
+                  Genie
+                </label>
+
+                <label class="optimizer-check">
+                  <input id="has-fish" type="checkbox">
+                  Fish in a Bowl
+                </label>
+
+                <label class="optimizer-check">
+                  <input id="has-seahorse" type="checkbox">
+                  Seahorse
+                </label>
+
+                <label class="optimizer-check">
+                  <input id="has-propeller-cat" type="checkbox">
+                  Propeller Cat
+                </label>
+              </fieldset>
+
+              <button class="cta-button optimizer-button" type="submit">
+                Get Recommendation
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <section id="results" class="guide-card guide-text-card optimizer-card">
+          <div class="card-content">
+            <h2>Recommendation</h2>
+            <p>Fill out the form and click “Get Recommendation.”</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Dungeon Defenders Progression Hub</p>
+    </footer>
+  </div>
+      <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        ↑
+    </button>
+  <script src="scripts/main.js"></script>
+  <script src="scripts/optimizer.js"></script>
+</body>
+</html>
