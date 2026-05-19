@@ -1116,3 +1116,23 @@ body {
         grid-template-columns: 1fr;
     }
 }
+.hero-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.remove-hero-button {
+    padding: 6px 10px;
+    color: #fff1d5;
+    background: linear-gradient(to bottom, #71200e, #3f1208);
+    border: 1px solid #e18a32;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.remove-hero-button:hover {
+    filter: brightness(1.12);
+}

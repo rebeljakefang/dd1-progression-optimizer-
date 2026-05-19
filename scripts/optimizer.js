@@ -1,3 +1,29 @@
+const maxHeroSlots = 20;
+
+const heroClasses = [
+    "Apprentice",
+    "Squire",
+    "Huntress",
+    "Monk",
+    "Series EV",
+    "Summoner",
+    "Jester",
+    "Barbarian",
+    "Adept",
+    "Countess",
+    "Ranger",
+    "Initiate"
+];
+
+const heroRoles = [
+    "Builder",
+    "Waller",
+    "DPS",
+    "Support",
+    "Hybrid"
+];
+
+
 function getNumberValue(selector) {
     const input = document.querySelector(selector);
 
@@ -15,21 +41,208 @@ function getNumberValue(selector) {
 }
 
 
+function buildOptions(items, emptyLabel) {
+    let options = `<option value="">${emptyLabel}</option>`;
+
+    items.forEach((item) => {
+        options += `<option value="${item}">${item}</option>`;
+    });
+
+    return options;
+}
+
+
+function updateAddHeroButton() {
+    const heroRosterGrid = document.querySelector("#hero-roster-grid");
+    const addHeroButton = document.querySelector("#add-hero-button");
+
+    if (!heroRosterGrid || !addHeroButton) {
+        return;
+    }
+
+    const currentHeroCount = heroRosterGrid.querySelectorAll(".hero-slot").length;
+
+    if (currentHeroCount >= maxHeroSlots) {
+        addHeroButton.disabled = true;
+        addHeroButton.textContent = "Maximum Heroes Added";
+    } else {
+        addHeroButton.disabled = false;
+        addHeroButton.textContent = "Add Hero";
+    }
+}
+
+
+function renumberHeroSlots() {
+    const heroSlots = document.querySelectorAll(".hero-slot");
+
+    heroSlots.forEach((slot, index) => {
+        const newHeroNumber = index + 1;
+        const oldHeroNumber = slot.dataset.heroNumber;
+
+        slot.dataset.heroNumber = newHeroNumber;
+
+        const heading = slot.querySelector("h3");
+
+        if (heading) {
+            heading.textContent = `Hero ${newHeroNumber}`;
+        }
+
+        const fields = [
+            "class",
+            "role",
+            "level",
+            "tower-health",
+            "tower-damage",
+            "tower-range",
+            "tower-rate",
+            "hero-health",
+            "hero-damage",
+            "ability-1",
+            "ability-2"
+        ];
+
+        fields.forEach((field) => {
+            const oldId = `hero-${oldHeroNumber}-${field}`;
+            const newId = `hero-${newHeroNumber}-${field}`;
+
+            const input = slot.querySelector(`#${CSS.escape(oldId)}`);
+            const label = slot.querySelector(`label[for="${oldId}"]`);
+
+            if (input) {
+                input.id = newId;
+            }
+
+            if (label) {
+                label.setAttribute("for", newId);
+            }
+        });
+    });
+}
+
+
+function removeHeroSlot(event) {
+    const heroSlot = event.target.closest(".hero-slot");
+
+    if (heroSlot) {
+        heroSlot.remove();
+    }
+
+    renumberHeroSlots();
+    updateAddHeroButton();
+}
+
+
+function createHeroSlot(heroNumber) {
+    const heroSlot = document.createElement("div");
+    heroSlot.classList.add("hero-slot");
+    heroSlot.dataset.heroNumber = heroNumber;
+
+    heroSlot.innerHTML = `
+        <div class="hero-slot-header">
+            <h3>Hero ${heroNumber}</h3>
+            <button class="remove-hero-button" type="button">Remove</button>
+        </div>
+
+        <label for="hero-${heroNumber}-class">Class</label>
+        <select id="hero-${heroNumber}-class" class="hero-class">
+            ${buildOptions(heroClasses, "None")}
+        </select>
+
+        <label for="hero-${heroNumber}-role">Role</label>
+        <select id="hero-${heroNumber}-role" class="hero-role">
+            ${buildOptions(heroRoles, "None")}
+        </select>
+
+        <label for="hero-${heroNumber}-level">Level</label>
+        <input id="hero-${heroNumber}-level" class="hero-level" type="number" min="0" max="100">
+
+        <label for="hero-${heroNumber}-tower-health">Tower Health</label>
+        <input id="hero-${heroNumber}-tower-health" class="hero-tower-health" type="number" min="0" max="10000">
+
+        <label for="hero-${heroNumber}-tower-damage">Tower Damage</label>
+        <input id="hero-${heroNumber}-tower-damage" class="hero-tower-damage" type="number" min="0" max="10000">
+
+        <label for="hero-${heroNumber}-tower-range">Tower Range</label>
+        <input id="hero-${heroNumber}-tower-range" class="hero-tower-range" type="number" min="0" max="10000">
+
+        <label for="hero-${heroNumber}-tower-rate">Tower Rate</label>
+        <input id="hero-${heroNumber}-tower-rate" class="hero-tower-rate" type="number" min="0" max="10000">
+
+        <label for="hero-${heroNumber}-hero-health">Hero Health</label>
+        <input id="hero-${heroNumber}-hero-health" class="hero-hero-health" type="number" min="0" max="10000">
+
+        <label for="hero-${heroNumber}-hero-damage">Hero Damage</label>
+        <input id="hero-${heroNumber}-hero-damage" class="hero-hero-damage" type="number" min="0" max="10000">
+
+        <label for="hero-${heroNumber}-ability-1">Ability 1</label>
+        <input id="hero-${heroNumber}-ability-1" class="hero-ability-1" type="number" min="0" max="10000">
+
+        <label for="hero-${heroNumber}-ability-2">Ability 2</label>
+        <input id="hero-${heroNumber}-ability-2" class="hero-ability-2" type="number" min="0" max="10000">
+    `;
+
+    const removeButton = heroSlot.querySelector(".remove-hero-button");
+    removeButton.addEventListener("click", removeHeroSlot);
+
+    return heroSlot;
+}
+
+
+function addHeroSlot() {
+    const heroRosterGrid = document.querySelector("#hero-roster-grid");
+
+    if (!heroRosterGrid) {
+        return;
+    }
+
+    const currentHeroCount = heroRosterGrid.querySelectorAll(".hero-slot").length;
+
+    if (currentHeroCount >= maxHeroSlots) {
+        updateAddHeroButton();
+        return;
+    }
+
+    const nextHeroNumber = currentHeroCount + 1;
+    const heroSlot = createHeroSlot(nextHeroNumber);
+
+    heroRosterGrid.appendChild(heroSlot);
+    updateAddHeroButton();
+}
+
+
+function initializeHeroRoster() {
+    const addHeroButton = document.querySelector("#add-hero-button");
+
+    addHeroSlot();
+    addHeroSlot();
+    addHeroSlot();
+
+    if (addHeroButton) {
+        addHeroButton.addEventListener("click", addHeroSlot);
+    }
+
+    updateAddHeroButton();
+}
+
+
 function buildHeroRosterFromForm() {
     const heroes = [];
+    const heroSlots = document.querySelectorAll(".hero-slot");
 
-    for (let i = 1; i <= 3; i++) {
-        const className = document.querySelector(`#hero-${i}-class`).value;
-        const role = document.querySelector(`#hero-${i}-role`).value;
-        const level = getNumberValue(`#hero-${i}-level`);
-        const towerHealth = getNumberValue(`#hero-${i}-tower-health`);
-        const towerDamage = getNumberValue(`#hero-${i}-tower-damage`);
-        const towerRange = getNumberValue(`#hero-${i}-tower-range`);
-        const towerRate = getNumberValue(`#hero-${i}-tower-rate`);
-        const heroHealth = getNumberValue(`#hero-${i}-hero-health`);
-        const heroDamage = getNumberValue(`#hero-${i}-hero-damage`);
-        const ability1 = getNumberValue(`#hero-${i}-ability-1`);
-        const ability2 = getNumberValue(`#hero-${i}-ability-2`);
+    heroSlots.forEach((slot) => {
+        const heroNumber = slot.dataset.heroNumber;
+
+        const className = document.querySelector(`#hero-${heroNumber}-class`).value;
+        const role = document.querySelector(`#hero-${heroNumber}-role`).value;
+        const level = getNumberValue(`#hero-${heroNumber}-level`);
+        const towerHealth = getNumberValue(`#hero-${heroNumber}-tower-health`);
+        const towerDamage = getNumberValue(`#hero-${heroNumber}-tower-damage`);
+        const towerRange = getNumberValue(`#hero-${heroNumber}-tower-range`);
+        const towerRate = getNumberValue(`#hero-${heroNumber}-tower-rate`);
+        const heroHealth = getNumberValue(`#hero-${heroNumber}-hero-health`);
+        const heroDamage = getNumberValue(`#hero-${heroNumber}-hero-damage`);
+        const ability1 = getNumberValue(`#hero-${heroNumber}-ability-1`);
+        const ability2 = getNumberValue(`#hero-${heroNumber}-ability-2`);
 
         if (
             className !== "" ||
@@ -58,7 +271,7 @@ function buildHeroRosterFromForm() {
                 ability2: ability2
             });
         }
-    }
+    });
 
     return heroes;
 }
@@ -260,6 +473,8 @@ function handleOptimizerSubmit(event) {
     renderResults(recommendation, stepName, stepData, account);
 }
 
+
+initializeHeroRoster();
 
 const optimizerForm = document.querySelector("#optimizer-form");
 
