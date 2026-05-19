@@ -172,9 +172,13 @@ function chooseGoalRecommendation(stepName, stepData, account) {
 }
 
 
-function hasRole(heroes, roleName) {
+function hasAnyRole(heroes, roleNames) {
     return heroes.some((hero) => {
-        return hero.role.toLowerCase() === roleName.toLowerCase();
+        const role = hero.role.toLowerCase();
+
+        return roleNames.some((roleName) => {
+            return role === roleName.toLowerCase();
+        });
     });
 }
 
@@ -197,31 +201,74 @@ function getBestStat(heroes, statName, allowedRoles) {
 function buildAccountReview(account) {
     const notes = [];
 
-    const bestTowerHealth = getBestStat(account.heroes, "towerHealth", [
-        "builder",
-        "waller",
-        "hybrid",
-        "support"
+    const hasBuilder = hasAnyRole(account.heroes, [
+        "Builder",
+        "Hybrid",
+        "Aura Monk",
+        "Trap Huntress",
+        "Beam EV",
+        "Minion Summoner"
     ]);
 
-    if (!hasRole(account.heroes, "Builder") && !hasRole(account.heroes, "Hybrid")) {
-        notes.push("No clear builder role was detected. Add a Builder or Hybrid hero for better recommendations.");
+    const hasWalls = hasAnyRole(account.heroes, [
+        "Waller",
+        "Waller Summoner"
+    ]);
+
+    const hasDps = hasAnyRole(account.heroes, [
+        "DPS",
+        "Hybrid"
+    ]);
+
+    const hasBeamEv = hasAnyRole(account.heroes, ["Beam EV"]);
+    const hasWallerSummoner = hasAnyRole(account.heroes, ["Waller Summoner"]);
+    const hasBoostMonk = hasAnyRole(account.heroes, ["Boost Monk"]);
+    const hasMinionSummoner = hasAnyRole(account.heroes, ["Minion Summoner", "Waller Summoner"]);
+    const hasUpgradeInitiate = hasAnyRole(account.heroes, ["Upgrade Initiate"]);
+
+    const bestWallHealth = getBestStat(account.heroes, "towerHealth", [
+        "waller",
+        "waller summoner"
+    ]);
+
+    if (!hasBuilder) {
+        notes.push("No clear builder role was detected. Add a Builder, Hybrid, Aura Monk, Trap Huntress, Beam EV, or Minion Summoner for better recommendations.");
     }
 
-    if (!hasRole(account.heroes, "DPS") && !hasRole(account.heroes, "Hybrid")) {
-        notes.push("No clear DPS hero was detected. A DPS hero becomes more important for bosses and later maps.");
+    if (!hasWalls) {
+        notes.push("No wall role was detected. A Waller or Waller Summoner becomes more important as you push harder Nightmare maps.");
     }
 
-    if (!hasRole(account.heroes, "Waller")) {
-        notes.push("No waller was detected. This is not always required early, but wall strength matters more later.");
+    if (!hasDps) {
+        notes.push("No hero is marked as DPS or Hybrid. Any class can work for DPS, but marking one helps the optimizer judge your boss damage setup.");
     }
 
-    if (account.towerDamage >= 2000 && bestTowerHealth < 800) {
-        notes.push("Your tower damage is decent, but tower health looks low compared to your progression stage.");
+    if (account.towerDamage >= 1500 && !hasWallerSummoner) {
+        notes.push("At this stage, a Waller Summoner can help a lot with survival builds and safer Nightmare progression.");
+    }
+
+    if (account.towerDamage >= 1500 && !hasBeamEv) {
+        notes.push("At this stage, a Beam EV is worth building because buff beams become very important for Nightmare setups.");
+    }
+
+    if (account.towerDamage >= 2500 && !hasBoostMonk) {
+        notes.push("At this stage, a Boost Monk becomes very useful for boss maps, harder survivals, and pushing into tougher content.");
+    }
+
+    if (account.towerDamage >= 2500 && !hasMinionSummoner) {
+        notes.push("At this stage, a Minion Summoner is useful for minion-based defenses and safer survival layouts.");
+    }
+
+    if (account.towerDamage >= 3500 && !hasUpgradeInitiate) {
+        notes.push("At this stage, an Upgrade Initiate can help with faster upgrading during harder survival waves.");
+    }
+
+    if (account.towerDamage >= 2500 && bestWallHealth > 0 && bestWallHealth < 1200) {
+        notes.push("Your wall health looks low for this stage. Stronger walls or minion walls may help before pushing harder survival maps.");
     }
 
     if (account.bestDpsDamage > 0 && account.bestDpsDamage < 1000 && account.level >= 78) {
-        notes.push("Your DPS hero damage may be low for this stage, so boss maps may feel harder.");
+        notes.push("Your marked DPS hero damage may be low for this stage, so boss maps may feel harder.");
     }
 
     if (notes.length === 0) {

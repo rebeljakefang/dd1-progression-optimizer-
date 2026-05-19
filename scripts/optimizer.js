@@ -18,8 +18,14 @@ const heroClasses = [
 const heroRoles = [
     "Builder",
     "Waller",
+    "Waller Summoner",
     "DPS",
-    "Support",
+    "Boost Monk",
+    "Aura Monk",
+    "Beam EV",
+    "Minion Summoner",
+    "Trap Huntress",
+    "Upgrade Initiate",
     "Hybrid"
 ];
 
@@ -299,8 +305,12 @@ function getBestBuilderDamage(heroes, fallbackTowerDamage) {
         if (
             role === "builder" ||
             role === "waller" ||
+            role === "waller summoner" ||
             role === "hybrid" ||
-            role === "support"
+            role === "aura monk" ||
+            role === "beam ev" ||
+            role === "minion summoner" ||
+            role === "trap huntress"
         ) {
             if (hero.towerDamage > bestTowerDamage) {
                 bestTowerDamage = hero.towerDamage;
