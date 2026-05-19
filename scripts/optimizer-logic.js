@@ -2,6 +2,7 @@ function determineExperience(level) {
     return level >= 74;
 }
 
+
 function determineProgression(level, towerDamage, experiencedPlayer) {
     if (level < 20) {
         return "First Hero + Main Campaign";
@@ -69,6 +70,7 @@ function determineProgression(level, towerDamage, experiencedPlayer) {
 
     return "Infested Ruins and Beyond";
 }
+
 
 function chooseGoalRecommendation(stepName, stepData, account) {
     const goal = account.mainGoal;
@@ -167,4 +169,64 @@ function chooseGoalRecommendation(stepName, stepData, account) {
         reward: stepData.reward,
         reason: "The optimizer is keeping you on the main progression route."
     };
+}
+
+
+function hasRole(heroes, roleName) {
+    return heroes.some((hero) => {
+        return hero.role.toLowerCase() === roleName.toLowerCase();
+    });
+}
+
+
+function getBestStat(heroes, statName, allowedRoles) {
+    let bestValue = 0;
+
+    heroes.forEach((hero) => {
+        const role = hero.role.toLowerCase();
+
+        if (allowedRoles.includes(role) && hero[statName] > bestValue) {
+            bestValue = hero[statName];
+        }
+    });
+
+    return bestValue;
+}
+
+
+function buildAccountReview(account) {
+    const notes = [];
+
+    const bestTowerHealth = getBestStat(account.heroes, "towerHealth", [
+        "builder",
+        "waller",
+        "hybrid",
+        "support"
+    ]);
+
+    if (!hasRole(account.heroes, "Builder") && !hasRole(account.heroes, "Hybrid")) {
+        notes.push("No clear builder role was detected. Add a Builder or Hybrid hero for better recommendations.");
+    }
+
+    if (!hasRole(account.heroes, "DPS") && !hasRole(account.heroes, "Hybrid")) {
+        notes.push("No clear DPS hero was detected. A DPS hero becomes more important for bosses and later maps.");
+    }
+
+    if (!hasRole(account.heroes, "Waller")) {
+        notes.push("No waller was detected. This is not always required early, but wall strength matters more later.");
+    }
+
+    if (account.towerDamage >= 2000 && bestTowerHealth < 800) {
+        notes.push("Your tower damage is decent, but tower health looks low compared to your progression stage.");
+    }
+
+    if (account.bestDpsDamage > 0 && account.bestDpsDamage < 1000 && account.level >= 78) {
+        notes.push("Your DPS hero damage may be low for this stage, so boss maps may feel harder.");
+    }
+
+    if (notes.length === 0) {
+        notes.push("No major roster weaknesses were detected from the current inputs.");
+    }
+
+    return notes;
 }

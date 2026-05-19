@@ -143,7 +143,7 @@ function renderHeroSummary(account) {
         return `
             <div class="result-box">
                 <h3>Hero Summary</h3>
-                <p>No hero roster entries were added, so the optimizer used the fallback level and tower damage fields.</p>
+                <p>No hero roster entries were added, so the optimizer could not calculate a real roster summary.</p>
             </div>
         `;
     }
@@ -182,6 +182,24 @@ function renderHeroSummary(account) {
 }
 
 
+function renderAccountReview(account) {
+    const notes = buildAccountReview(account);
+
+    const noteItems = notes.map((note) => {
+        return `<li>${note}</li>`;
+    }).join("");
+
+    return `
+        <div class="result-box">
+            <h3>Account Review</h3>
+            <ul>
+                ${noteItems}
+            </ul>
+        </div>
+    `;
+}
+
+
 function renderResults(recommendation, stepName, stepData, account) {
     const results = document.querySelector("#results");
 
@@ -213,6 +231,7 @@ function renderResults(recommendation, stepName, stepData, account) {
                 </div>
 
                 ${renderHeroSummary(account)}
+                ${renderAccountReview(account)}
             </div>
         </div>
     `;
