@@ -1,5 +1,11 @@
 function getNumberValue(selector) {
-    const value = Number(document.querySelector(selector).value);
+    const input = document.querySelector(selector);
+
+    if (!input) {
+        return 0;
+    }
+
+    const value = Number(input.value);
 
     if (Number.isNaN(value)) {
         return 0;
@@ -16,16 +22,40 @@ function buildHeroRosterFromForm() {
         const className = document.querySelector(`#hero-${i}-class`).value;
         const role = document.querySelector(`#hero-${i}-role`).value;
         const level = getNumberValue(`#hero-${i}-level`);
+        const towerHealth = getNumberValue(`#hero-${i}-tower-health`);
         const towerDamage = getNumberValue(`#hero-${i}-tower-damage`);
+        const towerRange = getNumberValue(`#hero-${i}-tower-range`);
+        const towerRate = getNumberValue(`#hero-${i}-tower-rate`);
+        const heroHealth = getNumberValue(`#hero-${i}-hero-health`);
         const heroDamage = getNumberValue(`#hero-${i}-hero-damage`);
+        const ability1 = getNumberValue(`#hero-${i}-ability-1`);
+        const ability2 = getNumberValue(`#hero-${i}-ability-2`);
 
-        if (className !== "" || role !== "" || level > 0 || towerDamage > 0 || heroDamage > 0) {
+        if (
+            className !== "" ||
+            role !== "" ||
+            level > 0 ||
+            towerHealth > 0 ||
+            towerDamage > 0 ||
+            towerRange > 0 ||
+            towerRate > 0 ||
+            heroHealth > 0 ||
+            heroDamage > 0 ||
+            ability1 > 0 ||
+            ability2 > 0
+        ) {
             heroes.push({
                 className: className,
                 role: role,
                 level: level,
+                towerHealth: towerHealth,
                 towerDamage: towerDamage,
-                heroDamage: heroDamage
+                towerRange: towerRange,
+                towerRate: towerRate,
+                heroHealth: heroHealth,
+                heroDamage: heroDamage,
+                ability1: ability1,
+                ability2: ability2
             });
         }
     }
@@ -87,12 +117,10 @@ function getBestDpsDamage(heroes) {
 
 
 function buildAccountFromForm() {
-    const fallbackLevel = getNumberValue("#hero-level");
-    const fallbackTowerDamage = getNumberValue("#tower-damage");
     const heroes = buildHeroRosterFromForm();
 
-    const level = getHighestHeroLevel(heroes, fallbackLevel);
-    const towerDamage = getBestBuilderDamage(heroes, fallbackTowerDamage);
+    const level = getHighestHeroLevel(heroes, 0);
+    const towerDamage = getBestBuilderDamage(heroes, 0);
     const bestDpsDamage = getBestDpsDamage(heroes);
 
     return {
@@ -125,9 +153,19 @@ function renderHeroSummary(account) {
             <p>
                 <strong>${hero.className || "Unknown Hero"}</strong>
                 (${hero.role || "No role"}) —
-                Level ${hero.level || 0},
+                Level ${hero.level || 0}
+            </p>
+            <p>
+                Tower HP ${hero.towerHealth || 0},
                 Tower Damage ${hero.towerDamage || 0},
-                Hero Damage ${hero.heroDamage || 0}
+                Tower Range ${hero.towerRange || 0},
+                Tower Rate ${hero.towerRate || 0}
+            </p>
+            <p>
+                Hero HP ${hero.heroHealth || 0},
+                Hero Damage ${hero.heroDamage || 0},
+                Ability 1 ${hero.ability1 || 0},
+                Ability 2 ${hero.ability2 || 0}
             </p>
         `;
     }).join("");
