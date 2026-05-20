@@ -1,3 +1,7 @@
+/* =========================================================
+   1. Global Reset + Base Page Styles
+========================================================= */
+
 * {
     box-sizing: border-box;
 }
@@ -27,7 +31,10 @@ body {
         0 20px 50px rgba(195, 40, 40, 0.55);
 }
 
-/* Header and navigation */
+
+/* =========================================================
+   2. Header + Navigation
+========================================================= */
 
 .topbar {
     display: flex;
@@ -81,7 +88,10 @@ body {
     color: #ffdc9b;
 }
 
-/* Main panels */
+
+/* =========================================================
+   3. Shared Panels + Hero Sections
+========================================================= */
 
 .panel {
     text-align: center;
@@ -137,7 +147,10 @@ body {
         0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Home page cards */
+
+/* =========================================================
+   4. Homepage Cards
+========================================================= */
 
 .card-section {
     display: grid;
@@ -204,7 +217,10 @@ body {
     color: #f2dfbf;
 }
 
-/* Divider */
+
+/* =========================================================
+   5. Divider
+========================================================= */
 
 .divider {
     display: flex;
@@ -233,7 +249,10 @@ body {
     flex-shrink: 0;
 }
 
-/* Planner */
+
+/* =========================================================
+   6. Planner Section
+========================================================= */
 
 .planner {
     padding-top: 28px;
@@ -255,7 +274,10 @@ body {
     height: auto;
 }
 
-/* Footer */
+
+/* =========================================================
+   7. Footer
+========================================================= */
 
 .footer {
     display: flex;
@@ -275,31 +297,10 @@ body {
     color: #f0dfc2;
 }
 
-.footer-icons {
-    display: flex;
-    gap: 10px;
-}
 
-.footer-icons a {
-    width: 52px;
-    height: 52px;
-    display: grid;
-    place-items: center;
-    text-decoration: none;
-    color: #f7e7cb;
-    font-size: 1.5rem;
-    background: linear-gradient(to bottom, #3f2c20, #201611);
-    border: 2px solid #6d4a31;
-    box-shadow: 0 0 0 2px #2d1a11 inset;
-    transition: transform 0.18s ease, filter 0.18s ease;
-}
-
-.footer-icons a:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.08);
-}
-
-/* Guide pages */
+/* =========================================================
+   8. Guide Page Layout
+========================================================= */
 
 .guide-page {
     padding: 42px 34px 36px;
@@ -365,7 +366,10 @@ body {
     break-inside: avoid;
 }
 
-/* Highlight boxes */
+
+/* =========================================================
+   9. Guide Highlight Boxes
+========================================================= */
 
 .guide-warning {
     margin: 22px 0;
@@ -402,7 +406,10 @@ body {
     color: #fff1d6;
 }
 
-/* Code boxes and tables */
+
+/* =========================================================
+   10. Code Boxes + Tables
+========================================================= */
 
 .code-box {
     margin: 16px 0;
@@ -443,7 +450,10 @@ body {
     background: rgba(113, 32, 14, 0.35);
 }
 
-/* Checklist page */
+
+/* =========================================================
+   11. Checklist Page
+========================================================= */
 
 .checklist-group {
     display: grid;
@@ -497,8 +507,6 @@ body {
     margin: 0;
 }
 
-/* Master checklist items */
-
 .achievement-master {
     background: rgba(113, 32, 14, 0.45);
     border: 2px solid #e18a32;
@@ -507,8 +515,6 @@ body {
 .achievement-master strong {
     color: #fff1d6;
 }
-
-/* General checklist tables */
 
 .check-table .check-cell,
 .pet-check-table .check-cell {
@@ -545,7 +551,10 @@ body {
     cursor: pointer;
 }
 
-/* Optimizer page */
+
+/* =========================================================
+   12. Optimizer Page Layout
+========================================================= */
 
 .optimizer-hero {
     padding-top: 34px;
@@ -601,6 +610,12 @@ body {
     background: rgba(24, 12, 8, 0.65);
 }
 
+.optimizer-form fieldset p {
+    margin: 0 0 10px;
+    color: #f2dfbf;
+    line-height: 1.45;
+}
+
 .optimizer-check {
     display: flex;
     align-items: center;
@@ -622,6 +637,11 @@ body {
     cursor: pointer;
     font-family: Georgia, "Times New Roman", serif;
 }
+
+
+/* =========================================================
+   13. Optimizer Results
+========================================================= */
 
 #results h3 {
     margin: 20px 0 8px;
@@ -649,7 +669,125 @@ body {
     color: #ffdc9b;
 }
 
-/* Large desktop layout */
+
+/* =========================================================
+   14. Optimizer Hero Roster
+========================================================= */
+
+.hero-roster-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+    gap: 18px;
+    margin-top: 14px;
+}
+
+.hero-slot {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 16px;
+    background: rgba(10, 6, 4, 0.55);
+    border: 2px solid #6d4a31;
+    box-shadow: 0 0 0 2px #2e1b10 inset;
+}
+
+.hero-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.hero-slot h3 {
+    margin: 0 0 6px;
+    color: #fff1d6;
+    font-size: 1.25rem;
+}
+
+.hero-slot label {
+    margin-top: 4px;
+}
+
+.hero-slot input,
+.hero-slot select {
+    width: 100%;
+    min-height: 44px;
+    height: auto;
+    padding: 10px 12px;
+    color: #f6ead2;
+    background: rgba(10, 6, 4, 0.85);
+    border: 2px solid #6d4a31;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.95rem;
+}
+
+.hero-slot input:focus,
+.hero-slot select:focus {
+    outline: none;
+    border-color: #e18a32;
+    box-shadow: 0 0 0 2px rgba(225, 138, 50, 0.25);
+}
+
+.remove-hero-button {
+    padding: 6px 10px;
+    color: #fff1d5;
+    background: linear-gradient(to bottom, #71200e, #3f1208);
+    border: 1px solid #e18a32;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.remove-hero-button:hover {
+    filter: brightness(1.12);
+}
+
+.role-stat-hint {
+    align-self: start;
+    margin: 2px 0 6px;
+    padding: 10px 12px;
+    color: #f2dfbf;
+    background: rgba(24, 12, 8, 0.55);
+    border-left: 4px solid #e18a32;
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.role-stat-hint summary {
+    color: #ffdc9b;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.role-stat-hint p {
+    margin: 10px 0 0;
+}
+
+.hero-stat-details {
+    align-self: start;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: rgba(24, 12, 8, 0.55);
+    border: 1px solid rgba(255, 220, 155, 0.25);
+}
+
+.hero-stat-details summary {
+    color: #ffdc9b;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.hero-stat-grid {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+
+/* =========================================================
+   15. Large Desktop Layout
+========================================================= */
 
 @media (min-width: 1200px) {
     .site-shell {
@@ -724,9 +862,16 @@ body {
     .planner-image-wrap {
         max-width: 1200px;
     }
+
+    .hero-roster-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
-/* Medium screens: tablets, Surface Pro, small laptops */
+
+/* =========================================================
+   16. Medium Screen Layout
+========================================================= */
 
 @media (min-width: 701px) and (max-width: 1199px) {
     .site-shell {
@@ -826,9 +971,16 @@ body {
         flex-direction: column;
         align-items: flex-start;
     }
+
+    .hero-roster-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-/* Phone layout */
+
+/* =========================================================
+   17. Phone Layout
+========================================================= */
 
 @media (max-width: 700px) {
     body {
@@ -969,20 +1121,23 @@ body {
         padding: 16px;
     }
 
+    .hero-roster-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-slot-header {
+        align-items: flex-start;
+    }
+
+    .remove-hero-button {
+        padding: 6px 8px;
+        font-size: 0.85rem;
+    }
+
     .footer {
         flex-direction: column;
         align-items: flex-start;
         padding: 22px 18px;
-    }
-
-    .footer-icons {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .footer-icons a {
-        width: 48px;
-        height: 48px;
     }
 
     .gem {
@@ -992,7 +1147,10 @@ body {
     }
 }
 
-/* Very small phones */
+
+/* =========================================================
+   18. Very Small Phone Layout
+========================================================= */
 
 @media (max-width: 420px) {
     .logo-wrap img {
@@ -1021,7 +1179,10 @@ body {
     }
 }
 
-/* Back to top button */
+
+/* =========================================================
+   19. Back to Top Button
+========================================================= */
 
 .back-to-top {
     position: fixed;
@@ -1064,75 +1225,4 @@ body {
         height: 46px;
         font-size: 1.5rem;
     }
-}
-/* Hero roster section */
-
-.hero-roster-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    margin-top: 14px;
-}
-
-.hero-slot {
-    display: grid;
-    gap: 10px;
-    padding: 16px;
-    background: rgba(10, 6, 4, 0.55);
-    border: 2px solid #6d4a31;
-    box-shadow: 0 0 0 2px #2e1b10 inset;
-}
-
-.hero-slot h3 {
-    margin: 0 0 6px;
-    color: #fff1d6;
-    font-size: 1.25rem;
-}
-
-.hero-slot label {
-    margin-top: 4px;
-}
-
-.hero-slot input,
-.hero-slot select {
-    width: 100%;
-    padding: 10px 12px;
-    color: #f6ead2;
-    background: rgba(10, 6, 4, 0.85);
-    border: 2px solid #6d4a31;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 0.95rem;
-}
-
-.hero-slot input:focus,
-.hero-slot select:focus {
-    outline: none;
-    border-color: #e18a32;
-    box-shadow: 0 0 0 2px rgba(225, 138, 50, 0.25);
-}
-
-@media (max-width: 1000px) {
-    .hero-roster-grid {
-        grid-template-columns: 1fr;
-    }
-}
-.hero-slot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-}
-
-.remove-hero-button {
-    padding: 6px 10px;
-    color: #fff1d5;
-    background: linear-gradient(to bottom, #71200e, #3f1208);
-    border: 1px solid #e18a32;
-    font-family: Georgia, "Times New Roman", serif;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.remove-hero-button:hover {
-    filter: brightness(1.12);
 }
