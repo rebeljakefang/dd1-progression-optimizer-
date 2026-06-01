@@ -1,3 +1,7 @@
+/* =========================================================
+   1. Basic Progression Helpers
+========================================================= */
+
 function determineExperience(level) {
     return level >= 74;
 }
@@ -71,6 +75,10 @@ function determineProgression(level, towerDamage, experiencedPlayer) {
     return "Infested Ruins and Beyond";
 }
 
+
+/* =========================================================
+   2. Main Goal-Based Recommendation Logic
+========================================================= */
 
 function chooseGoalRecommendation(stepName, stepData, account) {
     const goal = account.mainGoal;
@@ -172,6 +180,90 @@ function chooseGoalRecommendation(stepName, stepData, account) {
 }
 
 
+/* =========================================================
+   3. Other Recommended Options Logic
+========================================================= */
+
+function chooseOtherRecommendations(stepName, recommendation, account) {
+    const options = [];
+    const usedNames = [stepName, recommendation.name];
+
+    function addOption(name, reason) {
+        if (!progressionData[name]) {
+            return;
+        }
+
+        if (usedNames.includes(name)) {
+            return;
+        }
+
+        if (options.some((option) => option.name === name)) {
+            return;
+        }
+
+        options.push({
+            name: name,
+            reason: reason,
+            data: progressionData[name]
+        });
+    }
+
+    if (account.mainGoal === "pets") {
+        if (!account.hasFish && account.level >= 74) {
+            addOption("Moonbase Insane for Fish", "Useful if you still need stronger Fish in a Bowl pets for builders.");
+        }
+
+        if (!account.hasSeahorse && account.towerDamage >= 3500) {
+            addOption("Aquanos or Sky City", "Good if you want to work toward major DPS pet milestones.");
+        }
+
+        if (!account.hasPropellerCat && account.towerDamage >= 3500) {
+            addOption("Aquanos or Sky City", "Good if you want another major DPS pet path after your first choice.");
+        }
+    }
+
+    if (account.mainGoal === "gear") {
+        if (account.towerDamage >= 1500 && account.towerDamage < 3000) {
+            addOption("King's Game 78+", "Strong midgame survival option for pushing toward better armor.");
+            addOption("Dread Dungeon", "Good backup option if King's Game survival feels too hard.");
+        }
+
+        if (account.towerDamage >= 3000 && account.towerDamage < 4000) {
+            addOption("Arcane or Coastal", "Good option for accessories, Genie farming, and general Nightmare progression.");
+            addOption("Aquanos or Sky City", "Good next step if you want pet progression while still improving gear.");
+        }
+
+        if (account.towerDamage >= 4000) {
+            addOption("Moonbase NMHC or Deep Survival", "Useful for stronger late Nightmare farming and deeper survival progression.");
+            addOption("Tavern Defense or Akatiti Jungle", "Good harder-map option once your roster feels ready.");
+        }
+    }
+
+    if (account.mainGoal === "achievements" || account.mainGoal === "100%") {
+        addOption(stepName, "Stay on your current progression route while cleaning up achievements.");
+        addOption("Balanced Nightmare Progression", "Useful if you need stronger stats before harder achievement cleanup.");
+        addOption("Moonbase NMHC or Deep Survival", "Good long-term farming path for survival and account strength.");
+    }
+
+    if (account.mainGoal === "leveling") {
+        addOption(stepName, "Stay on your current main leveling route.");
+        addOption("Tinkerer's Lab to 74", "Useful if you still need to push heroes into early Nightmare levels.");
+        addOption("King's Game Pre-78", "Good transition route before stronger survival farming.");
+    }
+
+    if (options.length === 0) {
+        addOption("Balanced Nightmare Progression", "Safe backup route if the main recommendation feels too hard.");
+        addOption("Arcane or Coastal", "Good side route for accessories, pets, and general account progression.");
+    }
+
+    return options.slice(0, 3);
+}
+
+
+/* =========================================================
+   4. Role Helper Functions
+========================================================= */
+
 function hasAnyRole(heroes, roleNames) {
     return heroes.some((hero) => {
         const role = hero.role.toLowerCase();
@@ -208,6 +300,10 @@ function getHeroesByRole(heroes, roleNames) {
     });
 }
 
+
+/* =========================================================
+   5. Account Review Logic
+========================================================= */
 
 function buildAccountReview(account) {
     const notes = [];

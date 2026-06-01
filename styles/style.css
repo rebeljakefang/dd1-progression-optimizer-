@@ -668,7 +668,26 @@ body {
 .result-box strong {
     color: #ffdc9b;
 }
+.other-options-grid {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+}
 
+.other-option-box {
+    padding: 14px;
+    background: rgba(10, 6, 4, 0.45);
+    border: 1px solid rgba(255, 220, 155, 0.25);
+}
+
+.other-option-box h4 {
+    margin: 0 0 8px;
+    color: #fff1d6;
+}
+
+.other-option-box p {
+    margin-bottom: 8px;
+}
 
 /* =========================================================
    14. Optimizer Hero Roster

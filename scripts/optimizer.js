@@ -1,3 +1,7 @@
+/* =========================================================
+   1. Hero Class + Role Data
+========================================================= */
+
 const maxHeroSlots = 20;
 
 const heroClasses = [
@@ -52,6 +56,10 @@ const roleStatHints = {
 };
 
 
+/* =========================================================
+   2. Basic Form Helper Functions
+========================================================= */
+
 function getNumberValue(selector) {
     const input = document.querySelector(selector);
 
@@ -67,6 +75,8 @@ function getNumberValue(selector) {
 
     return value;
 }
+
+
 function setHeroField(heroNumber, fieldId, value) {
     const field = document.querySelector(`#hero-${heroNumber}-${fieldId}`);
 
@@ -86,6 +96,10 @@ function buildOptions(items, emptyLabel) {
     return options;
 }
 
+
+/* =========================================================
+   3. Role Dropdown + Stat Priority Logic
+========================================================= */
 
 function updateRoleOptions(heroNumber) {
     const classSelect = document.querySelector(`#hero-${heroNumber}-class`);
@@ -134,6 +148,10 @@ function updateRoleHint(heroNumber) {
     }
 }
 
+
+/* =========================================================
+   4. Hero Slot Buttons + Renumbering
+========================================================= */
 
 function updateAddHeroButton() {
     const heroRosterGrid = document.querySelector("#hero-roster-grid");
@@ -218,6 +236,10 @@ function removeHeroSlot(event) {
     updateAddHeroButton();
 }
 
+
+/* =========================================================
+   5. Hero Slot Creation
+========================================================= */
 
 function createHeroSlot(heroNumber) {
     const heroSlot = document.createElement("div");
@@ -343,6 +365,10 @@ function initializeHeroRoster() {
     updateAddHeroButton();
 }
 
+
+/* =========================================================
+   6. Build Account Object From Form
+========================================================= */
 
 function buildHeroRosterFromForm() {
     const heroes = [];
@@ -478,6 +504,12 @@ function buildAccountFromForm() {
         hasPropellerCat: document.querySelector("#has-propeller-cat").checked
     };
 }
+
+
+/* =========================================================
+   7. Temporary Demo Fill Tools
+========================================================= */
+
 function setDemoHero(heroNumber, hero) {
     setHeroField(heroNumber, "class", hero.className);
     updateRoleOptions(heroNumber);
@@ -627,6 +659,11 @@ function fillDemoOptimizerData() {
     }
 }
 
+
+/* =========================================================
+   8. Results: Roster Summary
+========================================================= */
+
 function renderHeroSummary(account) {
     if (account.heroes.length === 0) {
         return `
@@ -675,6 +712,11 @@ function renderHeroSummary(account) {
     `;
 }
 
+
+/* =========================================================
+   9. Results: Account Review + Other Options
+========================================================= */
+
 function renderAccountReview(account) {
     const notes = buildAccountReview(account);
 
@@ -693,7 +735,41 @@ function renderAccountReview(account) {
 }
 
 
-function renderResults(recommendation, stepName, stepData, account) {
+function renderOtherRecommendations(otherRecommendations) {
+    if (!otherRecommendations || otherRecommendations.length === 0) {
+        return "";
+    }
+
+    const optionCards = otherRecommendations.map((option) => {
+        return `
+            <div class="other-option-box">
+                <h4>${option.name}</h4>
+                <p>${option.reason}</p>
+                <p><strong>Goal:</strong> ${option.data.goal}</p>
+                <p><strong>Difficulty:</strong> ${option.data.difficulty}</p>
+                <p><strong>Mode:</strong> ${option.data.mode}</p>
+                <p><strong>Risk:</strong> ${option.data.risk}</p>
+                <p><strong>Reward:</strong> ${option.data.reward}</p>
+            </div>
+        `;
+    }).join("");
+
+    return `
+        <div class="result-box">
+            <h3>Other Recommended Options</h3>
+            <div class="other-options-grid">
+                ${optionCards}
+            </div>
+        </div>
+    `;
+}
+
+
+/* =========================================================
+   10. Results: Main Render Function
+========================================================= */
+
+function renderResults(recommendation, stepName, stepData, account, otherRecommendations) {
     const results = document.querySelector("#results");
 
     results.innerHTML = `
@@ -725,11 +801,16 @@ function renderResults(recommendation, stepName, stepData, account) {
 
                 ${renderHeroSummary(account)}
                 ${renderAccountReview(account)}
+                ${renderOtherRecommendations(otherRecommendations)}
             </div>
         </div>
     `;
 }
 
+
+/* =========================================================
+   11. Form Submit Logic
+========================================================= */
 
 function handleOptimizerSubmit(event) {
     event.preventDefault();
@@ -750,7 +831,13 @@ function handleOptimizerSubmit(event) {
         account
     );
 
-    renderResults(recommendation, stepName, stepData, account);
+    const otherRecommendations = chooseOtherRecommendations(
+        stepName,
+        recommendation,
+        account
+    );
+
+    renderResults(recommendation, stepName, stepData, account, otherRecommendations);
 
     const results = document.querySelector("#results");
 
@@ -763,6 +850,10 @@ function handleOptimizerSubmit(event) {
 }
 
 
+/* =========================================================
+   12. Page Startup + Event Listeners
+========================================================= */
+
 initializeHeroRoster();
 
 const optimizerForm = document.querySelector("#optimizer-form");
@@ -770,6 +861,7 @@ const optimizerForm = document.querySelector("#optimizer-form");
 if (optimizerForm) {
     optimizerForm.addEventListener("submit", handleOptimizerSubmit);
 }
+
 const demoFillButton = document.querySelector("#demo-fill-button");
 
 if (demoFillButton) {
