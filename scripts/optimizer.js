@@ -67,6 +67,13 @@ function getNumberValue(selector) {
 
     return value;
 }
+function setHeroField(heroNumber, fieldId, value) {
+    const field = document.querySelector(`#hero-${heroNumber}-${fieldId}`);
+
+    if (field) {
+        field.value = value;
+    }
+}
 
 
 function buildOptions(items, emptyLabel) {
@@ -471,53 +478,202 @@ function buildAccountFromForm() {
         hasPropellerCat: document.querySelector("#has-propeller-cat").checked
     };
 }
+function setDemoHero(heroNumber, hero) {
+    setHeroField(heroNumber, "class", hero.className);
+    updateRoleOptions(heroNumber);
 
+    setHeroField(heroNumber, "role", hero.role);
+    updateRoleHint(heroNumber);
+
+    setHeroField(heroNumber, "level", hero.level);
+    setHeroField(heroNumber, "tower-health", hero.towerHealth);
+    setHeroField(heroNumber, "tower-damage", hero.towerDamage);
+    setHeroField(heroNumber, "tower-range", hero.towerRange);
+    setHeroField(heroNumber, "tower-rate", hero.towerRate);
+    setHeroField(heroNumber, "hero-health", hero.heroHealth);
+    setHeroField(heroNumber, "hero-damage", hero.heroDamage);
+    setHeroField(heroNumber, "hero-speed", hero.heroSpeed);
+    setHeroField(heroNumber, "lowest-resistance", hero.lowestResistance);
+    setHeroField(heroNumber, "ability-1", hero.ability1);
+    setHeroField(heroNumber, "ability-2", hero.ability2);
+}
+
+
+function fillDemoOptimizerData() {
+    const heroRosterGrid = document.querySelector("#hero-roster-grid");
+
+    if (!heroRosterGrid) {
+        return;
+    }
+
+    const demoHeroes = [
+        {
+            className: "Monk",
+            role: "Aura Monk",
+            level: 83,
+            towerHealth: 1600,
+            towerDamage: 3600,
+            towerRange: 2800,
+            towerRate: 2200,
+            heroHealth: 500,
+            heroDamage: 100,
+            heroSpeed: 600,
+            lowestResistance: 50,
+            ability1: 0,
+            ability2: 0
+        },
+        {
+            className: "Summoner",
+            role: "Waller Summoner",
+            level: 83,
+            towerHealth: 2200,
+            towerDamage: 2400,
+            towerRange: 1800,
+            towerRate: 1600,
+            heroHealth: 400,
+            heroDamage: 100,
+            heroSpeed: 400,
+            lowestResistance: 40,
+            ability1: 0,
+            ability2: 0
+        },
+        {
+            className: "Series EV",
+            role: "Beam EV",
+            level: 83,
+            towerHealth: 1400,
+            towerDamage: 1800,
+            towerRange: 900,
+            towerRate: 0,
+            heroHealth: 500,
+            heroDamage: 100,
+            heroSpeed: 500,
+            lowestResistance: 45,
+            ability1: 0,
+            ability2: 0
+        },
+        {
+            className: "Monk",
+            role: "Boost Monk",
+            level: 83,
+            towerHealth: 200,
+            towerDamage: 100,
+            towerRange: 100,
+            towerRate: 100,
+            heroHealth: 1400,
+            heroDamage: 700,
+            heroSpeed: 900,
+            lowestResistance: 78,
+            ability1: 1500,
+            ability2: 1500
+        },
+        {
+            className: "Jester",
+            role: "DPS",
+            level: 83,
+            towerHealth: 100,
+            towerDamage: 100,
+            towerRange: 100,
+            towerRate: 100,
+            heroHealth: 1300,
+            heroDamage: 2500,
+            heroSpeed: 900,
+            lowestResistance: 76,
+            ability1: 600,
+            ability2: 600
+        }
+    ];
+
+    heroRosterGrid.innerHTML = "";
+
+    demoHeroes.forEach(() => {
+        addHeroSlot();
+    });
+
+    demoHeroes.forEach((hero, index) => {
+        setDemoHero(index + 1, hero);
+    });
+
+    const mainGoal = document.querySelector("#main-goal");
+    const hasGenie = document.querySelector("#has-genie");
+    const hasFish = document.querySelector("#has-fish");
+    const hasSeahorse = document.querySelector("#has-seahorse");
+    const hasPropellerCat = document.querySelector("#has-propeller-cat");
+
+    if (mainGoal) {
+        mainGoal.value = "pets";
+    }
+
+    if (hasGenie) {
+        hasGenie.checked = true;
+    }
+
+    if (hasFish) {
+        hasFish.checked = true;
+    }
+
+    if (hasSeahorse) {
+        hasSeahorse.checked = false;
+    }
+
+    if (hasPropellerCat) {
+        hasPropellerCat.checked = false;
+    }
+
+    updateAddHeroButton();
+
+    if (typeof saveOptimizerData === "function") {
+        saveOptimizerData();
+    }
+}
 
 function renderHeroSummary(account) {
     if (account.heroes.length === 0) {
         return `
             <div class="result-box">
-                <h3>Hero Summary</h3>
-                <p>No hero roster entries were added, so the optimizer could not calculate a real roster summary.</p>
+                <h3>Roster Summary</h3>
+                <p>No hero roster entries were added.</p>
             </div>
         `;
     }
 
-    const heroRows = account.heroes.map((hero) => {
+    const heroRows = account.heroes.map((hero, index) => {
         return `
-            <p>
-                <strong>${hero.className || "Unknown Hero"}</strong>
-                (${hero.role || "No role"}) —
-                Level ${hero.level || 0}
-            </p>
-            <p>
-                Tower HP ${hero.towerHealth || 0},
-                Tower Damage ${hero.towerDamage || 0},
-                Tower Range ${hero.towerRange || 0},
-                Tower Rate ${hero.towerRate || 0}
-            </p>
-            <p>
-                Hero HP ${hero.heroHealth || 0},
-                Hero Damage ${hero.heroDamage || 0},
-                Hero Speed ${hero.heroSpeed || 0},
-                Lowest Resistance ${hero.lowestResistance || 0},
-                Ability 1 ${hero.ability1 || 0},
-                Ability 2 ${hero.ability2 || 0}
-            </p>
+            <div class="hero-result-detail">
+                <h4>Hero ${index + 1}: ${hero.className || "Unknown Hero"} — ${hero.role || "No role"}</h4>
+                <p>
+                    Tower HP ${hero.towerHealth || 0},
+                    Tower Damage ${hero.towerDamage || 0},
+                    Tower Range ${hero.towerRange || 0},
+                    Tower Rate ${hero.towerRate || 0}
+                </p>
+                <p>
+                    Hero HP ${hero.heroHealth || 0},
+                    Hero Damage ${hero.heroDamage || 0},
+                    Hero Speed ${hero.heroSpeed || 0},
+                    Lowest Resistance ${hero.lowestResistance || 0},
+                    Ability 1 ${hero.ability1 || 0},
+                    Ability 2 ${hero.ability2 || 0}
+                </p>
+            </div>
         `;
     }).join("");
 
     return `
         <div class="result-box">
-            <h3>Hero Summary</h3>
+            <h3>Roster Summary</h3>
+            <p><strong>Heroes Added:</strong> ${account.heroes.length}</p>
             <p><strong>Highest Hero Level Used:</strong> ${account.level}</p>
             <p><strong>Best Builder Tower Damage Used:</strong> ${account.towerDamage}</p>
             <p><strong>Best DPS Hero Damage Found:</strong> ${account.bestDpsDamage}</p>
-            ${heroRows}
+
+            <details class="result-details">
+                <summary>Show Full Hero Details</summary>
+                ${heroRows}
+            </details>
         </div>
     `;
 }
-
 
 function renderAccountReview(account) {
     const notes = buildAccountReview(account);
@@ -613,4 +769,9 @@ const optimizerForm = document.querySelector("#optimizer-form");
 
 if (optimizerForm) {
     optimizerForm.addEventListener("submit", handleOptimizerSubmit);
+}
+const demoFillButton = document.querySelector("#demo-fill-button");
+
+if (demoFillButton) {
+    demoFillButton.addEventListener("click", fillDemoOptimizerData);
 }

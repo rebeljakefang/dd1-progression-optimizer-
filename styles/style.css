@@ -1226,3 +1226,26 @@ body {
         font-size: 1.5rem;
     }
 }
+.result-details {
+    margin-top: 14px;
+    padding: 12px;
+    background: rgba(10, 6, 4, 0.45);
+    border: 1px solid rgba(255, 220, 155, 0.25);
+}
+
+.result-details summary {
+    color: #ffdc9b;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.hero-result-detail {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 220, 155, 0.2);
+}
+
+.hero-result-detail h4 {
+    margin: 0 0 8px;
+    color: #fff1d6;
+}
