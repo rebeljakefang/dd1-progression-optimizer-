@@ -600,7 +600,7 @@ function handleOptimizerSubmit(event) {
 
     if (results) {
         results.scrollIntoView({
-            behavior: "smooth",
+            behavior: "instant",
             block: "start"
         });
     }
