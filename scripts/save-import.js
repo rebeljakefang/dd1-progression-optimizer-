@@ -16,33 +16,60 @@ const dd1HeroClassRules = [
     {
         className: "Apprentice",
         templateIncludes: [
+            "DunDefPlayers.HeroTemplateApprentice",
             "DunDefHeroes.HeroTemplateApprentice",
             "DunDefHeroes.HeroTemplate_Apprentice",
-            "Apprentice"
+            "DunDefNewHeroes.HeroTemplateSorceress",
+            "HeroTemplateApprentice",
+            "HeroTemplateSorceress",
+            "Apprentice",
+            "Sorceress"
         ]
     },
     {
         className: "Squire",
         templateIncludes: [
+            "DunDefPlayers.HeroTemplateSquire",
             "DunDefHeroes.HeroTemplateSquire",
             "DunDefHeroes.HeroTemplate_Squire",
-            "Squire"
+            "DunDefNewHeroes.HeroTemplateLadyKnight",
+            "HeroTemplateSquire",
+            "HeroTemplateLadyKnight",
+            "Squire",
+            "LadyKnight",
+            "Countess"
         ]
     },
     {
         className: "Huntress",
         templateIncludes: [
+            "DunDefPlayers.HeroTemplateHuntress",
             "DunDefHeroes.HeroTemplateHuntress",
             "DunDefHeroes.HeroTemplate_Huntress",
-            "Huntress"
+            "DunDefNewHeroes.HeroTemplateHunter",
+            "HeroTemplateHuntress",
+            "HeroTemplateHunter",
+            "Huntress",
+            "Hunter",
+            "Ranger"
         ]
     },
     {
         className: "Monk",
         templateIncludes: [
+            "DunDefPlayers.HeroTemplateRecruit",
+            "DunDefPlayers.HeroTemplateInitiate",
             "DunDefHeroes.HeroTemplateMonk",
             "DunDefHeroes.HeroTemplate_Monk",
-            "Monk"
+            "DunDefNewHeroes.HeroTemplateMonkette",
+            "HeroTemplateRecruit",
+            "HeroTemplateInitiate",
+            "HeroTemplateMonk",
+            "HeroTemplateMonkette",
+            "Monk",
+            "Initiate",
+            "Monkette",
+            "Recruit"
         ]
     }
 ];
@@ -1797,6 +1824,13 @@ function saveHasBeatenTag(saveData, campaignTag) {
 }
 
 
+function saveHasAnyBeatenTag(saveData, campaignTags) {
+    return campaignTags.some((campaignTag) => {
+        return saveHasBeatenTag(saveData, campaignTag);
+    });
+}
+
+
 function saveHasBeatenTagOnNightmare(saveData, campaignTag) {
     const beatenMap = getBeatenLevelMap(saveData);
 
@@ -1805,6 +1839,13 @@ function saveHasBeatenTagOnNightmare(saveData, campaignTag) {
     }
 
     return levelMaskHasNightmare(beatenMap.get(campaignTag));
+}
+
+
+function saveHasAnyBeatenTagOnNightmare(saveData, campaignTags) {
+    return campaignTags.some((campaignTag) => {
+        return saveHasBeatenTagOnNightmare(saveData, campaignTag);
+    });
 }
 
 
@@ -1879,21 +1920,6 @@ function findCheckboxesByTextRules(rootElement, rules) {
             return !hasExcludedText;
         });
     });
-}
-
-
-function setFirstMatchingCheckboxChecked(rootElement, rules) {
-    const matches = findCheckboxesByTextRules(rootElement, rules);
-
-    if (matches.length === 0) {
-        return false;
-    }
-
-    if (!matches[0].checked) {
-        matches[0].checked = true;
-    }
-
-    return true;
 }
 
 
@@ -2048,57 +2074,70 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     let checkedCount = 0;
 
     const campaignRows = [
-        { tag: "CAMPDW", text: "The Deeper Well" },
-        { tag: "CAMPFF", text: "Foundries and Forges" },
-        { tag: "CAMPMQ", text: "Magus Quarters" },
-        { tag: "CAMPAL", text: "Alchemical Laboratory" },
-        { tag: "CAMPSQ", text: "Servants Quarters" },
-        { tag: "CAMPCA", text: "Castle Armory" },
-        { tag: "CAMPHC", text: "Hall of Court" },
-        { tag: "CAMPTR", text: "The Throne Room" },
-        { tag: "CAMPRG", text: "Royal Gardens" },
-        { tag: "CAMPRP", text: "The Ramparts" },
-        { tag: "CAMPES", text: "Endless Spires" },
-        { tag: "CAMPTS", text: "The Summit" },
-        { tag: "CAMPGC", text: "Glitterhelm Caverns" }
+        { tags: ["CAMPDW"], text: "The Deeper Well" },
+        { tags: ["CAMPFF"], text: "Foundries and Forges" },
+        { tags: ["CAMPMQ"], text: "Magus Quarters" },
+        { tags: ["CAMPAL"], text: "Alchemical Laboratory" },
+        { tags: ["CAMPSQ"], text: "Servants Quarters" },
+        { tags: ["CAMPCA"], text: "Castle Armory" },
+        { tags: ["CAMPHC"], text: "Hall of Court" },
+        { tags: ["CAMPTR"], text: "The Throne Room" },
+        { tags: ["CAMPRG"], text: "Royal Gardens" },
+        { tags: ["CAMPRP"], text: "The Ramparts" },
+        { tags: ["CAMPES"], text: "Endless Spires" },
+        { tags: ["CAMPTS"], text: "The Summit" },
+        { tags: ["CAMPGC"], text: "Glitterhelm Caverns" }
     ];
 
     const shardsAndCampaignRows = [
-        { tag: "CAMPAR", text: "Mistymire Forest" },
-        { tag: "CAMPAQ", text: "Aquanos" },
-        { tag: "CAMPSC", text: "Sky City" },
-        { tag: "CAMPCL", text: "Crystalline Dimension" }
+        { tags: ["CAMPAR", "RETMIS"], text: "Mistymire Forest" },
+        { tags: ["CAMPMB", "RETMOR"], text: "Moraggo Desert Town" },
+        { tags: ["CAMPAQ", "RETAQU"], text: "Aquanos" },
+        { tags: ["CAMPSC", "RETSKY"], text: "Sky City" },
+        { tags: ["CAMPCL", "RETCRD"], text: "Crystalline Dimension" }
     ];
 
     const lostQuestNightmareRows = [
-        { tag: "CDTCDD", text: "Dread Dungeon" },
-        { tag: "CDTARC", text: "Arcane Library" },
-        { tag: "CDTARA", text: "Embermount Volcano" },
-        { tag: "CDTTOW", text: "Temple of Water" },
-        { tag: "CDTWIM", text: "Wintermire" },
-        { tag: "CDTINF", text: "Infested Ruins" },
-        { tag: "CDTTOP", text: "Temple of Polybius" },
-        { tag: "CDTTOP", text: "Tomb of Etheria" }
+        { tags: ["CDTCDD"], text: "Dread Dungeon" },
+        { tags: ["CDTARC"], text: "Arcane Library" },
+        { tags: ["CDTTWA", "CDTSBB"], text: "Buccaneer Bay" },
+        { tags: ["SPECHI"], text: "Pirate Invasion" },
+        { tags: ["CDTTWC", "CDTCBB"], text: "Coastal Bazaar" },
+        { tags: ["CDTARA", "CDTEMV"], text: "Embermount Volcano" },
+        { tags: ["LIFHOL"], text: "Flames of Rebirth" },
+        { tags: ["CDTTOW"], text: "Temple of Water" },
+        { tags: ["CDTTOP"], text: "Temple of Polybius" },
+        { tags: ["CDTVAL"], text: "Spring Valley" },
+        { tags: ["CDTTOE", "CDTTOP"], text: "Tomb of Etheria" },
+        { tags: ["CDTEME"], text: "Emerald City" },
+        { tags: ["ACH_CR_NIGHTMARE_FAKE_TAG"], text: "Crystalline Resurgence Part 1" },
+        { tags: ["ACH_CR_NIGHTMARE_FAKE_TAG"], text: "Crystalline Resurgence Part 2" },
+        { tags: ["ACH_CR_NIGHTMARE_FAKE_TAG"], text: "Crystalline Resurgence Part 3" },
+        { tags: ["ACH_CR_NIGHTMARE_FAKE_TAG"], text: "Crystalline Resurgence Part 4" },
+        { tags: ["CDTWIM"], text: "Wintermire" },
+        { tags: ["MAGUSV"], text: "Magus Citadel" },
+        { tags: ["CDTOMN"], text: "Omenak" },
+        { tags: ["CDTINF"], text: "Infested Ruins" }
     ];
 
     const challengeRows = [
-        { tag: "SPECDW", text: "No Towers Allowed" },
-        { tag: "SPECFF", text: "Unlikely Allies" },
-        { tag: "SPECMQ", text: "Warping Core" },
-        { tag: "SPECAL", text: "Raining Goblins" },
-        { tag: "SPECSQ", text: "Wizardry" },
-        { tag: "SPECCA", text: "Ogre Crush" },
-        { tag: "SPECHC", text: "Zippy Terror" },
-        { tag: "SPECTR", text: "Chicken" },
-        { tag: "SPECRG", text: "Moving Core" },
-        { tag: "SPECRP", text: "Death From Above" },
-        { tag: "SPECES", text: "Assault" },
-        { tag: "SPECTS", text: "Treasure Hunt" },
-        { tag: "CAMPMF", text: "Monster Fest" }
+        { tags: ["SPECDW"], text: "No Towers Allowed" },
+        { tags: ["SPECFF"], text: "Unlikely Allies" },
+        { tags: ["SPECMQ"], text: "Warping Core" },
+        { tags: ["SPECAL"], text: "Raining Goblins" },
+        { tags: ["SPECSQ"], text: "Wizardry" },
+        { tags: ["SPECCA"], text: "Ogre Crush" },
+        { tags: ["SPECHC"], text: "Zippy Terror" },
+        { tags: ["SPECTR"], text: "Chicken" },
+        { tags: ["SPECRG"], text: "Moving Core" },
+        { tags: ["SPECRP"], text: "Death From Above" },
+        { tags: ["SPECES"], text: "Assault" },
+        { tags: ["SPECTS"], text: "Treasure Hunt" },
+        { tags: ["CAMPMF", "SPECMF"], text: "Monster Fest" }
     ];
 
     campaignRows.forEach((row) => {
-        if (!saveHasBeatenTag(saveData, row.tag)) {
+        if (!saveHasAnyBeatenTag(saveData, row.tags)) {
             return;
         }
 
@@ -2141,7 +2180,7 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     });
 
     shardsAndCampaignRows.forEach((row) => {
-        if (!saveHasBeatenTag(saveData, row.tag)) {
+        if (!saveHasAnyBeatenTag(saveData, row.tags)) {
             return;
         }
 
@@ -2156,7 +2195,20 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     });
 
     lostQuestNightmareRows.forEach((row) => {
-        if (!saveHasBeatenTagOnNightmare(saveData, row.tag)) {
+        if (!saveHasAnyBeatenTagOnNightmare(saveData, row.tags)) {
+            return;
+        }
+
+        if (row.text === "Pirate Invasion") {
+            checkedCount += checkBoxesByTextRules(rootElement, [
+                {
+                    includes: [
+                        row.text,
+                        "wave 7",
+                        "nightmare"
+                    ]
+                }
+            ]);
             return;
         }
 
@@ -2171,7 +2223,7 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     });
 
     challengeRows.forEach((row) => {
-        if (!saveHasBeatenTag(saveData, row.tag)) {
+        if (!saveHasAnyBeatenTag(saveData, row.tags)) {
             return;
         }
 
@@ -2312,14 +2364,6 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
             achievements: ["ACH_MOONBASE", "ACH_MOONBASE_NIGHTMARE"]
         },
         {
-            text: "Buccaneer Bay",
-            achievements: ["ACH_BUCCANEER_BAY_NIGHTMARE"]
-        },
-        {
-            text: "Omenak",
-            achievements: ["ACH_OME_NIGHTMARE"]
-        },
-        {
             text: "Crystalline Resurgence Part 1",
             achievements: ["ACH_CR_NIGHTMARE"]
         },
@@ -2342,11 +2386,7 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
             return;
         }
 
-        if (
-            row.text === "Buccaneer Bay" ||
-            row.text === "Omenak" ||
-            row.text.startsWith("Crystalline Resurgence Part")
-        ) {
+        if (row.text.startsWith("Crystalline Resurgence Part")) {
             checkedCount += checkBoxesByTextRules(rootElement, [
                 {
                     includes: [
