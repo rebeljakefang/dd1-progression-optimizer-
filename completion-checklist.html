@@ -34,6 +34,24 @@
                 <a class="cta-button" href="#checklist-start">Start Checklist</a>
             </section>
 
+            <section class="guide-page" id="save-import-test">
+                <div class="guide-card guide-text-card">
+                    <div class="card-content">
+                        <h2>Save Import</h2>
+                        <p>
+                            Upload your <strong>DunDefHeroes.dun</strong> file to test auto-checking Steam achievements.
+                            This will auto-check matching Steam achievements on this checklist page.
+                        </p>
+
+                        <input id="save-file-input" type="file" accept=".dun">
+
+                        <div id="save-file-output">
+                            <p>No save file selected yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="checklist-start" class="guide-page">
                 <div class="guide-card guide-text-card">
                     <div class="card-content">
@@ -62,26 +80,29 @@
                             <li><a href="#pet-checklist">Pet Drop Checklist</a></li>
                             <li><a href="#shards-checklist">Shards and Summoner Checklist</a></li>
                             <li><a href="#lost-quest-checklist">Lost Quest / Eternal Defender</a></li>
+                            <li><a href="#steam-cleanup-checklist">Steam Achievement Cleanup</a></li>
                             <li><a href="#extra-checklist">Extra Cleanup</a></li>
                             <li><a href="#ruthless-checklist">Ruthless Progression</a></li>
                         </ol>
                     </div>
                 </div>
-                    <button id="clear-checklist-storage" class="cta-button optimizer-button" type="button">
-                        Clear Saved Checklist Progress
-                    </button>
+
+                <button id="clear-checklist-storage" class="cta-button optimizer-button" type="button">
+                    Clear Saved Checklist Progress
+                </button>
+
                 <div id="main-goals" class="guide-card guide-text-card">
                     <div class="card-content">
                         <h2>Main Completion Goals</h2>
 
                         <div class="checklist-group">
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="legendary" data-master="legendary">
+                                <input type="checkbox" data-checks="legendary" data-master="legendary" data-steam-achievement="ACH_LEGENDARY">
                                 <span><strong>Legendary Defender:</strong> Complete achievements 0 through 57.</span>
                             </label>
 
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="legendary ultimate" data-master="ultimate" data-prerequisites="legendary">
+                                <input type="checkbox" data-checks="legendary ultimate" data-master="ultimate" data-prerequisites="legendary" data-steam-achievement="ACH_ULTIMATE_DEFENDER">
                                 <span><strong>Ultimate Defender:</strong> Complete achievements 0 through 89, except Boss Rush and Anti-Cupid.</span>
                             </label>
 
@@ -105,6 +126,74 @@
                             These are the main campaign maps. Try to stack achievements by doing higher difficulties,
                             Hardcore, Flawless Victory, Team Effort, Gunslinger, and Master Strategist when possible.
                         </p>
+
+                        <h3>Campaign Steam Achievement Goals</h3>
+                        <div class="checklist-group">
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_ETHERIA">
+                                <span><strong>Defender of Etheria:</strong> Complete the required campaign progress for this achievement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_DEPTHS">
+                                <span><strong>From the Depths:</strong> Complete the early campaign achievement requirement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_ROOFTOPS">
+                                <span><strong>To the Rooftops:</strong> Complete the required campaign progress for this achievement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_VICTORY">
+                                <span><strong>A Taste of Victory:</strong> Complete the first campaign victory achievement requirement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_CRAWLER">
+                                <span><strong>Dungeon Crawler:</strong> Complete the required campaign achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_BELLY">
+                                <span><strong>The Belly of the Beast:</strong> Complete the required campaign achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_BODY">
+                                <span><strong>The Body of the Beast:</strong> Complete the required campaign achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_CROWN">
+                                <span><strong>The Crown of the Beast:</strong> Complete the required campaign achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_RAIDER">
+                                <span><strong>Dungeon Raider:</strong> Complete the required campaign achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_BRIMSTONE">
+                                <span><strong>From Fire with Brimstone:</strong> Complete the required campaign achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_KEEP">
+                                <span><strong>Through The Crowded Keep:</strong> Complete the required campaign achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_SUMMIT">
+                                <span><strong>To the Lofty Summit:</strong> Complete the required Summit achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_DEFENDER">
+                                <span><strong>Dungeon Defender:</strong> Complete the required full campaign achievement progress.</span>
+                            </label>
+                        </div>
 
                         <h3>Area 1</h3>
                         <div class="checklist-group">
@@ -194,132 +283,162 @@
                 </div>
 
                 <div id="hero-achievements" class="guide-card guide-text-card">
-                    <div class="card-content">
-                        <h2>Hero and Campaign Multi-Step Achievements</h2>
+    <div class="card-content">
+        <h2>Hero and Campaign Multi-Step Achievements</h2>
 
-                        <h3>Group Hug</h3>
-                        <div class="checklist-group">
-                            <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="group-hug">
-                                <span><strong>Group Hug:</strong> Raise one of each original hero type to level 70.</span>
-                            </label>
-                        </div>
+        <h3>Group Hug</h3>
+        <div class="checklist-group">
+            <label class="checklist-item achievement-master">
+                <input type="checkbox" data-checks="group-hug" data-steam-achievement="ACH_HUG">
+                <span><strong>Group Hug:</strong> Raise one of each original hero type to level 70.</span>
+            </label>
+        </div>
 
-                        <div class="table-wrap">
-                            <table class="check-table">
-                                <thead>
-                                    <tr>
-                                        <th>Done</th>
-                                        <th>Hero</th>
-                                        <th>Requirement</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
-                                        <td>Apprentice</td>
-                                        <td>Reach level 70</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
-                                        <td>Monk</td>
-                                        <td>Reach level 70</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
-                                        <td>Huntress</td>
-                                        <td>Reach level 70</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
-                                        <td>Squire</td>
-                                        <td>Reach level 70</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+        <div class="table-wrap">
+            <table class="check-table">
+                <thead>
+                    <tr>
+                        <th>Done</th>
+                        <th>Hero</th>
+                        <th>Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
+                        <td>Apprentice</td>
+                        <td>Reach level 70</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
+                        <td>Monk</td>
+                        <td>Reach level 70</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
+                        <td>Huntress</td>
+                        <td>Reach level 70</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate group-hug"></td>
+                        <td>Squire</td>
+                        <td>Reach level 70</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-                        <h3>A Matter of Perspective</h3>
-                        <div class="checklist-group">
-                            <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="perspective">
-                                <span><strong>A Matter of Perspective:</strong> Defeat The Summit with each original hero as player one.</span>
-                            </label>
-                        </div>
+        <h3>A Matter of Perspective</h3>
+        <div class="checklist-group">
+            <label class="checklist-item achievement-master">
+                <input type="checkbox" data-checks="perspective" data-steam-achievement="ACH_PERSPECTIVE">
+                <span><strong>A Matter of Perspective:</strong> Defeat The Summit with each original hero as player one.</span>
+            </label>
+        </div>
 
-                        <div class="table-wrap">
-                            <table class="check-table">
-                                <thead>
-                                    <tr>
-                                        <th>Done</th>
-                                        <th>Hero</th>
-                                        <th>Requirement</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
-                                        <td>Apprentice</td>
-                                        <td>Defeat The Summit as player one</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
-                                        <td>Monk</td>
-                                        <td>Defeat The Summit as player one</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
-                                        <td>Huntress</td>
-                                        <td>Defeat The Summit as player one</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
-                                        <td>Squire</td>
-                                        <td>Defeat The Summit as player one</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+        <div class="table-wrap">
+            <table class="check-table">
+                <thead>
+                    <tr>
+                        <th>Done</th>
+                        <th>Hero</th>
+                        <th>Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
+                        <td>Apprentice</td>
+                        <td>Defeat The Summit as player one</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
+                        <td>Monk</td>
+                        <td>Defeat The Summit as player one</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
+                        <td>Huntress</td>
+                        <td>Defeat The Summit as player one</td>
+                    </tr>
+                    <tr>
+                        <td class="check-cell"><input type="checkbox" data-achievement="legendary ultimate perspective"></td>
+                        <td>Squire</td>
+                        <td>Defeat The Summit as player one</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-                        <h3>Basic Progress Achievements</h3>
-                        <div class="checklist-group">
-                            <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
-                                <span><strong>Smithy:</strong> Upgrade your first piece of equipment.</span>
-                            </label>
+        <h3>Basic Progress Achievements</h3>
+        <div class="checklist-group">
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_SMITHY">
+                <span><strong>Smithy:</strong> Upgrade your first piece of equipment.</span>
+            </label>
 
-                            <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
-                                <span><strong>And This Is My Weapon:</strong> Fully upgrade one piece of equipment.</span>
-                            </label>
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_MY_WEAPON">
+                <span><strong>And This Is My Weapon:</strong> Fully upgrade one piece of equipment.</span>
+            </label>
 
-                            <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
-                                <span><strong>To The Limit:</strong> Wear fully upgraded gear in all major slots.</span>
-                            </label>
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_PUPIL">
+                <span><strong>Pupil:</strong> Reach hero level 10.</span>
+            </label>
 
-                            <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
-                                <span><strong>Divine Intention:</strong> Pick up a Godly weapon.</span>
-                            </label>
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_VETERAN">
+                <span><strong>Veteran:</strong> Reach hero level 70.</span>
+            </label>
 
-                            <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
-                                <span><strong>O Mighty Smiter:</strong> Wear a full Godly armor set with the same material type.</span>
-                            </label>
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_LIMIT">
+                <span><strong>To The Limit:</strong> Wear fully upgraded gear in all major slots.</span>
+            </label>
 
-                            <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
-                                <span><strong>Obedience Training:</strong> Fully upgrade a pet.</span>
-                            </label>
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_DEVINE">
+                <span><strong>Divine Intention:</strong> Pick up a Godly weapon.</span>
+            </label>
 
-                            <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
-                                <span><strong>Master Banker:</strong> Store 15,000,000 mana in your mana bank.</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_SMITER">
+                <span><strong>O Mighty Smiter:</strong> Wear a full Godly armor set with the same material type.</span>
+            </label>
+
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_OBEDIENCE">
+                <span><strong>Obedience Training:</strong> Fully upgrade a pet.</span>
+            </label>
+
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_BANKER">
+                <span><strong>Master Banker:</strong> Store 15,000,000 mana in your mana bank.</span>
+            </label>
+
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_WEAPON">
+                <span><strong>Weapon Master:</strong> Store every original challenge reward weapon type.</span>
+            </label>
+
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_NOBILITY">
+                <span><strong>True Nobility:</strong> Earn the Lord Award on every original campaign mission.</span>
+            </label>
+
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_EFFORT">
+                <span><strong>Team Effort:</strong> Complete all original campaign missions with four players.</span>
+            </label>
+
+            <label class="checklist-item">
+                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_STUDENT">
+                <span><strong>Good Student:</strong> Complete the tutorial.</span>
+            </label>
+        </div>
+    </div>
+</div>
 
                 <div id="challenge-checklist" class="guide-card guide-text-card">
                     <div class="card-content">
@@ -329,9 +448,102 @@
                             Nightmare Hardcore clears help cover several challenge goals at once.
                         </p>
 
+                        <h3>Challenge Steam Achievement Goals</h3>
+                        <div class="checklist-group">
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_BLUEPRINT">
+                                <span><strong>Where's The Blueprints?:</strong> Complete the required challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_FRIENDS">
+                                <span><strong>Friends Forever:</strong> Complete the required multiplayer/team challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_CORE">
+                                <span><strong>88 Core:</strong> Complete the required core challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_ELLA">
+                                <span><strong>Ella, Ella:</strong> Complete the required challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_WIZARD">
+                                <span><strong>Wizard Hunter:</strong> Complete the Wizardry challenge achievement requirement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_MUSHROOM">
+                                <span><strong>You No Take Mushroom:</strong> Complete the required challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_FREAK">
+                                <span><strong>Speed Freak:</strong> Complete the required speed challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_FOWL">
+                                <span><strong>In A Fowl Mood:</strong> Complete the Chicken challenge achievement requirement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_CARDIO">
+                                <span><strong>Core Cardio:</strong> Complete the required core challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_MANIA">
+                                <span><strong>Monster Mania:</strong> Complete the required Monster Fest achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_DESTROYER">
+                                <span><strong>Core Destroyer:</strong> Complete the required core challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_GOLD">
+                                <span><strong>Gold Rush:</strong> Complete the required treasure challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_CHALLANGER">
+                                <span><strong>A Challenger Approaches:</strong> Complete the required original challenge progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_EXTERMINATOR">
+                                <span><strong>Kobold Exterminator:</strong> Complete the required challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_MADNESS">
+                                <span><strong>Monster Madness:</strong> Complete the required challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_DANCING">
+                                <span><strong>Dancing in the Rain:</strong> Complete the required challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_BLITZ">
+                                <span><strong>Gold Blitz:</strong> Complete the required treasure challenge achievement progress.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_BLOCK">
+                                <span><strong>Ogre Block Party:</strong> Complete the Ogre Crush challenge achievement requirement.</span>
+                            </label>
+                        </div>
+
                         <div class="checklist-group">
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="challenge-champion">
+                                <input type="checkbox" data-checks="challenge-champion" data-steam-achievement="ACH_CHALLENGE_MYTHICAL_HARDCORE">
                                 <span><strong>Transcendent Challenge Champion:</strong> Complete every original challenge on Nightmare Hardcore.</span>
                             </label>
                         </div>
@@ -511,22 +723,22 @@
                         <h3>Survival Achievements</h3>
                         <div class="checklist-group">
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_IRONMAN">
                                 <span><strong>Iron Man:</strong> Reach Survival wave 10 on Insane.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_SURVIVALIST">
                                 <span><strong>Survivalist:</strong> Reach Survival wave 15 on at least Medium.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_TOUGH">
                                 <span><strong>Tough Guy:</strong> Reach Survival wave 15 on at least Hard.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="legendary ultimate">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_THICK">
                                 <span><strong>Thick Skin:</strong> Reach Survival wave 20 on at least Medium.</span>
                             </label>
                         </div>
@@ -635,12 +847,12 @@
                         <h3>Pet Achievement Goals</h3>
                         <div class="checklist-group">
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="catch-pets">
+                                <input type="checkbox" data-checks="catch-pets" data-steam-achievement="ACH_CATCH">
                                 <span><strong>46. Catch 'em All:</strong> Store all pet types in your item box or on heroes.</span>
                             </label>
 
                             <label class="checklist-item achievement-master">
-                                <input type="checkbox" data-checks="monster-pets">
+                                <input type="checkbox" data-checks="monster-pets" data-steam-achievement="ACH_MONSTERS">
                                 <span><strong>60. I've Got Monsters in My Pocket:</strong> Collect every required pet in Etheria.</span>
                             </label>
                         </div>
@@ -786,22 +998,22 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate" data-steam-achievement="NEW_ACHIEVEMENT_9_3"></td>
                                         <td>Dungeon Raider</td>
                                         <td>Complete the Assault Mission Pack</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate" data-steam-achievement="NEW_ACHIEVEMENT_9_4"></td>
                                         <td>Mythical Dungeon Raider</td>
                                         <td>Complete the Assault Mission Pack on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_PLAYIN_CUPID"></td>
                                         <td>Playin' Cupid</td>
                                         <td>Complete Sky O' Love</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_PLAYIN_CUPID_NIGHTMARE"></td>
                                         <td>Playin' Mythical Cupid</td>
                                         <td>Complete Sky O' Love on Nightmare</td>
                                     </tr>
@@ -834,27 +1046,27 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards" data-steam-achievements="ACH_ETERNIASHARDS_PART1_ANY ACH_ETERNIASHARDS_PART1_NIGHTMARE"></td>
                                         <td>Mistymire Forest</td>
                                         <td>Complete Shard and Nightmare Shard progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards" data-steam-achievements="ACH_ETERNIASHARDS_PART2_ANY ACH_ETERNIASHARDS_PART2_NIGHTMARE"></td>
                                         <td>Moraggo Desert Town</td>
                                         <td>Complete Shard and Nightmare Shard progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards" data-steam-achievements="ACH_ETERNIASHARDS_PART3_ANY ACH_ETERNIASHARDS_PART3_NIGHTMARE"></td>
                                         <td>Aquanos</td>
                                         <td>Complete Shard and Nightmare Shard progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards" data-steam-achievements="ACH_ETERNIASHARDS_PART4_ANY ACH_ETERNIASHARDS_PART4_NIGHTMARE"></td>
                                         <td>Sky City</td>
                                         <td>Complete Shard and Nightmare Shard progress</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ultimate shards" data-steam-achievements="ACH_HEROES ACH_HEROES_NIGHTMARE"></td>
                                         <td>Crystalline Dimension</td>
                                         <td>Complete Heroes to the Rescue and Nightmare Heroes to the Rescue</td>
                                     </tr>
@@ -917,17 +1129,17 @@
                         <h3>Summoner Achievement Goals</h3>
                         <div class="checklist-group">
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="ultimate">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_RTS">
                                 <span><strong>Real Time Strategist:</strong> Required maps completed with Summoner rules.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="ultimate">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_RTS_MYTHICAL">
                                 <span><strong>Mythical Real Time Strategist:</strong> Required maps completed with Summoner rules on Nightmare.</span>
                             </label>
 
                             <label class="checklist-item">
-                                <input type="checkbox" data-achievement="ultimate">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_MASTERMIND">
                                 <span><strong>Mastermind:</strong> Complete maps with only tower damage on the final wave where applicable.</span>
                             </label>
                         </div>
@@ -970,7 +1182,7 @@
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal" data-steam-achievements="ACH_BUCCANEER_BAY ACH_BUCCANEER_BAY_NIGHTMARE"></td>
                                         <td>Buccaneer Bay</td>
                                         <td>Complete on Nightmare</td>
                                     </tr>
@@ -995,7 +1207,7 @@
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal" data-steam-achievements="ACH_TEMPLE_WATER ACH_TEMPLE_WATER_NIGHTMARE"></td>
                                         <td>Temple of Water</td>
                                         <td>Complete on Nightmare</td>
                                     </tr>
@@ -1010,7 +1222,7 @@
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal" data-steam-achievement="ACH_TOMB_NIGHTMARE"></td>
                                         <td>Tomb of Etheria</td>
                                         <td>Complete on Nightmare</td>
                                     </tr>
@@ -1035,12 +1247,12 @@
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal" data-steam-achievements="ACH_CR ACH_CR_NIGHTMARE"></td>
                                         <td>Crystalline Resurgence Part 4</td>
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal" data-steam-achievement="ACH_WM_NIGHTMARE"></td>
                                         <td>Wintermire</td>
                                         <td>Complete on Nightmare</td>
                                     </tr>
@@ -1050,17 +1262,109 @@
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal" data-steam-achievement="ACH_OME_NIGHTMARE"></td>
                                         <td>Omenak</td>
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="eternal" data-steam-achievement="ACH_IF_NIGHTMARE"></td>
                                         <td>Infested Ruins</td>
                                         <td>Complete on Nightmare</td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="steam-cleanup-checklist" class="guide-card guide-text-card">
+                    <div class="card-content">
+                        <h2>Steam Achievement Cleanup</h2>
+                        <p>
+                            These are Steam achievements that do not fit cleanly into the main checklist rows yet.
+                            The save importer can still read them and check them automatically.
+                        </p>
+
+                        <div class="checklist-group">
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_OFFENSE">
+                                <span><strong>Defense Is the Best Offense:</strong> Reach wave 10 on all original campaign maps in Pure Strategy on at least Medium.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_PERFECTIONIST">
+                                <span><strong>Perfectionist:</strong> Earn Flawless Victory on all original campaign missions.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_DAREDEVIL">
+                                <span><strong>Daredevil:</strong> Complete campaign progress without taking hero damage where required.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="legendary ultimate" data-steam-achievement="ACH_FORCE">
+                                <span><strong>Brute Force:</strong> Complete required campaign progress using only hero damage where required.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="extra" data-steam-achievement="ACH_XMAS">
+                                <span><strong>Jingled All the Way:</strong> Complete the Christmas-themed achievement requirement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_PORTAL_PROTECTOR">
+                                <span><strong>Portal Protector:</strong> Complete Portal Defense.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_PORTAL_PROTECTOR_NIGHTMARE">
+                                <span><strong>Nightmare Portal Protector:</strong> Complete Portal Defense on Nightmare.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_MYTHICAL_DEFENDER">
+                                <span><strong>Mythical Defender:</strong> Complete the required campaign missions on Nightmare.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="NEW_ACHIEVEMENT_9_2">
+                                <span><strong>Hardcore Mythical Defender:</strong> Complete the required campaign missions on Nightmare Hardcore.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_DJINN_RECRUITER">
+                                <span><strong>Djinn Recruiter:</strong> Complete the Moraggo-related Djinn achievement requirement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_DJINN_RECRUITER_NIGHTMARE">
+                                <span><strong>Nightmare Djinn Recruiter:</strong> Complete the Djinn Recruiter requirement on Nightmare.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_TRANSCENDENT_SURVIVALIST">
+                                <span><strong>Transcendent Survivalist:</strong> Achieve Nightmare Survival Victory on every required campaign mission.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_PUZZLE_SOLVER">
+                                <span><strong>Puzzle Solver:</strong> Complete the Aquanos puzzle achievement requirement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="ultimate" data-steam-achievement="ACH_PUZZLE_SOLVER_NIGHTMARE">
+                                <span><strong>Nightmare Puzzle Solver:</strong> Complete the Aquanos puzzle requirement on Nightmare.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="extra" data-steam-achievement="ACH_TRIAL_FIRELIGHT">
+                                <span><strong>Trial by Fire and Lightning:</strong> Complete the Trial by Fire and Lightning achievement.</span>
+                            </label>
+
+                            <label class="checklist-item">
+                                <input type="checkbox" data-achievement="extra" data-steam-achievement="ACH_TRIAL_FIRELIGHT_NIGHTMARE">
+                                <span><strong>Nightmare Trial by Fire and Lightning:</strong> Complete Trial by Fire and Lightning on Nightmare.</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -1092,47 +1396,47 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox"></td>
+                                        <td class="check-cell"><input type="checkbox" data-steam-achievements="ACH_BOSS_CRUSHER ACH_BOSS_CRUSHER_NIGHTMARE"></td>
                                         <td>Boss Rush</td>
                                         <td>Boss Crusher and Nightmare Boss Crusher completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox"></td>
+                                        <td class="check-cell"><input type="checkbox" data-steam-achievements="ACH_VDAY_2013 ACH_VDAY_2013_NIGHTMARE"></td>
                                         <td>Temple O' Love</td>
                                         <td>Anti-Cupid and Nightmare Anti-Cupid completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="extra"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="extra" data-steam-achievements="ACH_PUMPKIN_PARTY ACH_PUMPKINPARTY_NIGHTMARE"></td>
                                         <td>Halloween Spooktacular 2</td>
                                         <td>Pumpkin Party and Nightmare Pumpkin Party completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="extra"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="extra" data-steam-achievements="ACH_GREATER_TURKEYHUNTER ACH_GREATER_TURKEYHUNTER_NIGHTMARE"></td>
                                         <td>Greater Turkey Hunt</td>
                                         <td>Greater Turkey Hunter and Nightmare Greater Turkey Hunter completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="extra"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="extra" data-steam-achievements="ACH_SILENT_NIGHT ACH_SILENT_NIGHT_NIGHTMARE"></td>
                                         <td>Silent Night</td>
                                         <td>Not So Silent Night and Nightmare Not So Silent Night completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="extra"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="extra" data-steam-achievements="ACH_ANNIVERSARY ACH_ANNIVERSARY_NIGHTMARE"></td>
                                         <td>Anniversary Pack</td>
                                         <td>Anniversary Defender and Nightmare Anniversary Defender completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="extra"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="extra" data-steam-achievements="ACH_WINTER_WONDERLAND ACH_WINTER_WONDERLAND_NIGHTMARE"></td>
                                         <td>Winter Wonderland</td>
                                         <td>Winter Wonderland and Nightmare Winter Wonderland completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="extra"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="extra" data-steam-achievements="ACH_LAB ACH_LAB_NIGHTMARE ACH_LABASSAULT ACH_LABASSAULT_NIGHTMARE"></td>
                                         <td>Tinkerer's Lab</td>
                                         <td>Tinkerer's Defender, EV Reprogrammer, and Nightmare versions completed</td>
                                     </tr>
                                     <tr>
-                                        <td class="check-cell"><input type="checkbox" data-achievement="extra"></td>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="extra" data-steam-achievements="ACH_MOONBASE ACH_MOONBASE_NIGHTMARE"></td>
                                         <td>Moonbase</td>
                                         <td>Out of this World and Nightmare Out of this World completed</td>
                                     </tr>
@@ -1184,187 +1488,188 @@
                         </div>
                     </div>
                 </div>
+
                 <div id="ruthless-checklist" class="guide-card guide-text-card">
-    <div class="card-content">
-        <h2>Ruthless Progression</h2>
-        <p>
-            Ruthless Defender is a separate late-game goal. It is not required for
-            Legendary Defender, Ultimate Defender, or Eternal Defender. Save this
-            section for after your Nightmare progression and major completion cleanup
-            are in a good place.
-        </p>
+                    <div class="card-content">
+                        <h2>Ruthless Progression</h2>
+                        <p>
+                            Ruthless Defender is a separate late-game goal. It is not required for
+                            Legendary Defender, Ultimate Defender, or Eternal Defender. Save this
+                            section for after your Nightmare progression and major completion cleanup
+                            are in a good place.
+                        </p>
 
-        <div class="checklist-group">
-            <label class="checklist-item achievement-master">
-                <input type="checkbox" data-checks="ruthless" data-master="ruthless">
-                <span><strong>Ruthless Defender:</strong> Complete the classic campaign and classic challenges on Ruthless.</span>
-            </label>
-        </div>
+                        <div class="checklist-group">
+                            <label class="checklist-item achievement-master">
+                                <input type="checkbox" data-checks="ruthless" data-master="ruthless">
+                                <span><strong>Ruthless Defender:</strong> Complete the classic campaign and classic challenges on Ruthless.</span>
+                            </label>
+                        </div>
 
-        <div class="guide-warning">
-            <h3>Important Note</h3>
-            <p>
-                Ruthless Defender is separate from Eternal Defender. Checking Legendary,
-                Ultimate, or Eternal should not automatically complete this section.
-            </p>
-        </div>
+                        <div class="guide-warning">
+                            <h3>Important Note</h3>
+                            <p>
+                                Ruthless Defender is separate from Eternal Defender. Checking Legendary,
+                                Ultimate, or Eternal should not automatically complete this section.
+                            </p>
+                        </div>
 
-        <h3>Classic Campaign on Ruthless</h3>
-        <div class="table-wrap">
-            <table class="check-table">
-                <thead>
-                    <tr>
-                        <th>Done</th>
-                        <th>Map</th>
-                        <th>Requirement</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>The Deeper Well</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Foundries and Forges</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Magus Quarters</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Alchemical Laboratory</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Servants Quarters</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Castle Armory</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Hall of Court</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>The Throne Room</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Royal Gardens</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>The Ramparts</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Endless Spires</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>The Summit</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                        <h3>Classic Campaign on Ruthless</h3>
+                        <div class="table-wrap">
+                            <table class="check-table">
+                                <thead>
+                                    <tr>
+                                        <th>Done</th>
+                                        <th>Map</th>
+                                        <th>Requirement</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>The Deeper Well</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Foundries and Forges</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Magus Quarters</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Alchemical Laboratory</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Servants Quarters</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Castle Armory</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Hall of Court</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>The Throne Room</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Royal Gardens</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>The Ramparts</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Endless Spires</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>The Summit</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
-        <h3>Classic Challenges on Ruthless</h3>
-        <div class="table-wrap">
-            <table class="check-table">
-                <thead>
-                    <tr>
-                        <th>Done</th>
-                        <th>Challenge</th>
-                        <th>Requirement</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>No Towers Allowed</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Unlikely Allies</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Warping Core</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Raining Goblins</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Wizardry</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Ogre Crush</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Zippy Terror</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Chicken</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Moving Core</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Death From Above</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Assault</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Treasure Hunt</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                    <tr>
-                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
-                        <td>Monster Fest</td>
-                        <td>Complete on Ruthless</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                        <h3>Classic Challenges on Ruthless</h3>
+                        <div class="table-wrap">
+                            <table class="check-table">
+                                <thead>
+                                    <tr>
+                                        <th>Done</th>
+                                        <th>Challenge</th>
+                                        <th>Requirement</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>No Towers Allowed</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Unlikely Allies</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Warping Core</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Raining Goblins</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Wizardry</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Ogre Crush</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Zippy Terror</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Chicken</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Moving Core</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Death From Above</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Assault</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Treasure Hunt</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="check-cell"><input type="checkbox" data-achievement="ruthless"></td>
+                                        <td>Monster Fest</td>
+                                        <td>Complete on Ruthless</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </section>
         </main>
 
@@ -1381,11 +1686,13 @@
     </div>
 
     <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-    ↑
+        ↑
     </button>
 
     <script src="scripts/checklist.js"></script>
     <script src="scripts/main.js"></script>
     <script src="scripts/storage.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <script src="scripts/save-import.js"></script>
 </body>
 </html>

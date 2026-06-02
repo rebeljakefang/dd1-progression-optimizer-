@@ -551,6 +551,60 @@ body {
     cursor: pointer;
 }
 
+/* =========================================================
+   11B. Save Import Test Box
+========================================================= */
+
+#save-import-test input[type="file"] {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    margin: 18px 0;
+    padding: 12px;
+    color: #f6ead2;
+    background: rgba(10, 6, 4, 0.85);
+    border: 2px solid #6d4a31;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+#save-file-output {
+    margin-top: 18px;
+    padding: 18px;
+    background: rgba(10, 6, 4, 0.55);
+    border: 1px solid rgba(255, 220, 155, 0.25);
+    color: #f2dfbf;
+    line-height: 1.5;
+}
+
+#save-file-output h2,
+#save-file-output h3 {
+    color: #ffdc9b;
+}
+
+#save-file-output code {
+    color: #ffdc9b;
+    word-break: break-word;
+}
+
+#save-file-output details {
+    margin: 14px 0;
+    padding: 12px;
+    background: rgba(24, 12, 8, 0.65);
+    border: 1px solid rgba(255, 220, 155, 0.22);
+}
+
+#save-file-output summary {
+    color: #ffdc9b;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#auto-check-result {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(113, 32, 14, 0.25);
+    border-left: 4px solid #e18a32;
+}
 
 /* =========================================================
    12. Optimizer Page Layout
