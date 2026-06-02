@@ -892,21 +892,6 @@ function looksLikeAchievementWindow(bytes, start) {
 }
 
 
-function getLongestOnePrefix(bytes, start, count) {
-    let length = 0;
-
-    for (let index = 0; index < count; index++) {
-        if (bytes[start + index] === 1) {
-            length++;
-        } else {
-            break;
-        }
-    }
-
-    return length;
-}
-
-
 function scoreAchievementWindow(bytes, start) {
     const steamAchievementCount = dd1SteamAchievementIndex.length;
 
@@ -926,52 +911,76 @@ function scoreAchievementWindow(bytes, start) {
 
     let score = 0;
 
-    score += steamCounts.nonZeroCount * 3;
+    score += steamCounts.oneCount * 4;
 
-    const firstThirtyTwo = countAchievementWindow(bytes, start, 32);
-    const firstSixtyFour = countAchievementWindow(bytes, start, 64);
-    const longestOnePrefix = getLongestOnePrefix(bytes, start, 32);
-
-    if (firstThirtyTwo.oneCount >= 28) {
-        score -= 500;
-    }
-
-    if (firstSixtyFour.oneCount >= 50) {
-        score -= 300;
-    }
-
-    if (longestOnePrefix >= 16) {
-        score -= 300;
-    }
-
-    if (steamCounts.oneCount >= 5 && steamCounts.oneCount <= 80) {
-        score += 100;
-    }
-
-    if (steamCounts.oneCount >= 10 && steamCounts.oneCount <= 60) {
-        score += 100;
-    }
-
-    const earlyAchievementIndexes = [
+    const firstCampaignIndexes = [
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        10, 11, 12, 13, 14, 18
+        10, 11, 12, 13, 14, 15, 16, 17, 18
     ];
 
-    earlyAchievementIndexes.forEach((index) => {
+    let firstCampaignUnlocked = 0;
+
+    firstCampaignIndexes.forEach((index) => {
         if (bytes[start + index] === 1) {
-            score += 8;
+            firstCampaignUnlocked++;
         }
     });
 
-    const commonProgressIndexes = [
+    score += firstCampaignUnlocked * 25;
+
+    if (firstCampaignUnlocked >= 15) {
+        score += 600;
+    }
+
+    if (firstCampaignUnlocked >= 19) {
+        score += 1000;
+    }
+
+    const hasDungeonDefender = bytes[start + 18] === 1;
+    const hasDungeonRaider = bytes[start + 14] === 1;
+    const hasBrimstone = bytes[start + 15] === 1;
+    const hasCrowdedKeep = bytes[start + 16] === 1;
+    const hasLoftySummit = bytes[start + 17] === 1;
+
+    if (hasDungeonDefender) {
+        score += 150;
+
+        if (hasDungeonRaider && hasBrimstone && hasCrowdedKeep && hasLoftySummit) {
+            score += 1000;
+        } else {
+            score -= 1000;
+        }
+    }
+
+    if (hasDungeonRaider && hasBrimstone && hasCrowdedKeep && hasLoftySummit) {
+        score += 800;
+    }
+
+    const challengeIndexes = [
+        19, 20, 21, 22, 23, 24, 25, 26,
+        27, 28, 29, 30, 31, 32, 33, 34,
+        35, 36, 37
+    ];
+
+    let challengeUnlocked = 0;
+
+    challengeIndexes.forEach((index) => {
+        if (bytes[start + index] === 1) {
+            challengeUnlocked++;
+        }
+    });
+
+    score += challengeUnlocked * 8;
+
+    const laterProgressIndexes = [
         38, 39, 40, 41, 43, 44, 45,
         46, 47, 48, 49, 50, 52, 53,
         54, 55, 56
     ];
 
-    commonProgressIndexes.forEach((index) => {
+    laterProgressIndexes.forEach((index) => {
         if (bytes[start + index] === 1) {
-            score += 5;
+            score += 6;
         }
     });
 
@@ -994,41 +1003,27 @@ function findAchievementStartNearAbilityMarker(bytes) {
         const markerPosition = markerPositions[markerIndex];
         const markerEnd = markerPosition + marker.length;
 
-        for (let offsetAfterMarker = 40; offsetAfterMarker <= 90; offsetAfterMarker++) {
+        for (let offsetAfterMarker = 0; offsetAfterMarker <= 120; offsetAfterMarker++) {
             const candidateStart = markerEnd + offsetAfterMarker;
 
             if (!looksLikeAchievementWindow(bytes, candidateStart)) {
                 continue;
             }
 
-            const steamCounts = countAchievementWindow(
-                bytes,
-                candidateStart,
-                dd1SteamAchievementIndex.length
-            );
-
-            const distanceFromExpected = Math.abs(offsetAfterMarker - 64);
-
             let score = 10000;
             score += scoreAchievementWindow(bytes, candidateStart);
-            score -= distanceFromExpected * 4;
 
-            if (steamCounts.oneCount >= 5 && steamCounts.oneCount <= 80) {
-                score += 500;
-            }
+            const distanceFromExpected = Math.abs(offsetAfterMarker - 9);
+            score -= distanceFromExpected * 5;
 
             if (score > bestScore) {
                 bestScore = score;
                 bestStart = candidateStart;
             }
         }
-
-        if (bestStart !== -1) {
-            return bestStart;
-        }
     }
 
-    return -1;
+    return bestStart;
 }
 
 
