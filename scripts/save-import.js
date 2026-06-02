@@ -873,17 +873,6 @@ function scoreAchievementWindow(bytes, start) {
     score += 20;
   }
 
-  const beforeStart = Math.max(0, start - 16);
-  const beforeLength = start - beforeStart;
-
-  if (beforeLength > 0) {
-    const beforeCounts = countAchievementWindow(bytes, beforeStart, beforeLength);
-
-    if (beforeCounts.otherNonZeroCount > 0) {
-      score += 5;
-    }
-  }
-
   return score;
 }
 
@@ -992,7 +981,7 @@ function readAchievementBytes(bytes, heroes) {
 
   if (start === -1) {
     throw new Error(
-      "Could not find the Steam achievement byte window. This save may use a different format, or the achievement data may not be stored in this .dun file."
+      "NEW SCANNER ACTIVE: Could not find the Steam achievement byte window after scanning the combined decompressed save data."
     );
   }
 
