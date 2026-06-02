@@ -2813,6 +2813,26 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
    12K. Master Checkbox Logic
 ========================================================= */
 
+function checkFirstMatchingUncheckedBox(rootElement, rules) {
+    const matches = findCheckboxesByTextRules(rootElement, rules);
+
+    if (matches.length === 0) {
+        return 0;
+    }
+
+    const uncheckedMatch = matches.find((checkbox) => {
+        return !checkbox.checked;
+    });
+
+    if (!uncheckedMatch) {
+        return 0;
+    }
+
+    uncheckedMatch.checked = true;
+    return 1;
+}
+
+
 function applyMasterChecklistProgress(saveData, rootElement = document) {
     let checkedCount = 0;
 
@@ -2872,12 +2892,7 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
             return;
         }
 
-        const masterMatches = findCheckboxesByTextRules(rootElement, group.master);
-
-        if (masterMatches.length > 0 && !masterMatches[0].checked) {
-            masterMatches[0].checked = true;
-            checkedCount++;
-        }
+        checkedCount += checkFirstMatchingUncheckedBox(rootElement, group.master);
     });
 
     const eternalDefenderRequiredRowGroups = [
@@ -2933,7 +2948,7 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
     ];
 
     if (areAllRequiredRuleGroupsChecked(rootElement, eternalDefenderRequiredRowGroups)) {
-        const sectionMasterMatches = findCheckboxesByTextRules(rootElement, [
+        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
             {
                 includes: [
                     "eternal defender",
@@ -2942,29 +2957,19 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
             }
         ]);
 
-        const mainGoalMatches = findCheckboxesByTextRules(rootElement, [
+        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
             {
                 includes: [
                     "eternal defender",
                     "after ultimate defender",
-                    "complete the required lost quest maps on nightmare"
+                    "complete the required lost quest maps"
                 ]
             }
         ]);
-
-        if (sectionMasterMatches.length > 0 && !sectionMasterMatches[0].checked) {
-            sectionMasterMatches[0].checked = true;
-            checkedCount++;
-        }
-
-        if (mainGoalMatches.length > 0 && !mainGoalMatches[0].checked) {
-            mainGoalMatches[0].checked = true;
-            checkedCount++;
-        }
     }
 
     if (areAllRequiredRuleGroupsChecked(rootElement, ruthlessRequiredRowGroups)) {
-        const ruthlessMainGoalMatches = findCheckboxesByTextRules(rootElement, [
+        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
             {
                 includes: [
                     "ruthless defender",
@@ -2973,27 +2978,14 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
             }
         ]);
 
-        const ruthlessSectionMatches = findCheckboxesByTextRules(rootElement, [
+        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
             {
                 includes: [
                     "ruthless defender",
-                    "ruthless"
-                ],
-                excludes: [
-                    "main completion goals"
+                    "complete the classic campaign"
                 ]
             }
         ]);
-
-        if (ruthlessMainGoalMatches.length > 0 && !ruthlessMainGoalMatches[0].checked) {
-            ruthlessMainGoalMatches[0].checked = true;
-            checkedCount++;
-        }
-
-        if (ruthlessSectionMatches.length > 0 && !ruthlessSectionMatches[0].checked) {
-            ruthlessSectionMatches[0].checked = true;
-            checkedCount++;
-        }
     }
 
     return checkedCount;
