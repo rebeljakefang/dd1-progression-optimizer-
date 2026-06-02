@@ -379,125 +379,175 @@ function readAsciiStringAt(bytes, position, length) {
 ========================================================= */
 
 function looksLikeZlibHeader(rawBytes, position) {
-    if (position < 0 || position + 1 >= rawBytes.length) {
-        return false;
-    }
+  if (position < 0 || position + 1 >= rawBytes.length) {
+    return false;
+  }
 
-    const firstByte = rawBytes[position];
-    const secondByte = rawBytes[position + 1];
+  const firstByte = rawBytes[position];
+  const secondByte = rawBytes[position + 1];
 
-    if (firstByte !== 0x78) {
-        return false;
-    }
+  if (firstByte !== 0x78) {
+    return false;
+  }
 
-    return (
-        secondByte === 0x01 ||
-        secondByte === 0x5e ||
-        secondByte === 0x9c ||
-        secondByte === 0xda
-    );
+  return (
+    secondByte === 0x01 ||
+    secondByte === 0x5e ||
+    secondByte === 0x9c ||
+    secondByte === 0xda
+  );
 }
-
 
 function findZlibHeaderOffsets(rawBytes) {
-    const offsets = [];
+  const offsets = [];
 
-    for (let position = 0; position < rawBytes.length - 1; position++) {
-        if (looksLikeZlibHeader(rawBytes, position)) {
-            offsets.push(position);
-        }
+  for (let position = 0; position < rawBytes.length - 1; position++) {
+    if (looksLikeZlibHeader(rawBytes, position)) {
+      offsets.push(position);
     }
+  }
 
-    return offsets;
+  return offsets;
 }
 
+function tryInflateSlice(rawBytes, offset, end) {
+  try {
+    const slice = rawBytes.slice(offset, end);
+    const decompressedBytes = pako.inflate(slice);
 
-function tryInflateExactEnd(rawBytes, offset, maxEnd) {
-    const startEnd = offset + 20;
-    const finalEnd = maxEnd || rawBytes.length;
-
-    for (let end = startEnd; end <= finalEnd; end++) {
-        try {
-            const slice = rawBytes.slice(offset, end);
-            const decompressed = pako.inflate(slice);
-
-            if (decompressed && decompressed.length !== undefined) {
-                return {
-                    success: true,
-                    offset: offset,
-                    end: end,
-                    rawLength: end - offset,
-                    decompressedBytes: decompressed,
-                    decompressedSize: decompressed.length,
-                    error: ""
-                };
-            }
-        } catch {
-            // Keep searching until we find the exact end of this zlib stream.
-        }
-    }
-
-    return {
-        success: false,
+    if (decompressedBytes && decompressedBytes.length > 0) {
+      return {
+        success: true,
         offset: offset,
-        end: finalEnd,
-        rawLength: finalEnd - offset,
-        decompressedBytes: null,
-        decompressedSize: 0,
-        error: "No exact zlib end found from this offset."
-    };
+        end: end,
+        rawLength: end - offset,
+        decompressedBytes: decompressedBytes,
+        decompressedSize: decompressedBytes.length,
+        error: ""
+      };
+    }
+  } catch {
+    // This slice did not inflate cleanly.
+  }
+
+  return {
+    success: false,
+    offset: offset,
+    end: end,
+    rawLength: end - offset,
+    decompressedBytes: null,
+    decompressedSize: 0,
+    error: "Could not inflate this slice."
+  };
 }
 
+function findExactZlibEnd(rawBytes, offset, searchLimit) {
+  const minimumEnd = offset + 8;
+  const maximumEnd = Math.min(searchLimit || rawBytes.length, rawBytes.length);
+
+  let fastEnd = minimumEnd;
+
+  while (fastEnd <= maximumEnd) {
+    const result = tryInflateSlice(rawBytes, offset, fastEnd);
+
+    if (result.success) {
+      const exactSearchStart = Math.max(minimumEnd, fastEnd - 2048);
+
+      for (let exactEnd = exactSearchStart; exactEnd <= fastEnd; exactEnd++) {
+        const exactResult = tryInflateSlice(rawBytes, offset, exactEnd);
+
+        if (exactResult.success) {
+          return exactResult;
+        }
+      }
+
+      return result;
+    }
+
+    fastEnd += 1024;
+  }
+
+  return {
+    success: false,
+    offset: offset,
+    end: maximumEnd,
+    rawLength: maximumEnd - offset,
+    decompressedBytes: null,
+    decompressedSize: 0,
+    error: "No exact zlib end found from this offset."
+  };
+}
 
 function decompressDunFile(arrayBuffer) {
-    const rawBytes = new Uint8Array(arrayBuffer);
-    const headerOffsets = findZlibHeaderOffsets(rawBytes);
-    const blocks = [];
+  const rawBytes = new Uint8Array(arrayBuffer);
+  const zlibHeaderOffsets = findZlibHeaderOffsets(rawBytes);
+  const blocks = [];
 
-    let searchIndex = 0;
+  let headerIndex = 0;
 
-    while (searchIndex < headerOffsets.length) {
-        const offset = headerOffsets[searchIndex];
+  while (headerIndex < zlibHeaderOffsets.length) {
+    const offset = zlibHeaderOffsets[headerIndex];
 
-        const result = tryInflateExactEnd(rawBytes, offset, rawBytes.length);
-
-        if (result.success && result.decompressedSize > 1000) {
-            blocks.push(result);
-
-            while (
-                searchIndex < headerOffsets.length &&
-                headerOffsets[searchIndex] < result.end
-            ) {
-                searchIndex++;
-            }
-        } else {
-            searchIndex++;
-        }
-    }
-
-    if (blocks.length === 0) {
-        throw new Error("No zlib save blocks were found. Make sure this is a valid DunDefHeroes.dun file.");
-    }
-
-    let totalLength = 0;
-
-    blocks.forEach((block) => {
-        totalLength += block.decompressedBytes.length;
+    const alreadyInsideKnownBlock = blocks.some((block) => {
+      return offset >= block.offset && offset < block.end;
     });
 
-    const combinedBytes = new Uint8Array(totalLength);
-    let position = 0;
+    if (alreadyInsideKnownBlock) {
+      headerIndex++;
+      continue;
+    }
 
-    blocks.forEach((block) => {
-        combinedBytes.set(block.decompressedBytes, position);
-        position += block.decompressedBytes.length;
-    });
+    const result = findExactZlibEnd(rawBytes, offset, rawBytes.length);
 
-    return {
-        rawBytes: rawBytes,
-        blocks: blocks,
-        combinedBytes: combinedBytes
-    };
+    if (result.success && result.decompressedSize > 0) {
+      blocks.push(result);
+
+      while (
+        headerIndex < zlibHeaderOffsets.length &&
+        zlibHeaderOffsets[headerIndex] < result.end
+      ) {
+        headerIndex++;
+      }
+    } else {
+      headerIndex++;
+    }
+  }
+
+  if (blocks.length === 0) {
+    throw new Error(
+      "No zlib save blocks were found. Make sure this is a valid DunDefHeroes.dun file."
+    );
+  }
+
+  blocks.sort((a, b) => a.offset - b.offset);
+
+  let combinedSize = 0;
+
+  blocks.forEach((block) => {
+    combinedSize += block.decompressedBytes.length;
+  });
+
+  const combinedBytes = new Uint8Array(combinedSize);
+  let combinedOffset = 0;
+
+  blocks.forEach((block, index) => {
+    block.blockNumber = index + 1;
+    block.combinedStart = combinedOffset;
+
+    combinedBytes.set(block.decompressedBytes, combinedOffset);
+    combinedOffset += block.decompressedBytes.length;
+
+    block.combinedEnd = combinedOffset;
+  });
+
+  return {
+    rawBytes: rawBytes,
+    zlibHeaderOffsets: zlibHeaderOffsets,
+    blocks: blocks,
+    blockCount: blocks.length,
+    combinedBytes: combinedBytes,
+    combinedSize: combinedBytes.length
+  };
 }
 
 
@@ -714,358 +764,279 @@ function scanHeroes(bytes) {
 ========================================================= */
 
 function countAchievementWindow(bytes, start, count = maxAchievements) {
-    let zeroCount = 0;
-    let oneCount = 0;
-    let nonZeroCount = 0;
-    let otherNonZeroCount = 0;
+  let zeroCount = 0;
+  let oneCount = 0;
+  let nonZeroCount = 0;
+  let otherNonZeroCount = 0;
 
-    if (start < 0 || start + count > bytes.length) {
-        return {
-            zeroCount: 0,
-            oneCount: 0,
-            nonZeroCount: 0,
-            otherNonZeroCount: count
-        };
-    }
-
-    for (let offset = 0; offset < count; offset++) {
-        const value = bytes[start + offset];
-
-        if (value === 0) {
-            zeroCount++;
-        } else {
-            nonZeroCount++;
-
-            if (value === 1) {
-                oneCount++;
-            } else {
-                otherNonZeroCount++;
-            }
-        }
-    }
-
+  if (start < 0 || start + count > bytes.length) {
     return {
-        zeroCount: zeroCount,
-        oneCount: oneCount,
-        nonZeroCount: nonZeroCount,
-        otherNonZeroCount: otherNonZeroCount
+      zeroCount: 0,
+      oneCount: 0,
+      nonZeroCount: 0,
+      otherNonZeroCount: count
     };
-}
+  }
 
+  for (let offset = 0; offset < count; offset++) {
+    const value = bytes[start + offset];
+
+    if (value === 0) {
+      zeroCount++;
+    } else {
+      nonZeroCount++;
+
+      if (value === 1) {
+        oneCount++;
+      } else {
+        otherNonZeroCount++;
+      }
+    }
+  }
+
+  return {
+    zeroCount: zeroCount,
+    oneCount: oneCount,
+    nonZeroCount: nonZeroCount,
+    otherNonZeroCount: otherNonZeroCount
+  };
+}
 
 function looksLikeAchievementWindow(bytes, start) {
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
+  const steamAchievementCount = dd1SteamAchievementIndex.length;
 
-    if (start < 0 || start + steamAchievementCount > bytes.length) {
-        return false;
-    }
+  if (start < 0 || start + steamAchievementCount > bytes.length) {
+    return false;
+  }
 
-    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+  const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
 
-    return (
-        steamCounts.nonZeroCount >= 1 &&
-        steamCounts.nonZeroCount <= steamAchievementCount &&
-        steamCounts.otherNonZeroCount === 0
-    );
+  return (
+    steamCounts.nonZeroCount >= 1 &&
+    steamCounts.nonZeroCount <= steamAchievementCount &&
+    steamCounts.otherNonZeroCount === 0
+  );
 }
-
 
 function scoreAchievementWindow(bytes, start) {
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
+  const steamAchievementCount = dd1SteamAchievementIndex.length;
 
-    if (start < 0 || start + steamAchievementCount > bytes.length) {
-        return -999999;
+  if (start < 0 || start + steamAchievementCount > bytes.length) {
+    return -999999;
+  }
+
+  const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+
+  if (steamCounts.otherNonZeroCount > 0) {
+    return -999999;
+  }
+
+  if (steamCounts.nonZeroCount < 1 || steamCounts.nonZeroCount > steamAchievementCount) {
+    return -999999;
+  }
+
+  let score = 0;
+
+  score += steamCounts.nonZeroCount * 4;
+
+  const earlyAchievementIndexes = [
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    10, 11, 12, 13, 14, 18
+  ];
+
+  earlyAchievementIndexes.forEach((index) => {
+    if (bytes[start + index] === 1) {
+      score += 25;
     }
+  });
 
-    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+  const commonProgressIndexes = [
+    38, 39, 40, 41, 43, 44, 45,
+    46, 47, 48, 49, 50, 52, 53,
+    54, 55, 56
+  ];
 
-    if (steamCounts.otherNonZeroCount > 0) {
-        return -999999;
+  commonProgressIndexes.forEach((index) => {
+    if (bytes[start + index] === 1) {
+      score += 10;
     }
+  });
 
-    if (steamCounts.nonZeroCount < 1 || steamCounts.nonZeroCount > steamAchievementCount) {
-        return -999999;
+  const largerWindowLength = Math.min(maxAchievements, bytes.length - start);
+  const largerCounts = countAchievementWindow(bytes, start, largerWindowLength);
+
+  if (largerCounts.otherNonZeroCount === 0) {
+    score += 30;
+  }
+
+  if (largerCounts.nonZeroCount <= steamAchievementCount) {
+    score += 20;
+  }
+
+  const beforeStart = Math.max(0, start - 16);
+  const beforeLength = start - beforeStart;
+
+  if (beforeLength > 0) {
+    const beforeCounts = countAchievementWindow(bytes, beforeStart, beforeLength);
+
+    if (beforeCounts.otherNonZeroCount > 0) {
+      score += 5;
     }
+  }
 
-    let score = 0;
-
-    score += steamCounts.nonZeroCount * 2;
-
-    const earlyAchievementIndexes = [
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        10, 11, 12, 13, 14
-    ];
-
-    earlyAchievementIndexes.forEach((index) => {
-        if (bytes[start + index] === 1) {
-            score += 20;
-        }
-    });
-
-    const commonProgressIndexes = [
-        38, 39, 40, 41, 43, 44, 45, 50, 52, 53, 54, 55
-    ];
-
-    commonProgressIndexes.forEach((index) => {
-        if (bytes[start + index] === 1) {
-            score += 8;
-        }
-    });
-
-    const fullWindowFits = start + maxAchievements <= bytes.length;
-
-    if (fullWindowFits) {
-        const fullCounts = countAchievementWindow(bytes, start, maxAchievements);
-
-        if (fullCounts.otherNonZeroCount === 0) {
-            score += 25;
-        }
-
-        if (fullCounts.nonZeroCount <= steamAchievementCount) {
-            score += 15;
-        }
-    }
-
-    return score;
+  return score;
 }
-
 
 function findBestAchievementStartInRange(bytes, searchStart, searchEnd) {
-    let bestStart = -1;
-    let bestScore = -999999;
+  let bestStart = -1;
+  let bestScore = -999999;
 
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
-    const safeStart = Math.max(0, searchStart);
-    const safeEnd = Math.min(searchEnd, bytes.length - steamAchievementCount);
+  const steamAchievementCount = dd1SteamAchievementIndex.length;
+  const safeStart = Math.max(0, searchStart);
+  const safeEnd = Math.min(searchEnd, bytes.length - steamAchievementCount);
 
-    for (let position = safeStart; position <= safeEnd; position++) {
-        if (!looksLikeAchievementWindow(bytes, position)) {
-            continue;
-        }
-
-        const score = scoreAchievementWindow(bytes, position);
-
-        if (score > bestScore) {
-            bestScore = score;
-            bestStart = position;
-        }
+  for (let position = safeStart; position <= safeEnd; position++) {
+    if (!looksLikeAchievementWindow(bytes, position)) {
+      continue;
     }
 
-    return bestStart;
-}
+    const score = scoreAchievementWindow(bytes, position);
 
+    if (score > bestScore) {
+      bestScore = score;
+      bestStart = position;
+    }
+  }
+
+  return bestStart;
+}
 
 function findLikelyAchievementStart(bytes, heroes) {
-    let searchStart = 0;
+  let searchStart = 0;
 
-    if (heroes.length > 0) {
-        const lastHero = heroes[heroes.length - 1];
-        searchStart = lastHero.templatePosition + 500;
-    }
+  if (heroes.length > 0) {
+    const lastHero = heroes[heroes.length - 1];
+    searchStart = lastHero.templatePosition + 500;
+  }
 
-    const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
+  const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
 
-    const heroBasedStart = findBestAchievementStartInRange(bytes, searchStart, searchEnd);
+  const heroBasedStart = findBestAchievementStartInRange(bytes, searchStart, searchEnd);
 
-    if (heroBasedStart !== -1) {
-        return heroBasedStart;
-    }
+  if (heroBasedStart !== -1) {
+    return heroBasedStart;
+  }
 
-    const fullFileStart = findBestAchievementStartInRange(bytes, 0, searchEnd);
+  const fullFileStart = findBestAchievementStartInRange(bytes, 0, searchEnd);
 
-    if (fullFileStart !== -1) {
-        return fullFileStart;
-    }
+  if (fullFileStart !== -1) {
+    return fullFileStart;
+  }
 
-    return -1;
+  return -1;
 }
-
 
 function findAchievementCandidates(bytes, heroes) {
-    const candidates = [];
-    let searchStart = 0;
+  const candidates = [];
 
-    if (heroes.length > 0) {
-        const lastHero = heroes[heroes.length - 1];
-        searchStart = lastHero.templatePosition + 500;
+  let searchStart = 0;
+
+  if (heroes.length > 0) {
+    const lastHero = heroes[heroes.length - 1];
+    searchStart = lastHero.templatePosition + 500;
+  }
+
+  const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
+
+  for (let position = searchStart; position <= searchEnd; position++) {
+    if (!looksLikeAchievementWindow(bytes, position)) {
+      continue;
     }
 
-    const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
+    const steamCounts = countAchievementWindow(
+      bytes,
+      position,
+      dd1SteamAchievementIndex.length
+    );
 
-    for (let position = searchStart; position <= searchEnd; position++) {
-        if (looksLikeAchievementWindow(bytes, position)) {
-            const steamCounts = countAchievementWindow(bytes, position, dd1SteamAchievementIndex.length);
-            const fullCounts = countAchievementWindow(bytes, position, Math.min(maxAchievements, bytes.length - position));
-            const achievementBytes = bytes.slice(position, position + dd1SteamAchievementIndex.length);
-
-            candidates.push({
-                start: position,
-                score: scoreAchievementWindow(bytes, position),
-                steamCounts: steamCounts,
-                counts: fullCounts,
-                previewHex: debugBytes(achievementBytes, 0, 160),
-                previewAscii: bytesToAscii(achievementBytes, 0, 160)
-            });
-
-            if (candidates.length >= 10) {
-                break;
-            }
-        }
-    }
-
-    return candidates;
-}
-
-
-function readAchievementBytes(bytes, heroes) {
-    const start = findLikelyAchievementStart(bytes, heroes);
-
-    if (start === -1) {
-        throw new Error("Could not find the Steam achievement byte window. This save may use a different format, or the achievement data may not be stored in this .dun file.");
-    }
-
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
-    const achievementBytes = bytes.slice(start, start + Math.max(maxAchievements, steamAchievementCount));
-    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
     const fullCounts = countAchievementWindow(
-        bytes,
-        start,
-        Math.min(maxAchievements, bytes.length - start)
+      bytes,
+      position,
+      Math.min(maxAchievements, bytes.length - position)
     );
 
-    const unlockedSteamAchievements = [];
-
-    for (let index = 0; index < dd1SteamAchievementIndex.length; index++) {
-        const steamId = dd1SteamAchievementIndex[index];
-        const value = achievementBytes[index];
-
-        if (value === 1) {
-            unlockedSteamAchievements.push({
-                index: index,
-                steamId: steamId,
-                name: getDd1AchievementName(steamId)
-            });
-        }
-    }
-
-    return {
-        start: start,
-        originalStart: start,
-        offsetAdjustment: 0,
-        bytes: achievementBytes,
-        counts: fullCounts,
-        steamCounts: steamCounts,
-        unlockedSteamAchievements: unlockedSteamAchievements,
-        previewHex: debugBytes(achievementBytes, 0, 200),
-        previewAscii: bytesToAscii(achievementBytes, 0, 200)
-    };
-}
-
-
-function looksLikeAchievementWindow(bytes, start) {
-    if (start < 0 || start + maxAchievements > bytes.length) {
-        return false;
-    }
-
-    const counts = countAchievementWindow(bytes, start);
-
-    return (
-        counts.nonZeroCount >= 1 &&
-        counts.nonZeroCount <= 118 &&
-        counts.otherNonZeroCount === 0
+    const achievementBytes = bytes.slice(
+      position,
+      position + dd1SteamAchievementIndex.length
     );
+
+    candidates.push({
+      start: position,
+      score: scoreAchievementWindow(bytes, position),
+      steamCounts: steamCounts,
+      counts: fullCounts,
+      previewHex: debugBytes(achievementBytes, 0, 160),
+      previewAscii: bytesToAscii(achievementBytes, 0, 160)
+    });
+  }
+
+  candidates.sort((a, b) => {
+    return b.score - a.score;
+  });
+
+  return candidates.slice(0, 10);
 }
-
-
-function findLikelyAchievementStart(bytes, heroes) {
-    let searchStart = 0;
-
-    if (heroes.length > 0) {
-        const lastHero = heroes[heroes.length - 1];
-        searchStart = lastHero.templatePosition + 500;
-    }
-
-    const searchEnd = bytes.length - maxAchievements;
-
-    for (let position = searchStart; position <= searchEnd; position++) {
-        if (looksLikeAchievementWindow(bytes, position)) {
-            return position;
-        }
-    }
-
-    return -1;
-}
-
-
-function findAchievementCandidates(bytes, heroes) {
-    const candidates = [];
-    let searchStart = 0;
-
-    if (heroes.length > 0) {
-        const lastHero = heroes[heroes.length - 1];
-        searchStart = lastHero.templatePosition + 500;
-    }
-
-    const searchEnd = bytes.length - maxAchievements;
-
-    for (let position = searchStart; position <= searchEnd; position++) {
-        if (looksLikeAchievementWindow(bytes, position)) {
-            const counts = countAchievementWindow(bytes, position);
-            const achievementBytes = bytes.slice(position, position + maxAchievements);
-
-            candidates.push({
-                start: position,
-                adjustedStart: position + 44,
-                counts: counts,
-                previewHex: debugBytes(achievementBytes, 0, 160),
-                previewAscii: bytesToAscii(achievementBytes, 0, 160)
-            });
-
-            if (candidates.length >= 10) {
-                break;
-            }
-        }
-    }
-
-    return candidates;
-}
-
 
 function readAchievementBytes(bytes, heroes) {
-    const start = findLikelyAchievementStart(bytes, heroes);
+  const start = findLikelyAchievementStart(bytes, heroes);
 
-    if (start === -1) {
-        throw new Error("Could not find a clean 500-byte achievement window.");
+  if (start === -1) {
+    throw new Error(
+      "Could not find the Steam achievement byte window. This save may use a different format, or the achievement data may not be stored in this .dun file."
+    );
+  }
+
+  const steamAchievementCount = dd1SteamAchievementIndex.length;
+
+  const achievementBytes = bytes.slice(
+    start,
+    start + Math.max(maxAchievements, steamAchievementCount)
+  );
+
+  const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+
+  const fullCounts = countAchievementWindow(
+    bytes,
+    start,
+    Math.min(maxAchievements, bytes.length - start)
+  );
+
+  const unlockedSteamAchievements = [];
+
+  for (let index = 0; index < dd1SteamAchievementIndex.length; index++) {
+    const steamId = dd1SteamAchievementIndex[index];
+    const value = achievementBytes[index];
+
+    if (value === 1) {
+      unlockedSteamAchievements.push({
+        index: index,
+        steamId: steamId,
+        name: getDd1AchievementName(steamId)
+      });
     }
+  }
 
-    const adjustedStart = start + 44;
-    const achievementBytes = bytes.slice(adjustedStart, adjustedStart + maxAchievements);
-    const counts = countAchievementWindow(bytes, adjustedStart);
-    const unlockedSteamAchievements = [];
-
-    for (let index = 0; index < dd1SteamAchievementIndex.length; index++) {
-        const steamId = dd1SteamAchievementIndex[index];
-        const value = achievementBytes[index];
-
-        if (value === 1) {
-            unlockedSteamAchievements.push({
-                index: index,
-                steamId: steamId,
-                name: getDd1AchievementName(steamId)
-            });
-        }
-    }
-
-    return {
-        start: adjustedStart,
-        originalStart: start,
-        offsetAdjustment: 44,
-        bytes: achievementBytes,
-        counts: counts,
-        unlockedSteamAchievements: unlockedSteamAchievements,
-        previewHex: debugBytes(achievementBytes, 0, 200),
-        previewAscii: bytesToAscii(achievementBytes, 0, 200)
-    };
+  return {
+    start: start,
+    originalStart: start,
+    offsetAdjustment: 0,
+    bytes: achievementBytes,
+    counts: fullCounts,
+    steamCounts: steamCounts,
+    unlockedSteamAchievements: unlockedSteamAchievements,
+    previewHex: debugBytes(achievementBytes, 0, 200),
+    previewAscii: bytesToAscii(achievementBytes, 0, 200)
+  };
 }
 
 
@@ -1073,87 +1044,82 @@ function readAchievementBytes(bytes, heroes) {
    11. Save Scanner
 ========================================================= */
 
-function getDd1SaveData(arrayBuffer) {
-    const decompression = decompressDunFile(arrayBuffer);
-    const combinedBytes = decompression.combinedBytes;
+function scanSaveFile(arrayBuffer) {
+  const decompression = decompressDunFile(arrayBuffer);
+  const combinedBytes = decompression.combinedBytes;
 
-    const headerVersion = readI32At(combinedBytes, 0);
-    const headerSaveSize = readI32At(combinedBytes, 4);
+  const headerVersion = readI32At(combinedBytes, 0);
+  const headerSaveSize = readI32At(combinedBytes, 4);
+  const heroes = scanHeroes(combinedBytes);
+  const achievement = readAchievementBytes(combinedBytes, heroes);
 
-    const heroes = scanHeroes(combinedBytes);
-    const achievement = readAchievementBytes(combinedBytes, heroes);
+  const unlockedSteamAchievementIds = achievement.unlockedSteamAchievements.map((achievementInfo) => {
+    return achievementInfo.steamId;
+  });
 
-    const unlockedSteamAchievementIds = achievement.unlockedSteamAchievements.map((achievementInfo) => {
-        return achievementInfo.steamId;
-    });
+  const unlockedSteamAchievementNames = achievement.unlockedSteamAchievements.map((achievementInfo) => {
+    return achievementInfo.name;
+  });
 
-    const unlockedSteamAchievementNames = achievement.unlockedSteamAchievements.map((achievementInfo) => {
-        return achievementInfo.name;
-    });
+  const saveData = {
+    heroes: heroes,
+    unlockedSteamAchievements: achievement.unlockedSteamAchievements,
+    unlockedSteamAchievementIds: unlockedSteamAchievementIds,
+    unlockedSteamAchievementNames: unlockedSteamAchievementNames,
+    steamAchievementsUnlocked: achievement.unlockedSteamAchievements.length,
+    totalSteamAchievements: dd1SteamAchievementIndex.length,
+    saveAchievementFlagsFound: achievement.counts.nonZeroCount,
+    maxSaveAchievementFlags: maxAchievements,
+    achievementStartPosition: achievement.start,
+    achievementOriginalStartPosition: achievement.originalStart,
+    achievementOffsetAdjustment: achievement.offsetAdjustment,
+    achievementBytes: achievement.bytes,
+    achievementCounts: achievement.counts,
+    achievementSteamCounts: achievement.steamCounts,
+    achievementPreviewHex: achievement.previewHex,
+    achievementPreviewAscii: achievement.previewAscii,
+    decompression: {
+      blocks: decompression.blocks,
+      blockCount: decompression.blockCount,
+      combinedSize: decompression.combinedSize,
+      zlibHeaderOffsets: decompression.zlibHeaderOffsets
+    },
+    header: {
+      version: headerVersion,
+      saveSize: headerSaveSize
+    }
+  };
 
-    return {
-        heroes: heroes,
+  const achievementCandidates = findAchievementCandidates(combinedBytes, heroes);
 
-        unlockedSteamAchievements: achievement.unlockedSteamAchievements,
-        unlockedSteamAchievementIds: unlockedSteamAchievementIds,
-        unlockedSteamAchievementNames: unlockedSteamAchievementNames,
-
-        steamAchievementsUnlocked: achievement.unlockedSteamAchievements.length,
-        totalSteamAchievements: dd1SteamAchievementIndex.length,
-
-        saveAchievementFlagsFound: achievement.counts.nonZeroCount,
-        maxSaveAchievementFlags: maxAchievements,
-
-        achievementStartPosition: achievement.start,
-        achievementOriginalStartPosition: achievement.originalStart,
-        achievementOffsetAdjustment: achievement.offsetAdjustment,
-
-        achievementBytes: achievement.bytes,
-        achievementCounts: achievement.counts,
-        achievementPreviewHex: achievement.previewHex,
-        achievementPreviewAscii: achievement.previewAscii,
-
-        decompression: {
-            blocks: decompression.blocks,
-            blockCount: decompression.blocks.length,
-            combinedSize: combinedBytes.length
-        },
-
-        header: {
-            version: headerVersion,
-            saveSize: headerSaveSize
-        }
-    };
+  return {
+    decompression: {
+      blocks: decompression.blocks,
+      blockCount: decompression.blockCount,
+      combinedSize: decompression.combinedSize,
+      zlibHeaderOffsets: decompression.zlibHeaderOffsets
+    },
+    header: saveData.header,
+    heroes: heroes,
+    achievement: {
+      start: saveData.achievementStartPosition,
+      originalStart: saveData.achievementOriginalStartPosition,
+      offsetAdjustment: saveData.achievementOffsetAdjustment,
+      bytes: saveData.achievementBytes,
+      counts: saveData.achievementCounts,
+      steamCounts: saveData.achievementSteamCounts,
+      unlockedSteamAchievements: saveData.unlockedSteamAchievements,
+      previewHex: saveData.achievementPreviewHex,
+      previewAscii: saveData.achievementPreviewAscii
+    },
+    achievementCandidates: achievementCandidates,
+    combinedSize: decompression.combinedSize,
+    cleanSaveData: saveData
+  };
 }
 
-
-function scanSaveFile(arrayBuffer) {
-    const saveData = getDd1SaveData(arrayBuffer);
-    const achievementCandidates = findAchievementCandidates(
-        decompressDunFile(arrayBuffer).combinedBytes,
-        saveData.heroes
-    );
-
-    return {
-        decompression: {
-            blocks: saveData.decompression.blocks
-        },
-        header: saveData.header,
-        heroes: saveData.heroes,
-        achievement: {
-            start: saveData.achievementStartPosition,
-            originalStart: saveData.achievementOriginalStartPosition,
-            offsetAdjustment: saveData.achievementOffsetAdjustment,
-            bytes: saveData.achievementBytes,
-            counts: saveData.achievementCounts,
-            unlockedSteamAchievements: saveData.unlockedSteamAchievements,
-            previewHex: saveData.achievementPreviewHex,
-            previewAscii: saveData.achievementPreviewAscii
-        },
-        achievementCandidates: achievementCandidates,
-        combinedSize: saveData.decompression.combinedSize,
-        cleanSaveData: saveData
-    };
+function getDd1SaveData(arrayBuffer) {
+  return scanSaveFile(arrayBuffer).cleanSaveData;
 }
 
 
