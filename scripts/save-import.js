@@ -10,22 +10,42 @@ const saveFileOutput = document.querySelector("#save-file-output");
    2. Save Reader Constants
 ========================================================= */
 
-const targetZlibOffsets = [60, 20602, 38463];
-
-const targetSearchRanges = {
-    60: 20602,
-    20602: 38463,
-    38463: null
-};
-
 const maxAchievements = 500;
 
-const heroTemplatePatterns = [
-    "DunDefNewHeroes.HeroTemplate",
-    "DunDefHeroes.HeroTemplate"
+const dd1HeroClassRules = [
+    {
+        className: "Apprentice",
+        templateIncludes: [
+            "DunDefHeroes.HeroTemplateApprentice",
+            "DunDefHeroes.HeroTemplate_Apprentice",
+            "Apprentice"
+        ]
+    },
+    {
+        className: "Squire",
+        templateIncludes: [
+            "DunDefHeroes.HeroTemplateSquire",
+            "DunDefHeroes.HeroTemplate_Squire",
+            "Squire"
+        ]
+    },
+    {
+        className: "Huntress",
+        templateIncludes: [
+            "DunDefHeroes.HeroTemplateHuntress",
+            "DunDefHeroes.HeroTemplate_Huntress",
+            "Huntress"
+        ]
+    },
+    {
+        className: "Monk",
+        templateIncludes: [
+            "DunDefHeroes.HeroTemplateMonk",
+            "DunDefHeroes.HeroTemplate_Monk",
+            "Monk"
+        ]
+    }
 ];
-
-
 /* =========================================================
    3. Steam Achievement Data
 ========================================================= */
@@ -383,11 +403,22 @@ function looksLikeZlibHeader(rawBytes, position) {
         return false;
     }
 
-    const compressionMethodAndInfo = rawBytes[position];
-    const flags = rawBytes[position + 1];
+    const firstByte = rawBytes[position];
+    const secondByte = rawBytes[position + 1];
 
-    const compressionMethod = compressionMethodAndInfo & 0x0f;
-    const compressionInfo = compressionMethodAndInfo >> 4;
+    const knownMagicHeader = (
+        (firstByte === 0x78 && secondByte === 0x9c) ||
+        (firstByte === 0x78 && secondByte === 0x01) ||
+        (firstByte === 0x78 && secondByte === 0xda) ||
+        (firstByte === 0x78 && secondByte === 0x5e)
+    );
+
+    if (knownMagicHeader) {
+        return true;
+    }
+
+    const compressionMethod = firstByte & 0x0f;
+    const compressionInfo = firstByte >> 4;
 
     if (compressionMethod !== 8) {
         return false;
@@ -397,7 +428,7 @@ function looksLikeZlibHeader(rawBytes, position) {
         return false;
     }
 
-    const headerValue = (compressionMethodAndInfo << 8) + flags;
+    const headerValue = (firstByte << 8) + secondByte;
 
     return headerValue % 31 === 0;
 }
@@ -548,6 +579,132 @@ function decompressUsingDunBlockTable(rawBytes, blockTable) {
         compressedOffset += entry.compressedSize;
     });
 
+    return buildCombinedDecompression(rawBytes, findZlibHeaderOffsets(rawBytes), blocks, false, "");
+}
+
+
+function tryInflateZlibTail(rawBytes, offset) {
+    try {
+        const compressedBytes = rawBytes.slice(offset);
+        const decompressedBytes = pako.inflate(compressedBytes);
+
+        if (!decompressedBytes || decompressedBytes.length === 0) {
+            return null;
+        }
+
+        return {
+            success: true,
+            offset: offset,
+            end: rawBytes.length,
+            rawLength: rawBytes.length - offset,
+            expectedDecompressedSize: null,
+            decompressedBytes: decompressedBytes,
+            decompressedSize: decompressedBytes.length,
+            error: ""
+        };
+    } catch {
+        return null;
+    }
+}
+
+
+function tryInflateZlibBetweenHeaders(rawBytes, offset, nextOffset) {
+    try {
+        const compressedBytes = rawBytes.slice(offset, nextOffset);
+        const decompressedBytes = pako.inflate(compressedBytes);
+
+        if (!decompressedBytes || decompressedBytes.length === 0) {
+            return null;
+        }
+
+        return {
+            success: true,
+            offset: offset,
+            end: nextOffset,
+            rawLength: nextOffset - offset,
+            expectedDecompressedSize: null,
+            decompressedBytes: decompressedBytes,
+            decompressedSize: decompressedBytes.length,
+            error: ""
+        };
+    } catch {
+        return null;
+    }
+}
+
+
+function decompressUsingZlibMagicScan(rawBytes) {
+    const zlibHeaderOffsets = findZlibHeaderOffsets(rawBytes);
+    const blocks = [];
+    let totalDecompressed = 0;
+
+    const maxBlocks = 200;
+    const maxTotalSize = 1024 * 1024 * 50;
+
+    for (let index = 0; index < zlibHeaderOffsets.length; index++) {
+        if (blocks.length >= maxBlocks) {
+            throw new Error(`Too many zlib blocks found. Max allowed: ${maxBlocks}`);
+        }
+
+        const offset = zlibHeaderOffsets[index];
+
+        const alreadyInsideKnownBlock = blocks.some((block) => {
+            return offset >= block.offset && offset < block.end;
+        });
+
+        if (alreadyInsideKnownBlock) {
+            continue;
+        }
+
+        const nextOffset = index + 1 < zlibHeaderOffsets.length
+            ? zlibHeaderOffsets[index + 1]
+            : rawBytes.length;
+
+        let block = tryInflateZlibBetweenHeaders(rawBytes, offset, nextOffset);
+
+        if (!block) {
+            block = tryInflateZlibTail(rawBytes, offset);
+        }
+
+        if (!block) {
+            continue;
+        }
+
+        totalDecompressed += block.decompressedSize;
+
+        if (totalDecompressed > maxTotalSize) {
+            throw new Error(
+                `Total decompressed save size exceeded ${maxTotalSize.toLocaleString()} bytes.`
+            );
+        }
+
+        block.blockNumber = blocks.length + 1;
+        blocks.push(block);
+    }
+
+    if (blocks.length === 0) {
+        return null;
+    }
+
+    blocks.sort((a, b) => {
+        return a.offset - b.offset;
+    });
+
+    blocks.forEach((block, index) => {
+        block.blockNumber = index + 1;
+    });
+
+    return buildCombinedDecompression(
+        rawBytes,
+        zlibHeaderOffsets,
+        blocks,
+        false,
+        ""
+    );
+}
+
+
+function buildCombinedDecompression(rawBytes, zlibHeaderOffsets, blocks, usedRawFallback, fallbackReason) {
     let combinedSize = 0;
 
     blocks.forEach((block) => {
@@ -567,9 +724,20 @@ function decompressUsingDunBlockTable(rawBytes, blockTable) {
     });
 
     return {
+        rawBytes: rawBytes,
+        zlibHeaderOffsets: zlibHeaderOffsets,
+        compressedHeaderOffsets: zlibHeaderOffsets.map((offset) => {
+            return {
+                offset: offset,
+                type: "zlib"
+            };
+        }),
         blocks: blocks,
+        blockCount: blocks.length,
         combinedBytes: combinedBytes,
-        combinedSize: combinedBytes.length
+        combinedSize: combinedBytes.length,
+        usedRawFallback: usedRawFallback,
+        fallbackReason: fallbackReason
     };
 }
 
@@ -591,35 +759,27 @@ function createRawFallbackDecompression(rawBytes, reason) {
 
 function decompressDunFile(arrayBuffer) {
     const rawBytes = new Uint8Array(arrayBuffer);
-    const zlibHeaderOffsets = findZlibHeaderOffsets(rawBytes);
+
     const blockTable = parseDunCompressedBlockTable(rawBytes);
 
-    if (!blockTable) {
-        return createRawFallbackDecompression(
-            rawBytes,
-            "Could not read the Dungeon Defenders compressed block table, so the importer scanned the raw file bytes instead."
-        );
+    if (blockTable) {
+        const tableResult = decompressUsingDunBlockTable(rawBytes, blockTable);
+        tableResult.blockTable = blockTable;
+        tableResult.decompressionMethod = "dd1-block-table";
+        return tableResult;
     }
 
-    const decompressed = decompressUsingDunBlockTable(rawBytes, blockTable);
+    const magicScanResult = decompressUsingZlibMagicScan(rawBytes);
 
-    return {
-        rawBytes: rawBytes,
-        zlibHeaderOffsets: zlibHeaderOffsets,
-        compressedHeaderOffsets: zlibHeaderOffsets.map((offset) => {
-            return {
-                offset: offset,
-                type: "zlib"
-            };
-        }),
-        blocks: decompressed.blocks,
-        blockCount: decompressed.blocks.length,
-        combinedBytes: decompressed.combinedBytes,
-        combinedSize: decompressed.combinedSize,
-        usedRawFallback: false,
-        fallbackReason: "",
-        blockTable: blockTable
-    };
+    if (magicScanResult) {
+        magicScanResult.decompressionMethod = "zlib-magic-scan";
+        return magicScanResult;
+    }
+
+    return createRawFallbackDecompression(
+        rawBytes,
+        "Could not read the Dungeon Defenders block table or decompress zlib streams, so the importer scanned the raw file bytes instead."
+    );
 }
 
 
@@ -832,394 +992,512 @@ function scanHeroes(bytes) {
 
 
 /* =========================================================
-   10. Achievement Window Scanner
+   10. Structured Save Deserializer
 ========================================================= */
 
-function countAchievementWindow(bytes, start, count = maxAchievements) {
-    let zeroCount = 0;
-    let oneCount = 0;
-    let nonZeroCount = 0;
-    let otherNonZeroCount = 0;
-
-    if (start < 0 || start + count > bytes.length) {
-        return {
-            zeroCount: 0,
-            oneCount: 0,
-            nonZeroCount: 0,
-            otherNonZeroCount: count
-        };
+class SaveBinaryReader {
+    constructor(bytes) {
+        this.bytes = bytes;
+        this.position = 0;
+        this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     }
 
-    for (let offset = 0; offset < count; offset++) {
-        const value = bytes[start + offset];
+    remaining() {
+        return this.bytes.length - this.position;
+    }
 
-        if (value === 0) {
-            zeroCount++;
-        } else {
-            nonZeroCount++;
-
-            if (value === 1) {
-                oneCount++;
-            } else {
-                otherNonZeroCount++;
-            }
+    requireBytes(count, label) {
+        if (this.position + count > this.bytes.length) {
+            throw new Error(`Unexpected end of save while reading ${label}.`);
         }
     }
 
+    readI8(label = "i8") {
+        this.requireBytes(1, label);
+        const value = this.view.getInt8(this.position);
+        this.position += 1;
+        return value;
+    }
+
+    readBool(label = "bool") {
+        const value = this.readI8(label);
+
+        if (value === 0) {
+            return false;
+        }
+
+        if (value === 1) {
+            return true;
+        }
+
+        throw new Error(`Invalid bool value ${value} while reading ${label}.`);
+    }
+
+    readI32(label = "i32") {
+        this.requireBytes(4, label);
+        const value = this.view.getInt32(this.position, true);
+        this.position += 4;
+        return value;
+    }
+
+    readF32(label = "f32") {
+        this.requireBytes(4, label);
+        const value = this.view.getFloat32(this.position, true);
+        this.position += 4;
+        return value;
+    }
+
+    readOptionString(label = "Option<String>") {
+        const sizeRaw = this.readI32(`${label} length`);
+
+        if (sizeRaw === 0) {
+            return null;
+        }
+
+        const isUtf16 = sizeRaw < 0;
+        const characterCount = Math.abs(sizeRaw);
+        const byteCount = isUtf16 ? characterCount * 2 : characterCount;
+
+        if (byteCount < 0 || byteCount > this.remaining()) {
+            throw new Error(`Invalid string size ${sizeRaw} while reading ${label}.`);
+        }
+
+        this.requireBytes(byteCount, label);
+
+        const raw = this.bytes.slice(this.position, this.position + byteCount);
+        this.position += byteCount;
+
+        let value = "";
+
+        if (isUtf16) {
+            const codeUnits = [];
+
+            for (let index = 0; index < raw.length; index += 2) {
+                codeUnits.push(raw[index] | (raw[index + 1] << 8));
+            }
+
+            if (codeUnits.length > 0 && codeUnits[codeUnits.length - 1] === 0) {
+                codeUnits.pop();
+            }
+
+            value = String.fromCharCode(...codeUnits);
+        } else {
+            const trimmedRaw = raw.length > 0 && raw[raw.length - 1] === 0
+                ? raw.slice(0, raw.length - 1)
+                : raw;
+
+            const decoder = new TextDecoder("windows-1252");
+            value = decoder.decode(trimmedRaw);
+        }
+
+        if (value === "" || value === " ") {
+            return null;
+        }
+
+        return value;
+    }
+
+    readArray(count, readItem, label) {
+        const output = [];
+
+        for (let index = 0; index < count; index++) {
+            output.push(readItem(`${label}[${index}]`));
+        }
+
+        return output;
+    }
+
+    readVec(readItem, label) {
+        const count = this.readI32(`${label} count`);
+
+        if (count < 0) {
+            throw new Error(`Invalid negative vector size ${count} while reading ${label}.`);
+        }
+
+        if (count > 100000) {
+            throw new Error(`Invalid huge vector size ${count} while reading ${label}.`);
+        }
+
+        const output = [];
+
+        for (let index = 0; index < count; index++) {
+            output.push(readItem(`${label}[${index}]`));
+        }
+
+        return output;
+    }
+}
+
+
+function readLinearColor(reader, label) {
     return {
-        zeroCount: zeroCount,
-        oneCount: oneCount,
-        nonZeroCount: nonZeroCount,
-        otherNonZeroCount: otherNonZeroCount
+        r: reader.readF32(`${label}.r`),
+        g: reader.readF32(`${label}.g`),
+        b: reader.readF32(`${label}.b`),
+        a: reader.readF32(`${label}.a`)
     };
 }
 
 
-function looksLikeAchievementWindow(bytes, start) {
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
-
-    if (start < 0 || start + steamAchievementCount > bytes.length) {
-        return false;
-    }
-
-    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
-
-    return (
-        steamCounts.nonZeroCount >= 1 &&
-        steamCounts.nonZeroCount <= steamAchievementCount &&
-        steamCounts.otherNonZeroCount === 0
-    );
+function readSearchFilterSettings(reader) {
+    return {
+        levelIndicesToFilter: reader.readVec(
+            () => reader.readI32("level index"),
+            "level_indices_to_filter"
+        ),
+        difficultiesToFilter: reader.readVec(
+            () => reader.readI32("difficulty"),
+            "difficulties_to_filter"
+        ),
+        filterChallengeMissions: reader.readI8("filter_challenge_missions"),
+        filterCampaignMissions: reader.readI8("filter_campaign_missions"),
+        filterPureStrategy: reader.readI8("filter_pure_strategy"),
+        filterInfiniteBuild: reader.readI8("filter_infinite_build"),
+        filterInfiniteWaves: reader.readI8("filter_infinite_waves"),
+        filterHostClass: reader.readI8("filter_host_class"),
+        filterHostLevel: reader.readI8("filter_host_level"),
+        filterHostLevelStart: reader.readI8("filter_host_level_start"),
+        filterHostLevelEnd: reader.readI8("filter_host_level_end")
+    };
 }
 
 
-function scoreAchievementWindow(bytes, start) {
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
+function readOptionsFixedStruct(reader) {
+    return {
+        autoShowLevelUp: reader.readBool("auto_show_level_up"),
+        allowFriendlyFire: reader.readBool("allow_friendly_fire"),
+        useGamepad: reader.readBool("use_gamepad"),
+        autoAdjustCameraForPhase: reader.readBool("auto_adjust_camera_for_phase"),
 
-    if (start < 0 || start + steamAchievementCount > bytes.length) {
-        return -999999;
-    }
+        showTutorials: reader.readBool("show_tutorials"),
+        shownTutorials: reader.readArray(
+            10,
+            () => reader.readI32("shown_tutorial"),
+            "shown_tutorials"
+        ),
 
-    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+        volumeSfx: reader.readF32("volume_sfx"),
+        volumeMusic: reader.readF32("volume_music"),
 
-    if (steamCounts.otherNonZeroCount > 0) {
-        return -999999;
-    }
+        voicePlayVolume: reader.readF32("voice_play_volume"),
+        voiceCaptureVolume: reader.readF32("voice_capture_volume"),
+        pushToTalk: reader.readBool("push_to_talk"),
+        incomingVoice: reader.readBool("incoming_voice"),
+        outgoingVoice: reader.readBool("outgoing_voice"),
 
-    if (steamCounts.nonZeroCount < 1 || steamCounts.nonZeroCount > steamAchievementCount) {
-        return -999999;
-    }
+        gamma: reader.readF32("gamma"),
+        saturationIntensity: reader.readF32("saturation_intensity"),
+        uiScalePercent: reader.readF32("ui_scale_percent"),
 
-    let score = 0;
+        postProcessing: reader.readBool("post_processing"),
 
-    score += steamCounts.oneCount * 4;
+        showFloatingDamageNumbers: reader.readBool("show_floating_damage_numbers"),
+        rightStickTurnsCameraScheme: reader.readBool("right_stick_turns_camera_scheme"),
+        invertCameraPitch: reader.readBool("invert_camera_pitch"),
+        swapTriggersAndButtons: reader.readBool("swap_triggers_and_buttons"),
+        fullScreen: reader.readBool("full_screen"),
+        splitScreenConfig: reader.readI8("split_screen_config"),
+        currentDifficulty: reader.readI8("current_difficulty"),
+        lobbyItemLock: reader.readBool("lobby_item_lock"),
+        defaultChaseCamera: reader.readBool("default_chase_camera"),
+        defaultCameraTargetDistance: reader.readF32("default_camera_target_distance"),
+        defaultPlacingTowerCameraDistance: reader.readF32("default_placing_tower_camera_distance"),
+        mouseCameraRotationSpeed: reader.readF32("mouse_camera_rotation_speed"),
+        itemQualityFilter: reader.readI32("item_quality_filter"),
+        hideAccessory: reader.readBool("hide_accessory"),
+        enableOutlineEffect: reader.readBool("enable_outline_effect"),
 
-    const firstCampaignIndexes = [
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        10, 11, 12, 13, 14, 15, 16, 17, 18
-    ];
+        graphicsQuality: reader.readI8("graphics_quality"),
 
-    let firstCampaignUnlocked = 0;
+        frameRateLimit: reader.readF32("frame_rate_limit"),
 
-    firstCampaignIndexes.forEach((index) => {
-        if (bytes[start + index] === 1) {
-            firstCampaignUnlocked++;
-        }
-    });
+        inventorySortingFilter: reader.readI8("inventory_sorting_filter"),
 
-    score += firstCampaignUnlocked * 25;
+        minimumLevel: reader.readI32("minimum_level"),
 
-    if (firstCampaignUnlocked >= 15) {
-        score += 600;
-    }
+        savedLoginInfo: reader.readBool("saved_login_info"),
+        customGameMetaFlags: reader.readVec(
+            () => reader.readI8("custom_game_meta_flag"),
+            "custom_game_meta_flags"
+        ),
 
-    if (firstCampaignUnlocked >= 19) {
-        score += 1000;
-    }
-
-    const hasDungeonDefender = bytes[start + 18] === 1;
-    const hasDungeonRaider = bytes[start + 14] === 1;
-    const hasBrimstone = bytes[start + 15] === 1;
-    const hasCrowdedKeep = bytes[start + 16] === 1;
-    const hasLoftySummit = bytes[start + 17] === 1;
-
-    if (hasDungeonDefender) {
-        score += 150;
-
-        if (hasDungeonRaider && hasBrimstone && hasCrowdedKeep && hasLoftySummit) {
-            score += 1000;
-        } else {
-            score -= 1000;
-        }
-    }
-
-    if (hasDungeonRaider && hasBrimstone && hasCrowdedKeep && hasLoftySummit) {
-        score += 800;
-    }
-
-    const challengeIndexes = [
-        19, 20, 21, 22, 23, 24, 25, 26,
-        27, 28, 29, 30, 31, 32, 33, 34,
-        35, 36, 37
-    ];
-
-    let challengeUnlocked = 0;
-
-    challengeIndexes.forEach((index) => {
-        if (bytes[start + index] === 1) {
-            challengeUnlocked++;
-        }
-    });
-
-    score += challengeUnlocked * 8;
-
-    const laterProgressIndexes = [
-        38, 39, 40, 41, 43, 44, 45,
-        46, 47, 48, 49, 50, 52, 53,
-        54, 55, 56
-    ];
-
-    laterProgressIndexes.forEach((index) => {
-        if (bytes[start + index] === 1) {
-            score += 6;
-        }
-    });
-
-    return score;
+        customUnlocks: reader.readVec(
+            () => reader.readI32("custom_unlock"),
+            "custome_unlocks"
+        ),
+        heroUnlocks: reader.readVec(
+            () => reader.readI32("hero_unlock"),
+            "hero_unlocks"
+        )
+    };
 }
 
 
-function findAchievementStartNearAbilityMarker(bytes) {
-    const marker = "EntryBuild_AuraEnrage";
-    const markerPositions = findAllAsciiPatternMatches(bytes, marker);
-
-    if (markerPositions.length === 0) {
-        return -1;
-    }
-
-    let bestStart = -1;
-    let bestScore = -999999;
-
-    for (let markerIndex = markerPositions.length - 1; markerIndex >= 0; markerIndex--) {
-        const markerPosition = markerPositions[markerIndex];
-        const markerEnd = markerPosition + marker.length;
-
-        for (let offsetAfterMarker = 0; offsetAfterMarker <= 120; offsetAfterMarker++) {
-            const candidateStart = markerEnd + offsetAfterMarker;
-
-            if (!looksLikeAchievementWindow(bytes, candidateStart)) {
-                continue;
-            }
-
-            let score = 10000;
-            score += scoreAchievementWindow(bytes, candidateStart);
-
-            const distanceFromExpected = Math.abs(offsetAfterMarker - 9);
-            score -= distanceFromExpected * 5;
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestStart = candidateStart;
-            }
-        }
-    }
-
-    return bestStart;
+function readOptionsInfo(reader) {
+    return {
+        fixedSizeOptions: readOptionsFixedStruct(reader),
+        resolution: reader.readOptionString("resolution"),
+        lastLevelTag: reader.readOptionString("last_level_tag"),
+        username: reader.readOptionString("username"),
+        password: reader.readOptionString("password"),
+        searchFilters: readSearchFilterSettings(reader),
+        installedDlcEquipments: reader.readVec(
+            () => reader.readI32("installed_dlc_equipment"),
+            "installed_dlc_equipments"
+        )
+    };
 }
 
 
-function findBestAchievementStartInRange(bytes, searchStart, searchEnd) {
-    let bestStart = -1;
-    let bestScore = -999999;
+function readHeroInfo(reader) {
+    return {
+        isInitialized: reader.readBool("hero.is_initialized"),
 
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
-    const safeStart = Math.max(0, searchStart);
-    const safeEnd = Math.min(searchEnd, bytes.length - steamAchievementCount);
+        heroHealthModifier: reader.readI32("hero_health_modifier"),
+        heroSpeedModifier: reader.readI32("hero_speed_modifier"),
+        heroDamageModifier: reader.readI32("hero_damage_modifier"),
+        heroCastingModifier: reader.readI32("hero_casting_modifier"),
 
-    for (let position = safeStart; position <= safeEnd; position++) {
-        if (!looksLikeAchievementWindow(bytes, position)) {
-            continue;
-        }
+        heroAbilityOneModifier: reader.readI32("hero_ability_one_modifier"),
+        heroAbilityTwoModifier: reader.readI32("hero_ability_two_modifier"),
 
-        const score = scoreAchievementWindow(bytes, position);
+        heroDefenseHealthModifier: reader.readI32("hero_defense_health_modifier"),
+        heroDefenseAttackRateModifier: reader.readI32("hero_defense_attack_rate_modifier"),
+        heroDefenseDamageModifier: reader.readI32("hero_defense_damage_modifier"),
+        heroDefenseAreaOfEffectModifier: reader.readI32("hero_defense_area_of_effect_modifier"),
 
-        if (score > bestScore) {
-            bestScore = score;
-            bestStart = position;
-        }
-    }
+        heroLevel: reader.readI32("hero_level"),
+        heroExperience: reader.readI32("hero_experience"),
+        manaPower: reader.readI32("mana_power"),
 
-    return bestStart;
+        guid1: reader.readI32("guid1"),
+        guid2: reader.readI32("guid2"),
+        guid3: reader.readI32("guid3"),
+        guid4: reader.readI32("guid4"),
+
+        currentCostumeIndex: reader.readI32("current_costume_index"),
+        c1: readLinearColor(reader, "c1"),
+        c2: readLinearColor(reader, "c2"),
+        c3: readLinearColor(reader, "c3"),
+
+        didRespec: reader.readI8("did_respec"),
+        gaveExpBonus: reader.readI8("gave_exp_bonus"),
+        allowRename: reader.readI8("allow_rename"),
+        heroName: reader.readOptionString("hero_name"),
+        heroTemplate: reader.readOptionString("hero_template"),
+
+        hotKeyActionOne: reader.readOptionString("hot_key_action_one"),
+        hotKeyActionTwo: reader.readOptionString("hot_key_action_two"),
+        hotKeyActionThree: reader.readOptionString("hot_key_action_three"),
+        hotKeyActionFour: reader.readOptionString("hot_key_action_four"),
+        hotKeyActionFive: reader.readOptionString("hot_key_action_five"),
+        hotKeyActionSix: reader.readOptionString("hot_key_action_six"),
+        hotKeyActionSeven: reader.readOptionString("hot_key_action_seven"),
+        hotKeyActionEight: reader.readOptionString("hot_key_action_eight"),
+        hotKeyActionNine: reader.readOptionString("hot_key_action_nine"),
+        hotKeyActionTen: reader.readOptionString("hot_key_action_ten"),
+
+        equipmentCount: reader.readI32("equipment_count")
+    };
 }
 
 
-function findLikelyAchievementStart(bytes, heroes) {
-    const markerBasedStart = findAchievementStartNearAbilityMarker(bytes);
+function readEquipmentInfo(reader) {
+    return {
+        isInitialized: reader.readBool("equipment.is_initialized"),
 
-    if (markerBasedStart !== -1) {
-        return markerBasedStart;
-    }
+        damageReductionIndex: reader.readArray(
+            4,
+            () => reader.readI8("damage_reduction_index"),
+            "damage_reduction_index"
+        ),
+        damageReductionPercentage: reader.readArray(
+            4,
+            () => reader.readI8("damage_reduction_percentage"),
+            "damage_reduction_percentage"
+        ),
+        statModifiers: reader.readArray(
+            11,
+            () => reader.readI32("stat_modifier"),
+            "stat_modifiers"
+        ),
+        spawnStatModifiers: reader.readArray(
+            11,
+            () => reader.readI32("spawn_stat_modifier"),
+            "spawn_stat_modifiers"
+        ),
 
-    let searchStart = 0;
+        weaponDamageBonus: reader.readI32("weapon_damage_bonus"),
+        weaponNumberOfProjectilesBonus: reader.readI8("weapon_number_of_projectiles_bonus"),
+        weaponSpeedOfProjectilesBonus: reader.readI32("weapon_speed_of_projectiles_bonus"),
+        weaponAdditionalDamageTypeIndex: reader.readI8("weapon_additional_damage_type_index"),
+        weaponAdditionalDamageAmount: reader.readI32("weapon_additional_damage_amount"),
+        weaponDrawScaleMultiplier: reader.readF32("weapon_draw_scale_multiplier"),
+        weaponSwingSpeedMultiplier: reader.readF32("weapon_swing_speed_multiplier"),
+        level: reader.readI32("level"),
+        storedMana: reader.readI32("stored_mana"),
+        spawnQuality: reader.readF32("spawn_quality"),
+        spawnRandomizerMultiplier: reader.readF32("spawn_randomizer_multiplier"),
 
-    if (heroes.length > 0) {
-        const lastHero = heroes[heroes.length - 1];
-        searchStart = lastHero.templatePosition + 500;
-    }
+        weaponBlockingBonus: reader.readI8("weapon_blocking_bonus"),
+        weaponAltDamageBonus: reader.readI32("weapon_alt_damage_bonus"),
+        weaponClipAmmoBonus: reader.readI32("weapon_clip_ammo_bonus"),
+        weaponReloadSpeedBonus: reader.readI8("weapon_reload_speed_bonus"),
+        weaponKnockbackBonus: reader.readI8("weapon_knockback_bonus"),
+        weaponChargeSpeedBonus: reader.readI8("weapon_charge_speed_bonus"),
+        weaponShotsPerSecondBonus: reader.readI8("weapon_shots_per_second_bonus"),
 
-    const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
+        nameIndexBase: reader.readI8("name_index_base"),
+        nameIndexDamageReduction: reader.readI8("name_index_damage_reduction"),
+        nameIndexQualityDescriptor: reader.readI8("name_index_quality_descriptor"),
 
-    const heroBasedStart = findBestAchievementStartInRange(bytes, searchStart, searchEnd);
+        primaryColorSet: reader.readI8("primary_color_set"),
+        secondaryColorSet: reader.readI8("secondary_color_set"),
 
-    if (heroBasedStart !== -1) {
-        return heroBasedStart;
-    }
+        equipmentId1: reader.readI32("equipment_id_1"),
+        equipmentId2: reader.readI32("equipment_id_2"),
 
-    const fullFileStart = findBestAchievementStartInRange(bytes, 0, searchEnd);
+        minimumSellWorth: reader.readI32("minimum_sell_worth"),
+        maximumSellWorth: reader.readI32("maximum_sell_worth"),
+        maxEquipmentLevel: reader.readI32("max_equipment_level"),
 
-    if (fullFileStart !== -1) {
-        return fullFileStart;
-    }
+        droppedLocationX: reader.readI32("dropped_location_x"),
+        droppedLocationY: reader.readI32("dropped_location_y"),
+        droppedLocationZ: reader.readI32("dropped_location_z"),
 
-    return -1;
+        canBeUpgraded: reader.readI8("can_be_upgraded"),
+        allowRenamingAtMaxUpgrade: reader.readI8("allow_renaming_at_max_upgrade"),
+
+        cantBeDropped: reader.readI8("cant_be_dropped"),
+        cantBeSold: reader.readI8("cant_be_sold"),
+        autoLockInItemBox: reader.readI8("auto_lock_in_item_box"),
+        didOnetimeEffect: reader.readI8("did_onetime_effect"),
+        isLocked: reader.readI8("is_locked"),
+        manualLr: reader.readI8("manual_lr"),
+
+        primaryColorOverride: readLinearColor(reader, "primary_color_override"),
+        secondaryColorOverride: readLinearColor(reader, "secondary_color_override"),
+
+        userEquipmentName: reader.readOptionString("user_equipment_name"),
+        userForgerName: reader.readOptionString("user_forger_name"),
+        description: reader.readOptionString("description"),
+        equipmentTemplate: reader.readOptionString("equipment_template"),
+        equipmentTimestamp: reader.readOptionString("equipment_timestamp"),
+
+        folderId: reader.readI32("folder_id"),
+        isSecondary: reader.readBool("is_secondary"),
+
+        statEquipmentIds: reader.readArray(
+            10,
+            () => reader.readI32("stat_equipment_id"),
+            "stat_equipment_ids"
+        ),
+        statEquipmentTiers: reader.readArray(
+            10,
+            () => reader.readI32("stat_equipment_tier"),
+            "stat_equipment_tiers"
+        ),
+
+        qualityBeamColorOverride: readLinearColor(reader, "quality_beam_color_override"),
+        equipmentFeatureString: reader.readOptionString("equipment_feature_string"),
+
+        hideQualityDescriptors: reader.readI8("hide_quality_descriptors"),
+        equipmentFeatureByte1: reader.readI8("equipment_feature_byte1"),
+        equipmentFeatureByte2: reader.readI8("equipment_feature_byte2"),
+
+        featureArray: reader.readArray(
+            10,
+            () => reader.readI32("feature_array"),
+            "feature_array"
+        )
+    };
 }
 
 
-function findAchievementCandidates(bytes, heroes) {
-    const candidates = [];
-
-    const markerStart = findAchievementStartNearAbilityMarker(bytes);
-
-    if (markerStart !== -1) {
-        const markerBytes = bytes.slice(
-            markerStart,
-            markerStart + dd1SteamAchievementIndex.length
-        );
-
-        candidates.push({
-            start: markerStart,
-            source: "ability-marker",
-            score: 10000 + scoreAchievementWindow(bytes, markerStart),
-            steamCounts: countAchievementWindow(
-                bytes,
-                markerStart,
-                dd1SteamAchievementIndex.length
-            ),
-            counts: countAchievementWindow(
-                bytes,
-                markerStart,
-                Math.min(maxAchievements, bytes.length - markerStart)
-            ),
-            previewHex: debugBytes(markerBytes, 0, 160),
-            previewAscii: bytesToAscii(markerBytes, 0, 160)
-        });
-    }
-
-    let searchStart = 0;
-
-    if (heroes.length > 0) {
-        const lastHero = heroes[heroes.length - 1];
-        searchStart = lastHero.templatePosition + 500;
-    }
-
-    const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
-
-    for (let position = searchStart; position <= searchEnd; position++) {
-        if (!looksLikeAchievementWindow(bytes, position)) {
-            continue;
-        }
-
-        const achievementBytes = bytes.slice(
-            position,
-            position + dd1SteamAchievementIndex.length
-        );
-
-        candidates.push({
-            start: position,
-            source: "hero-based-scan",
-            score: scoreAchievementWindow(bytes, position),
-            steamCounts: countAchievementWindow(
-                bytes,
-                position,
-                dd1SteamAchievementIndex.length
-            ),
-            counts: countAchievementWindow(
-                bytes,
-                position,
-                Math.min(maxAchievements, bytes.length - position)
-            ),
-            previewHex: debugBytes(achievementBytes, 0, 160),
-            previewAscii: bytesToAscii(achievementBytes, 0, 160)
-        });
-    }
-
-    if (candidates.length === 0) {
-        for (let position = 0; position <= searchEnd; position++) {
-            if (!looksLikeAchievementWindow(bytes, position)) {
-                continue;
-            }
-
-            const achievementBytes = bytes.slice(
-                position,
-                position + dd1SteamAchievementIndex.length
-            );
-
-            candidates.push({
-                start: position,
-                source: "full-file-scan",
-                score: scoreAchievementWindow(bytes, position),
-                steamCounts: countAchievementWindow(
-                    bytes,
-                    position,
-                    dd1SteamAchievementIndex.length
-                ),
-                counts: countAchievementWindow(
-                    bytes,
-                    position,
-                    Math.min(maxAchievements, bytes.length - position)
-                ),
-                previewHex: debugBytes(achievementBytes, 0, 160),
-                previewAscii: bytesToAscii(achievementBytes, 0, 160)
-            });
-        }
-    }
-
-    candidates.sort((a, b) => {
-        return b.score - a.score;
-    });
-
-    return candidates.slice(0, 10);
+function readHero(reader) {
+    return {
+        heroInfo: readHeroInfo(reader),
+        equipments: reader.readVec(() => readEquipmentInfo(reader), "hero.equipments")
+    };
 }
 
 
-function readAchievementBytes(bytes, heroes) {
-    const start = findLikelyAchievementStart(bytes, heroes);
+function readAchievementInfo(reader) {
+    return {
+        achievements: reader.readArray(
+            maxAchievements,
+            () => reader.readI8("achievement"),
+            "achievements"
+        )
+    };
+}
 
-    if (start === -1) {
-        throw new Error(
-            "NEW SCANNER ACTIVE: Could not find the Steam achievement byte window after scanning the combined decompressed save data."
-        );
-    }
 
-    const steamAchievementCount = dd1SteamAchievementIndex.length;
+function readCoreUnlockInfo(reader) {
+    return {
+        coreUnlocks: reader.readArray(
+            40,
+            () => reader.readI8("core_unlock"),
+            "core_unlocks"
+        )
+    };
+}
 
-    const achievementBytes = bytes.slice(
-        start,
-        start + Math.max(maxAchievements, steamAchievementCount)
-    );
 
-    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+function readCrystalCoreOptions(reader) {
+    return {
+        coreIndex: reader.readI32("core_index"),
+        color1: readLinearColor(reader, "core_color_1"),
+        color2: readLinearColor(reader, "core_color_2"),
+        color3: readLinearColor(reader, "core_color_3")
+    };
+}
 
-    const fullCounts = countAchievementWindow(
-        bytes,
-        start,
-        Math.min(maxAchievements, bytes.length - start)
-    );
 
+function readLevelProgressInfo(reader) {
+    return {
+        campaignTag: reader.readOptionString("campaign_tag"),
+        difficultyMask: reader.readI32("difficulty_mask")
+    };
+}
+
+
+function readSaveFileInfoUntilLevelProgress(bytes) {
+    const reader = new SaveBinaryReader(bytes);
+
+    const versionNumber = reader.readI32("version_number");
+    const size = reader.readI32("size");
+
+    const options = readOptionsInfo(reader);
+    const heroes = reader.readVec(() => readHero(reader), "heroes");
+    const achievements = readAchievementInfo(reader);
+    const coreInfo = readCoreUnlockInfo(reader);
+    const coreOptions = readCrystalCoreOptions(reader);
+    const beatenLevels = reader.readVec(() => readLevelProgressInfo(reader), "beaten_levels");
+    const unlockedLevels = reader.readVec(() => readLevelProgressInfo(reader), "unlocked_levels");
+
+    return {
+        versionNumber: versionNumber,
+        size: size,
+        options: options,
+        heroes: heroes,
+        achievements: achievements,
+        coreInfo: coreInfo,
+        coreOptions: coreOptions,
+        beatenLevels: beatenLevels,
+        unlockedLevels: unlockedLevels,
+        readerPosition: reader.position,
+        remainingBytes: reader.remaining()
+    };
+}
+
+
+function getUnlockedSteamAchievementsFromStructuredSave(saveInfo) {
     const unlockedSteamAchievements = [];
 
     for (let index = 0; index < dd1SteamAchievementIndex.length; index++) {
         const steamId = dd1SteamAchievementIndex[index];
-        const value = achievementBytes[index];
+        const value = saveInfo.achievements.achievements[index];
 
         if (value === 1) {
             unlockedSteamAchievements.push({
@@ -1230,100 +1508,141 @@ function readAchievementBytes(bytes, heroes) {
         }
     }
 
-    return {
-        start: start,
-        originalStart: start,
-        offsetAdjustment: 0,
-        bytes: achievementBytes,
-        counts: fullCounts,
-        steamCounts: steamCounts,
-        unlockedSteamAchievements: unlockedSteamAchievements,
-        previewHex: debugBytes(achievementBytes, 0, 200),
-        previewAscii: bytesToAscii(achievementBytes, 0, 200)
-    };
+    return unlockedSteamAchievements;
 }
-
 
 /* =========================================================
    11. Save Scanner
 ========================================================= */
 
 function scanSaveFile(arrayBuffer) {
-  const decompression = decompressDunFile(arrayBuffer);
-  const combinedBytes = decompression.combinedBytes;
+    const decompression = decompressDunFile(arrayBuffer);
+    const combinedBytes = decompression.combinedBytes;
 
-  const headerVersion = readI32At(combinedBytes, 0);
-  const headerSaveSize = readI32At(combinedBytes, 4);
-  const heroes = scanHeroes(combinedBytes);
-  const achievement = readAchievementBytes(combinedBytes, heroes);
+    const structuredSaveInfo = readSaveFileInfoUntilLevelProgress(combinedBytes);
+    const unlockedSteamAchievements = getUnlockedSteamAchievementsFromStructuredSave(structuredSaveInfo);
 
-  const unlockedSteamAchievementIds = achievement.unlockedSteamAchievements.map((achievementInfo) => {
-    return achievementInfo.steamId;
-  });
+    const unlockedSteamAchievementIds = unlockedSteamAchievements.map((achievementInfo) => {
+        return achievementInfo.steamId;
+    });
 
-  const unlockedSteamAchievementNames = achievement.unlockedSteamAchievements.map((achievementInfo) => {
-    return achievementInfo.name;
-  });
+    const unlockedSteamAchievementNames = unlockedSteamAchievements.map((achievementInfo) => {
+        return achievementInfo.name;
+    });
 
-  const saveData = {
-    heroes: heroes,
-    unlockedSteamAchievements: achievement.unlockedSteamAchievements,
-    unlockedSteamAchievementIds: unlockedSteamAchievementIds,
-    unlockedSteamAchievementNames: unlockedSteamAchievementNames,
-    steamAchievementsUnlocked: achievement.unlockedSteamAchievements.length,
-    totalSteamAchievements: dd1SteamAchievementIndex.length,
-    saveAchievementFlagsFound: achievement.counts.nonZeroCount,
-    maxSaveAchievementFlags: maxAchievements,
-    achievementStartPosition: achievement.start,
-    achievementOriginalStartPosition: achievement.originalStart,
-    achievementOffsetAdjustment: achievement.offsetAdjustment,
-    achievementBytes: achievement.bytes,
-    achievementCounts: achievement.counts,
-    achievementSteamCounts: achievement.steamCounts,
-    achievementPreviewHex: achievement.previewHex,
-    achievementPreviewAscii: achievement.previewAscii,
-    decompression: {
-      blocks: decompression.blocks,
-      blockCount: decompression.blockCount,
-      combinedSize: decompression.combinedSize,
-      zlibHeaderOffsets: decompression.zlibHeaderOffsets
-    },
-    header: {
-      version: headerVersion,
-      saveSize: headerSaveSize
-    }
-  };
+    const heroes = structuredSaveInfo.heroes.map((hero, index) => {
+        return {
+            number: index + 1,
+            name: hero.heroInfo.heroName || "Unnamed Hero",
+            namePosition: null,
+            template: hero.heroInfo.heroTemplate || "Unknown Template",
+            templatePosition: null,
+            level: hero.heroInfo.heroLevel,
+            experience: hero.heroInfo.heroExperience,
+            equipmentCount: hero.equipments.length,
+            previewAscii: "",
+            previewHex: ""
+        };
+    });
 
-  const achievementCandidates = findAchievementCandidates(combinedBytes, heroes);
+    const achievementBytes = structuredSaveInfo.achievements.achievements;
 
-  return {
-    decompression: {
-      blocks: decompression.blocks,
-      blockCount: decompression.blockCount,
-      combinedSize: decompression.combinedSize,
-      zlibHeaderOffsets: decompression.zlibHeaderOffsets
-    },
-    header: saveData.header,
-    heroes: heroes,
-    achievement: {
-      start: saveData.achievementStartPosition,
-      originalStart: saveData.achievementOriginalStartPosition,
-      offsetAdjustment: saveData.achievementOffsetAdjustment,
-      bytes: saveData.achievementBytes,
-      counts: saveData.achievementCounts,
-      steamCounts: saveData.achievementSteamCounts,
-      unlockedSteamAchievements: saveData.unlockedSteamAchievements,
-      previewHex: saveData.achievementPreviewHex,
-      previewAscii: saveData.achievementPreviewAscii
-    },
-    achievementCandidates: achievementCandidates,
-    combinedSize: decompression.combinedSize,
-    cleanSaveData: saveData
-  };
+    const saveData = {
+        heroes: heroes,
+
+        unlockedSteamAchievements: unlockedSteamAchievements,
+        unlockedSteamAchievementIds: unlockedSteamAchievementIds,
+        unlockedSteamAchievementNames: unlockedSteamAchievementNames,
+
+        steamAchievementsUnlocked: unlockedSteamAchievements.length,
+        totalSteamAchievements: dd1SteamAchievementIndex.length,
+
+        beatenLevels: structuredSaveInfo.beatenLevels,
+        unlockedLevels: structuredSaveInfo.unlockedLevels,
+
+        saveAchievementFlagsFound: achievementBytes.filter((value) => {
+            return value !== 0;
+        }).length,
+
+        maxSaveAchievementFlags: maxAchievements,
+
+        achievementStartPosition: null,
+        achievementOriginalStartPosition: null,
+        achievementOffsetAdjustment: 0,
+        achievementBytes: achievementBytes,
+        achievementCounts: {
+            zeroCount: achievementBytes.filter((value) => {
+                return value === 0;
+            }).length,
+            oneCount: achievementBytes.filter((value) => {
+                return value === 1;
+            }).length,
+            nonZeroCount: achievementBytes.filter((value) => {
+                return value !== 0;
+            }).length,
+            otherNonZeroCount: achievementBytes.filter((value) => {
+                return value !== 0 && value !== 1;
+            }).length
+        },
+        achievementSteamCounts: {
+            zeroCount: achievementBytes.slice(0, dd1SteamAchievementIndex.length).filter((value) => {
+                return value === 0;
+            }).length,
+            oneCount: achievementBytes.slice(0, dd1SteamAchievementIndex.length).filter((value) => {
+                return value === 1;
+            }).length,
+            nonZeroCount: achievementBytes.slice(0, dd1SteamAchievementIndex.length).filter((value) => {
+                return value !== 0;
+            }).length,
+            otherNonZeroCount: achievementBytes.slice(0, dd1SteamAchievementIndex.length).filter((value) => {
+                return value !== 0 && value !== 1;
+            }).length
+        },
+        achievementPreviewHex: debugBytes(new Uint8Array(achievementBytes), 0, 200),
+        achievementPreviewAscii: bytesToAscii(new Uint8Array(achievementBytes), 0, 200),
+
+        structuredReaderPosition: structuredSaveInfo.readerPosition,
+        structuredReaderRemainingBytes: structuredSaveInfo.remainingBytes,
+
+        decompression: {
+            blocks: decompression.blocks,
+            blockCount: decompression.blockCount,
+            combinedSize: decompression.combinedSize,
+            zlibHeaderOffsets: decompression.zlibHeaderOffsets,
+            method: decompression.decompressionMethod || "unknown"
+        },
+
+        header: {
+            version: structuredSaveInfo.versionNumber,
+            saveSize: structuredSaveInfo.size
+        }
+    };
+
+    return {
+        decompression: saveData.decompression,
+        header: saveData.header,
+        heroes: heroes,
+        achievement: {
+            start: null,
+            originalStart: null,
+            offsetAdjustment: 0,
+            bytes: achievementBytes,
+            counts: saveData.achievementCounts,
+            steamCounts: saveData.achievementSteamCounts,
+            unlockedSteamAchievements: unlockedSteamAchievements,
+            previewHex: saveData.achievementPreviewHex,
+            previewAscii: saveData.achievementPreviewAscii
+        },
+        beatenLevels: structuredSaveInfo.beatenLevels,
+        unlockedLevels: structuredSaveInfo.unlockedLevels,
+        combinedSize: decompression.combinedSize,
+        cleanSaveData: saveData
+    };
 }
 
+
 function getDd1SaveData(arrayBuffer) {
-  return scanSaveFile(arrayBuffer).cleanSaveData;
+    return scanSaveFile(arrayBuffer).cleanSaveData;
 }
 
 
@@ -1356,15 +1675,9 @@ function buildHeroRows(heroes) {
                 <br>
                 <strong>Template:</strong> ${escapeHtml(hero.template)}
                 <br>
-                <strong>Name Position:</strong> ${hero.namePosition}
+                <strong>Level:</strong> ${hero.level ?? "Unknown"}
                 |
-                <strong>Template Position:</strong> ${hero.templatePosition}
-
-                <details>
-                    <summary>Hero preview</summary>
-                    <p><strong>ASCII:</strong> <code>${escapeHtml(hero.previewAscii)}</code></p>
-                    <p><strong>Hex:</strong> <code>${escapeHtml(hero.previewHex)}</code></p>
-                </details>
+                <strong>Equipment Count:</strong> ${hero.equipmentCount ?? "Unknown"}
             </li>
         `;
     }).join("");
@@ -1405,6 +1718,554 @@ function getRequiredSteamIdsFromCheckbox(checkbox) {
 }
 
 
+function saveHasAchievement(saveData, steamId) {
+    return saveData.unlockedSteamAchievementIds.includes(steamId);
+}
+
+
+function saveHasAnyAchievement(saveData, steamIds) {
+    return steamIds.some((steamId) => {
+        return saveHasAchievement(saveData, steamId);
+    });
+}
+
+
+function normalizeChecklistText(value) {
+    return String(value)
+        .toLowerCase()
+        .replaceAll("’", "'")
+        .replaceAll("'", "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+
+function getCheckboxTextContainer(checkbox) {
+    return checkbox.closest("li, tr, label, .checklist-item, .checklist-row, div") || checkbox.parentElement;
+}
+
+
+function getCheckboxVisibleText(checkbox) {
+    const container = getCheckboxTextContainer(checkbox);
+
+    if (!container) {
+        return "";
+    }
+
+    return normalizeChecklistText(container.textContent || "");
+}
+
+
+function getAllChecklistCheckboxes(rootElement = document) {
+    return Array.from(rootElement.querySelectorAll("input[type='checkbox']"));
+}
+
+
+function getBeatenLevelMap(saveData) {
+    const beatenMap = new Map();
+
+    if (!saveData.beatenLevels) {
+        return beatenMap;
+    }
+
+    saveData.beatenLevels.forEach((levelInfo) => {
+        if (!levelInfo || !levelInfo.campaignTag) {
+            return;
+        }
+
+        beatenMap.set(levelInfo.campaignTag, levelInfo.difficultyMask);
+    });
+
+    return beatenMap;
+}
+
+
+function levelMaskHasDifficulty(difficultyMask, difficultyBit) {
+    return (difficultyMask & difficultyBit) !== 0;
+}
+
+
+function levelMaskHasNightmare(difficultyMask) {
+    return levelMaskHasDifficulty(difficultyMask, 16);
+}
+
+
+function saveHasBeatenTag(saveData, campaignTag) {
+    const beatenMap = getBeatenLevelMap(saveData);
+    return beatenMap.has(campaignTag);
+}
+
+
+function saveHasBeatenTagOnNightmare(saveData, campaignTag) {
+    const beatenMap = getBeatenLevelMap(saveData);
+
+    if (!beatenMap.has(campaignTag)) {
+        return false;
+    }
+
+    return levelMaskHasNightmare(beatenMap.get(campaignTag));
+}
+
+
+function checkBoxesByTextRules(rootElement, rules) {
+    let checkedCount = 0;
+    const checkboxes = getAllChecklistCheckboxes(rootElement);
+
+    checkboxes.forEach((checkbox) => {
+        const visibleText = getCheckboxVisibleText(checkbox);
+
+        const matched = rules.some((rule) => {
+            const requiredText = normalizeChecklistText(rule.text || "");
+            const requiredIncludes = (rule.includes || []).map(normalizeChecklistText);
+            const excludedIncludes = (rule.excludes || []).map(normalizeChecklistText);
+
+            if (requiredText && !visibleText.includes(requiredText)) {
+                return false;
+            }
+
+            const hasAllRequiredIncludes = requiredIncludes.every((required) => {
+                return visibleText.includes(required);
+            });
+
+            if (!hasAllRequiredIncludes) {
+                return false;
+            }
+
+            const hasExcludedText = excludedIncludes.some((excluded) => {
+                return visibleText.includes(excluded);
+            });
+
+            return !hasExcludedText;
+        });
+
+        if (matched && !checkbox.checked) {
+            checkbox.checked = true;
+            checkedCount++;
+        }
+    });
+
+    return checkedCount;
+}
+
+
+function getHeroClassFromTemplate(template) {
+    if (!template) {
+        return null;
+    }
+
+    const normalizedTemplate = String(template).toLowerCase();
+
+    for (const rule of dd1HeroClassRules) {
+        const matched = rule.templateIncludes.some((templatePart) => {
+            return normalizedTemplate.includes(templatePart.toLowerCase());
+        });
+
+        if (matched) {
+            return rule.className;
+        }
+    }
+
+    return null;
+}
+
+
+function getOriginalLevel70HeroClasses(saveData) {
+    const classes = new Set();
+
+    if (!saveData.heroes) {
+        return classes;
+    }
+
+    saveData.heroes.forEach((hero) => {
+        const heroClass = getHeroClassFromTemplate(hero.template);
+
+        if (!heroClass) {
+            return;
+        }
+
+        if (hero.level >= 70) {
+            classes.add(heroClass);
+        }
+    });
+
+    return classes;
+}
+
+
+function applyGroupHugChecklistProgress(saveData, rootElement = document) {
+    let checkedCount = 0;
+    const level70Classes = getOriginalLevel70HeroClasses(saveData);
+
+    const originalHeroRows = [
+        {
+            className: "Apprentice",
+            possibleTexts: [
+                "Apprentice Level 70",
+                "Apprentice Reach level 70",
+                "Apprentice Raise to level 70",
+                "Apprentice Raise one to level 70"
+            ]
+        },
+        {
+            className: "Squire",
+            possibleTexts: [
+                "Squire Level 70",
+                "Squire Reach level 70",
+                "Squire Raise to level 70",
+                "Squire Raise one to level 70"
+            ]
+        },
+        {
+            className: "Huntress",
+            possibleTexts: [
+                "Huntress Level 70",
+                "Huntress Reach level 70",
+                "Huntress Raise to level 70",
+                "Huntress Raise one to level 70"
+            ]
+        },
+        {
+            className: "Monk",
+            possibleTexts: [
+                "Monk Level 70",
+                "Monk Reach level 70",
+                "Monk Raise to level 70",
+                "Monk Raise one to level 70"
+            ]
+        }
+    ];
+
+    originalHeroRows.forEach((row) => {
+        if (!level70Classes.has(row.className)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, row.possibleTexts.map((text) => {
+            return {
+                text: text,
+                excludes: [
+                    "defeat the summit",
+                    "player one",
+                    "a matter of perspective"
+                ]
+            };
+        }));
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    row.className,
+                    "level 70"
+                ],
+                excludes: [
+                    "defeat the summit",
+                    "player one",
+                    "a matter of perspective"
+                ]
+            },
+            {
+                includes: [
+                    row.className,
+                    "raise",
+                    "70"
+                ],
+                excludes: [
+                    "defeat the summit",
+                    "player one",
+                    "a matter of perspective"
+                ]
+            }
+        ]);
+    });
+
+    return checkedCount;
+}
+
+
+function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
+    let checkedCount = 0;
+
+    const campaignRows = [
+        { tag: "CAMPDW", text: "The Deeper Well" },
+        { tag: "CAMPFF", text: "Foundries and Forges" },
+        { tag: "CAMPMQ", text: "Magus Quarters" },
+        { tag: "CAMPAL", text: "Alchemical Laboratory" },
+        { tag: "CAMPSQ", text: "Servants Quarters" },
+        { tag: "CAMPCA", text: "Castle Armory" },
+        { tag: "CAMPHC", text: "Hall of Court" },
+        { tag: "CAMPTR", text: "The Throne Room" },
+        { tag: "CAMPRG", text: "Royal Gardens" },
+        { tag: "CAMPRP", text: "The Ramparts" },
+        { tag: "CAMPES", text: "Endless Spires" },
+        { tag: "CAMPTS", text: "The Summit" },
+        { tag: "CAMPGC", text: "Glitterhelm Caverns" }
+    ];
+
+    const shardsAndCampaignRows = [
+        { tag: "CAMPAR", text: "Mistymire Forest" },
+        { tag: "CAMPAQ", text: "Aquanos" },
+        { tag: "CAMPSC", text: "Sky City" },
+        { tag: "CAMPCL", text: "Crystalline Dimension" }
+    ];
+
+    const lostQuestNightmareRows = [
+        { tag: "CDTCDD", text: "Dread Dungeon" },
+        { tag: "CDTARC", text: "Arcane Library" },
+        { tag: "CDTARA", text: "Embermount Volcano" },
+        { tag: "CDTTOW", text: "Temple of Water" },
+        { tag: "CDTWIM", text: "Wintermire" },
+        { tag: "CDTINF", text: "Infested Ruins" },
+        { tag: "CDTTOP", text: "Temple of Polybius" },
+        { tag: "CDTTOP", text: "Tomb of Etheria" }
+    ];
+
+    const challengeRows = [
+        { tag: "SPECDW", text: "No Towers Allowed" },
+        { tag: "SPECFF", text: "Unlikely Allies" },
+        { tag: "SPECMQ", text: "Warping Core" },
+        { tag: "SPECAL", text: "Raining Goblins" },
+        { tag: "SPECSQ", text: "Wizardry" },
+        { tag: "SPECCA", text: "Ogre Crush" },
+        { tag: "SPECHC", text: "Zippy Terror" },
+        { tag: "SPECTR", text: "Chicken" },
+        { tag: "SPECRG", text: "Moving Core" },
+        { tag: "SPECRP", text: "Death From Above" },
+        { tag: "SPECES", text: "Assault" },
+        { tag: "SPECTS", text: "Treasure Hunt" },
+        { tag: "CAMPMF", text: "Monster Fest" }
+    ];
+
+    campaignRows.forEach((row) => {
+        if (!saveHasBeatenTag(saveData, row.tag)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    row.text,
+                    "complete required campaign clears"
+                ],
+                excludes: [
+                    "griffon",
+                    "giraffe",
+                    "steam robot",
+                    "serpent",
+                    "laser robot",
+                    "hamster",
+                    "tiger",
+                    "genie",
+                    "fairy",
+                    "hawk",
+                    "imp",
+                    "guardian",
+                    "guardians",
+                    "animus",
+                    "shroomite",
+                    "seahorse",
+                    "propeller cat",
+                    "rainbow unicorn",
+                    "defeat the summit as player one",
+                    "apprentice",
+                    "monk",
+                    "huntress",
+                    "squire",
+                    "survival",
+                    "pure strategy",
+                    "ruthless"
+                ]
+            }
+        ]);
+    });
+
+    shardsAndCampaignRows.forEach((row) => {
+        if (!saveHasBeatenTag(saveData, row.tag)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    row.text,
+                    "complete shard"
+                ]
+            }
+        ]);
+    });
+
+    lostQuestNightmareRows.forEach((row) => {
+        if (!saveHasBeatenTagOnNightmare(saveData, row.tag)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    row.text,
+                    "complete on nightmare"
+                ]
+            }
+        ]);
+    });
+
+    challengeRows.forEach((row) => {
+        if (!saveHasBeatenTag(saveData, row.tag)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    row.text,
+                    "complete challenge progress"
+                ],
+                excludes: [
+                    "ruthless"
+                ]
+            }
+        ]);
+    });
+
+    return checkedCount;
+}
+
+
+function applyAchievementBasedChecklistInferences(saveData, rootElement = document) {
+    let checkedCount = 0;
+
+    if (
+        saveHasAnyAchievement(saveData, [
+            "ACH_HUG"
+        ])
+    ) {
+        checkedCount += applyGroupHugChecklistProgress(saveData, rootElement);
+    }
+
+    if (
+        saveHasAnyAchievement(saveData, [
+            "ACH_TRANSCENDENT_SURVIVALIST",
+            "ACH_ULTIMATE_DEFENDER"
+        ])
+    ) {
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            { includes: ["nightmare survival victory"] }
+        ]);
+    }
+
+    if (
+        saveHasAnyAchievement(saveData, [
+            "ACH_ETERNIASHARDS_PART1_ANY",
+            "ACH_ETERNIASHARDS_PART1_NIGHTMARE"
+        ])
+    ) {
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            { includes: ["mistymire forest", "complete shard"] }
+        ]);
+    }
+
+    if (
+        saveHasAnyAchievement(saveData, [
+            "ACH_ETERNIASHARDS_PART2_ANY",
+            "ACH_ETERNIASHARDS_PART2_NIGHTMARE"
+        ])
+    ) {
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            { includes: ["moraggo desert town", "complete shard"] }
+        ]);
+    }
+
+    if (
+        saveHasAnyAchievement(saveData, [
+            "ACH_ETERNIASHARDS_PART3_ANY",
+            "ACH_ETERNIASHARDS_PART3_NIGHTMARE"
+        ])
+    ) {
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            { includes: ["aquanos", "complete shard"] }
+        ]);
+    }
+
+    if (
+        saveHasAnyAchievement(saveData, [
+            "ACH_ETERNIASHARDS_PART4_ANY",
+            "ACH_ETERNIASHARDS_PART4_NIGHTMARE"
+        ])
+    ) {
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            { includes: ["sky city", "complete shard"] }
+        ]);
+    }
+
+    if (
+        saveHasAnyAchievement(saveData, [
+            "ACH_HEROES",
+            "ACH_HEROES_NIGHTMARE"
+        ])
+    ) {
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            { includes: ["crystalline dimension", "complete heroes"] }
+        ]);
+    }
+
+    const extraAchievementRows = [
+        {
+            text: "Boss Rush",
+            achievements: ["ACH_BOSS_CRUSHER", "ACH_BOSS_CRUSHER_NIGHTMARE"]
+        },
+        {
+            text: "Anti Cupid",
+            achievements: ["ACH_VDAY_2013", "ACH_VDAY_2013_NIGHTMARE"]
+        },
+        {
+            text: "Halloween Spooktacular 2",
+            achievements: ["ACH_PUMPKIN_PARTY", "ACH_PUMPKINPARTY_NIGHTMARE"]
+        },
+        {
+            text: "Greater Turkey Hunt",
+            achievements: ["ACH_GREATER_TURKEYHUNTER", "ACH_GREATER_TURKEYHUNTER_NIGHTMARE"]
+        },
+        {
+            text: "Silent Night",
+            achievements: ["ACH_SILENT_NIGHT", "ACH_SILENT_NIGHT_NIGHTMARE"]
+        },
+        {
+            text: "Anniversary Pack",
+            achievements: ["ACH_ANNIVERSARY", "ACH_ANNIVERSARY_NIGHTMARE"]
+        },
+        {
+            text: "Winter Wonderland",
+            achievements: ["ACH_WINTER_WONDERLAND", "ACH_WINTER_WONDERLAND_NIGHTMARE"]
+        },
+        {
+            text: "Tinkerers Lab",
+            achievements: [
+                "ACH_LAB",
+                "ACH_LAB_NIGHTMARE",
+                "ACH_LABASSAULT",
+                "ACH_LABASSAULT_NIGHTMARE"
+            ]
+        },
+        {
+            text: "Moonbase",
+            achievements: ["ACH_MOONBASE", "ACH_MOONBASE_NIGHTMARE"]
+        }
+    ];
+
+    extraAchievementRows.forEach((row) => {
+        if (!saveHasAnyAchievement(saveData, row.achievements)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            { text: row.text }
+        ]);
+    });
+
+    return checkedCount;
+}
+
+
 function applySaveDataToChecklist(saveData, rootElement = document) {
     const achievementCheckboxes = rootElement.querySelectorAll("[data-steam-achievement], [data-steam-achievements]");
     let checkedCount = 0;
@@ -1423,6 +2284,9 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
         }
     });
 
+    checkedCount += applyBeatenLevelChecklistProgress(saveData, rootElement);
+    checkedCount += applyAchievementBasedChecklistInferences(saveData, rootElement);
+
     const statusElements = rootElement.querySelectorAll("[data-steam-status]");
 
     statusElements.forEach((statusElement) => {
@@ -1435,9 +2299,13 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
         }
     });
 
+    const allCheckedBoxes = Array.from(rootElement.querySelectorAll("input[type='checkbox']")).filter((checkbox) => {
+        return checkbox.checked;
+    });
+
     return {
-        checkedCount: checkedCount,
-        totalSteamAchievementCheckboxes: achievementCheckboxes.length
+        checkedCount: allCheckedBoxes.length,
+        totalSteamAchievementCheckboxes: rootElement.querySelectorAll("input[type='checkbox']").length
     };
 }
 
