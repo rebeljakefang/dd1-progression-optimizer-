@@ -383,43 +383,77 @@ function looksLikeZlibHeader(rawBytes, position) {
     return false;
   }
 
-  const firstByte = rawBytes[position];
-  const secondByte = rawBytes[position + 1];
+  const compressionMethodAndInfo = rawBytes[position];
+  const flags = rawBytes[position + 1];
 
-  if (firstByte !== 0x78) {
+  const compressionMethod = compressionMethodAndInfo & 0x0f;
+  const compressionInfo = compressionMethodAndInfo >> 4;
+
+  if (compressionMethod !== 8) {
+    return false;
+  }
+
+  if (compressionInfo > 7) {
+    return false;
+  }
+
+  const headerValue = (compressionMethodAndInfo << 8) + flags;
+
+  return headerValue % 31 === 0;
+}
+
+function looksLikeGzipHeader(rawBytes, position) {
+  if (position < 0 || position + 2 >= rawBytes.length) {
     return false;
   }
 
   return (
-    secondByte === 0x01 ||
-    secondByte === 0x5e ||
-    secondByte === 0x9c ||
-    secondByte === 0xda
+    rawBytes[position] === 0x1f &&
+    rawBytes[position + 1] === 0x8b &&
+    rawBytes[position + 2] === 0x08
   );
 }
 
-function findZlibHeaderOffsets(rawBytes) {
+function findCompressedHeaderOffsets(rawBytes) {
   const offsets = [];
 
-  for (let position = 0; position < rawBytes.length - 1; position++) {
+  for (let position = 0; position < rawBytes.length - 2; position++) {
     if (looksLikeZlibHeader(rawBytes, position)) {
-      offsets.push(position);
+      offsets.push({
+        offset: position,
+        type: "zlib"
+      });
+      continue;
+    }
+
+    if (looksLikeGzipHeader(rawBytes, position)) {
+      offsets.push({
+        offset: position,
+        type: "gzip"
+      });
     }
   }
 
   return offsets;
 }
 
-function tryInflateSlice(rawBytes, offset, end) {
+function tryInflateSlice(rawBytes, offset, end, type) {
   try {
     const slice = rawBytes.slice(offset, end);
-    const decompressedBytes = pako.inflate(slice);
+    let decompressedBytes = null;
+
+    if (type === "gzip") {
+      decompressedBytes = pako.ungzip(slice);
+    } else {
+      decompressedBytes = pako.inflate(slice);
+    }
 
     if (decompressedBytes && decompressedBytes.length > 0) {
       return {
         success: true,
         offset: offset,
         end: end,
+        type: type,
         rawLength: end - offset,
         decompressedBytes: decompressedBytes,
         decompressedSize: decompressedBytes.length,
@@ -434,6 +468,7 @@ function tryInflateSlice(rawBytes, offset, end) {
     success: false,
     offset: offset,
     end: end,
+    type: type,
     rawLength: end - offset,
     decompressedBytes: null,
     decompressedSize: 0,
@@ -441,20 +476,29 @@ function tryInflateSlice(rawBytes, offset, end) {
   };
 }
 
-function findExactZlibEnd(rawBytes, offset, searchLimit) {
+function findExactCompressedEnd(rawBytes, headerInfo, searchLimit) {
+  const offset = headerInfo.offset;
+  const type = headerInfo.type;
+
   const minimumEnd = offset + 8;
   const maximumEnd = Math.min(searchLimit || rawBytes.length, rawBytes.length);
+
+  const fullSliceResult = tryInflateSlice(rawBytes, offset, maximumEnd, type);
+
+  if (fullSliceResult.success) {
+    return fullSliceResult;
+  }
 
   let fastEnd = minimumEnd;
 
   while (fastEnd <= maximumEnd) {
-    const result = tryInflateSlice(rawBytes, offset, fastEnd);
+    const result = tryInflateSlice(rawBytes, offset, fastEnd, type);
 
     if (result.success) {
-      const exactSearchStart = Math.max(minimumEnd, fastEnd - 2048);
+      const exactSearchStart = Math.max(minimumEnd, fastEnd - 4096);
 
       for (let exactEnd = exactSearchStart; exactEnd <= fastEnd; exactEnd++) {
-        const exactResult = tryInflateSlice(rawBytes, offset, exactEnd);
+        const exactResult = tryInflateSlice(rawBytes, offset, exactEnd, type);
 
         if (exactResult.success) {
           return exactResult;
@@ -464,29 +508,52 @@ function findExactZlibEnd(rawBytes, offset, searchLimit) {
       return result;
     }
 
-    fastEnd += 1024;
+    fastEnd += 2048;
   }
 
   return {
     success: false,
     offset: offset,
     end: maximumEnd,
+    type: type,
     rawLength: maximumEnd - offset,
     decompressedBytes: null,
     decompressedSize: 0,
-    error: "No exact zlib end found from this offset."
+    error: "No exact compressed end found from this offset."
+  };
+}
+
+function createRawFallbackDecompression(rawBytes, reason) {
+  return {
+    rawBytes: rawBytes,
+    zlibHeaderOffsets: [],
+    compressedHeaderOffsets: [],
+    blocks: [],
+    blockCount: 0,
+    combinedBytes: rawBytes,
+    combinedSize: rawBytes.length,
+    usedRawFallback: true,
+    fallbackReason: reason
   };
 }
 
 function decompressDunFile(arrayBuffer) {
   const rawBytes = new Uint8Array(arrayBuffer);
-  const zlibHeaderOffsets = findZlibHeaderOffsets(rawBytes);
+  const compressedHeaderOffsets = findCompressedHeaderOffsets(rawBytes);
   const blocks = [];
+
+  if (compressedHeaderOffsets.length === 0) {
+    return createRawFallbackDecompression(
+      rawBytes,
+      "No zlib or gzip headers were found, so the importer scanned the raw save bytes instead."
+    );
+  }
 
   let headerIndex = 0;
 
-  while (headerIndex < zlibHeaderOffsets.length) {
-    const offset = zlibHeaderOffsets[headerIndex];
+  while (headerIndex < compressedHeaderOffsets.length) {
+    const headerInfo = compressedHeaderOffsets[headerIndex];
+    const offset = headerInfo.offset;
 
     const alreadyInsideKnownBlock = blocks.some((block) => {
       return offset >= block.offset && offset < block.end;
@@ -497,14 +564,14 @@ function decompressDunFile(arrayBuffer) {
       continue;
     }
 
-    const result = findExactZlibEnd(rawBytes, offset, rawBytes.length);
+    const result = findExactCompressedEnd(rawBytes, headerInfo, rawBytes.length);
 
     if (result.success && result.decompressedSize > 0) {
       blocks.push(result);
 
       while (
-        headerIndex < zlibHeaderOffsets.length &&
-        zlibHeaderOffsets[headerIndex] < result.end
+        headerIndex < compressedHeaderOffsets.length &&
+        compressedHeaderOffsets[headerIndex].offset < result.end
       ) {
         headerIndex++;
       }
@@ -514,12 +581,15 @@ function decompressDunFile(arrayBuffer) {
   }
 
   if (blocks.length === 0) {
-    throw new Error(
-      "No zlib save blocks were found. Make sure this is a valid DunDefHeroes.dun file."
+    return createRawFallbackDecompression(
+      rawBytes,
+      "Compression headers were found, but none could be decompressed cleanly, so the importer scanned the raw save bytes instead."
     );
   }
 
-  blocks.sort((a, b) => a.offset - b.offset);
+  blocks.sort((a, b) => {
+    return a.offset - b.offset;
+  });
 
   let combinedSize = 0;
 
@@ -542,11 +612,20 @@ function decompressDunFile(arrayBuffer) {
 
   return {
     rawBytes: rawBytes,
-    zlibHeaderOffsets: zlibHeaderOffsets,
+    zlibHeaderOffsets: compressedHeaderOffsets
+      .filter((headerInfo) => {
+        return headerInfo.type === "zlib";
+      })
+      .map((headerInfo) => {
+        return headerInfo.offset;
+      }),
+    compressedHeaderOffsets: compressedHeaderOffsets,
     blocks: blocks,
     blockCount: blocks.length,
     combinedBytes: combinedBytes,
-    combinedSize: combinedBytes.length
+    combinedSize: combinedBytes.length,
+    usedRawFallback: false,
+    fallbackReason: ""
   };
 }
 
