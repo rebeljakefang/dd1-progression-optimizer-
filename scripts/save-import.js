@@ -1677,6 +1677,11 @@ function getDd1SaveData(arrayBuffer) {
    12. Output Builders and Checklist Helpers
 ========================================================= */
 
+
+/* =========================================================
+   12A. Output Builders
+========================================================= */
+
 function buildBlockRows(blocks) {
     return blocks.map((block) => {
         return `
@@ -1729,6 +1734,10 @@ function buildUnlockedAchievementRows(unlockedAchievements) {
 }
 
 
+/* =========================================================
+   12B. Basic Achievement Helpers
+========================================================= */
+
 function getRequiredSteamIdsFromCheckbox(checkbox) {
     if (checkbox.dataset.steamAchievement) {
         return [checkbox.dataset.steamAchievement];
@@ -1756,6 +1765,10 @@ function saveHasAnyAchievement(saveData, steamIds) {
     });
 }
 
+
+/* =========================================================
+   12C. Checkbox Text Helpers
+========================================================= */
 
 function normalizeChecklistText(value) {
     return String(value)
@@ -1786,66 +1799,6 @@ function getCheckboxVisibleText(checkbox) {
 
 function getAllChecklistCheckboxes(rootElement = document) {
     return Array.from(rootElement.querySelectorAll("input[type='checkbox']"));
-}
-
-
-function getBeatenLevelMap(saveData) {
-    const beatenMap = new Map();
-
-    if (!saveData.beatenLevels) {
-        return beatenMap;
-    }
-
-    saveData.beatenLevels.forEach((levelInfo) => {
-        if (!levelInfo || !levelInfo.campaignTag) {
-            return;
-        }
-
-        beatenMap.set(levelInfo.campaignTag, levelInfo.difficultyMask);
-    });
-
-    return beatenMap;
-}
-
-
-function levelMaskHasDifficulty(difficultyMask, difficultyBit) {
-    return (difficultyMask & difficultyBit) !== 0;
-}
-
-
-function levelMaskHasNightmare(difficultyMask) {
-    return levelMaskHasDifficulty(difficultyMask, 16);
-}
-
-
-function saveHasBeatenTag(saveData, campaignTag) {
-    const beatenMap = getBeatenLevelMap(saveData);
-    return beatenMap.has(campaignTag);
-}
-
-
-function saveHasAnyBeatenTag(saveData, campaignTags) {
-    return campaignTags.some((campaignTag) => {
-        return saveHasBeatenTag(saveData, campaignTag);
-    });
-}
-
-
-function saveHasBeatenTagOnNightmare(saveData, campaignTag) {
-    const beatenMap = getBeatenLevelMap(saveData);
-
-    if (!beatenMap.has(campaignTag)) {
-        return false;
-    }
-
-    return levelMaskHasNightmare(beatenMap.get(campaignTag));
-}
-
-
-function saveHasAnyBeatenTagOnNightmare(saveData, campaignTags) {
-    return campaignTags.some((campaignTag) => {
-        return saveHasBeatenTagOnNightmare(saveData, campaignTag);
-    });
 }
 
 
@@ -1935,6 +1888,10 @@ function areAllRequiredRuleGroupsChecked(rootElement, ruleGroups) {
     });
 }
 
+
+/* =========================================================
+   12D. Section-Based Checkbox Helpers
+========================================================= */
 
 function getHeadingLevel(element) {
     if (!element || !element.tagName) {
@@ -2040,6 +1997,97 @@ function checkBoxesInSectionByTextRules(rootElement, headingIncludes, rules) {
     return checkedCount;
 }
 
+
+/* =========================================================
+   12E. Save Progress / Difficulty Helpers
+========================================================= */
+
+function getBeatenLevelMap(saveData) {
+    const beatenMap = new Map();
+
+    if (!saveData.beatenLevels) {
+        return beatenMap;
+    }
+
+    saveData.beatenLevels.forEach((levelInfo) => {
+        if (!levelInfo || !levelInfo.campaignTag) {
+            return;
+        }
+
+        beatenMap.set(levelInfo.campaignTag, levelInfo.difficultyMask);
+    });
+
+    return beatenMap;
+}
+
+
+function levelMaskHasDifficulty(difficultyMask, difficultyBit) {
+    return (difficultyMask & difficultyBit) !== 0;
+}
+
+
+function levelMaskHasNightmare(difficultyMask) {
+    return levelMaskHasDifficulty(difficultyMask, 16);
+}
+
+
+function levelMaskHasRuthless(difficultyMask) {
+    return levelMaskHasDifficulty(difficultyMask, 2048) || difficultyMask === 4095;
+}
+
+
+function saveHasBeatenTag(saveData, campaignTag) {
+    const beatenMap = getBeatenLevelMap(saveData);
+    return beatenMap.has(campaignTag);
+}
+
+
+function saveHasAnyBeatenTag(saveData, campaignTags) {
+    return campaignTags.some((campaignTag) => {
+        return saveHasBeatenTag(saveData, campaignTag);
+    });
+}
+
+
+function saveHasBeatenTagOnNightmare(saveData, campaignTag) {
+    const beatenMap = getBeatenLevelMap(saveData);
+
+    if (!beatenMap.has(campaignTag)) {
+        return false;
+    }
+
+    return levelMaskHasNightmare(beatenMap.get(campaignTag));
+}
+
+
+function saveHasAnyBeatenTagOnNightmare(saveData, campaignTags) {
+    return campaignTags.some((campaignTag) => {
+        return saveHasBeatenTagOnNightmare(saveData, campaignTag);
+    });
+}
+
+
+function saveHasBeatenTagOnRuthless(saveData, campaignTag) {
+    const beatenMap = getBeatenLevelMap(saveData);
+
+    if (!beatenMap.has(campaignTag)) {
+        return false;
+    }
+
+    return levelMaskHasRuthless(beatenMap.get(campaignTag));
+}
+
+
+function saveHasAnyBeatenTagOnRuthless(saveData, campaignTags) {
+    return campaignTags.some((campaignTag) => {
+        return saveHasBeatenTagOnRuthless(saveData, campaignTag);
+    });
+}
+
+
+/* =========================================================
+   12F. Hero / Class Helpers
+========================================================= */
 
 function getHeroClassFromTemplate(template) {
     if (!template) {
@@ -2175,6 +2223,10 @@ function applyGroupHugChecklistProgress(saveData, rootElement = document) {
 }
 
 
+/* =========================================================
+   12G. Achievement-Based Subcheck Logic
+========================================================= */
+
 function applyPerspectiveChecklistProgress(saveData, rootElement = document) {
     if (!saveHasAchievement(saveData, "ACH_PERSPECTIVE")) {
         return 0;
@@ -2300,6 +2352,10 @@ function applyRtsChecklistProgress(saveData, rootElement = document) {
 }
 
 
+/* =========================================================
+   12H. Beaten-Level Map Matching
+========================================================= */
+
 function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     let checkedCount = 0;
 
@@ -2334,7 +2390,7 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
         { tags: ["SPECHI"], text: "Pirate Invasion" },
         { tags: ["CDTTWC", "CDTCBB", "CDTCOB"], text: "Coastal Bazaar" },
         { tags: ["CDTARA", "CDTEMV"], text: "Embermount Volcano" },
-        { tags: ["CDTFOR"], text: "Flames of Rebirth" },
+        { tags: ["CDTFOR", "LIFHOL"], text: "Flames of Rebirth" },
         { tags: ["CDTTOW"], text: "Temple of Water" },
         { tags: ["CDTTOP"], text: "Temple of Polybius" },
         { tags: ["CDTVAL"], text: "Spring Valley" },
@@ -2372,7 +2428,7 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
         { tags: ["CAMPTD"], text: "Tavern Defense" },
         { tags: ["VDAY04"], text: "Lover's Paradise" },
         { tags: ["SPECJC"], text: "Crystal Escort" },
-        { tags: ["LIFHOL"], text: "Lifesteam Hollow" },
+        { tags: ["LHOLOC"], text: "Lifestream Hollow" },
         { tags: ["CDHUNT"], text: "Forest Ogre Crush" }
     ];
 
@@ -2495,6 +2551,95 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     return checkedCount;
 }
 
+
+/* =========================================================
+   12I. Ruthless Matching
+========================================================= */
+
+function applyRuthlessChecklistProgress(saveData, rootElement = document) {
+    let checkedCount = 0;
+
+    const ruthlessCampaignRows = [
+        { tags: ["CAMPDW"], text: "The Deeper Well" },
+        { tags: ["CAMPFF"], text: "Foundries and Forges" },
+        { tags: ["CAMPMQ"], text: "Magus Quarters" },
+        { tags: ["CAMPAL"], text: "Alchemical Laboratory" },
+        { tags: ["CAMPSQ"], text: "Servants Quarters" },
+        { tags: ["CAMPCA"], text: "Castle Armory" },
+        { tags: ["CAMPHC"], text: "Hall of Court" },
+        { tags: ["CAMPTR"], text: "The Throne Room" },
+        { tags: ["CAMPRG"], text: "Royal Gardens" },
+        { tags: ["CAMPRP"], text: "The Ramparts" },
+        { tags: ["CAMPES"], text: "Endless Spires" },
+        { tags: ["CAMPTS"], text: "The Summit" },
+        { tags: ["CAMPGC"], text: "Glitterhelm Caverns" }
+    ];
+
+    const ruthlessChallengeRows = [
+        { tags: ["SPECDW"], text: "No Towers Allowed" },
+        { tags: ["SPECFF"], text: "Unlikely Allies" },
+        { tags: ["SPECMQ"], text: "Warping Core" },
+        { tags: ["SPECAL"], text: "Raining Goblins" },
+        { tags: ["SPECSQ"], text: "Wizardry" },
+        { tags: ["SPECCA"], text: "Ogre Crush" },
+        { tags: ["SPECHC"], text: "Zippy Terror" },
+        { tags: ["SPECTR"], text: "Chicken" },
+        { tags: ["SPECRG"], text: "Moving Core" },
+        { tags: ["SPECRP"], text: "Death From Above" },
+        { tags: ["SPECES"], text: "Assault" },
+        { tags: ["SPECTS"], text: "Treasure Hunt" },
+        { tags: ["CAMPMF", "SPECMF"], text: "Monster Fest" }
+    ];
+
+    ruthlessCampaignRows.forEach((row) => {
+        if (!saveHasAnyBeatenTagOnRuthless(saveData, row.tags)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    row.text,
+                    "ruthless"
+                ],
+                excludes: [
+                    "nightmare",
+                    "survival",
+                    "pure strategy",
+                    "pet",
+                    "complete required campaign clears"
+                ]
+            }
+        ]);
+    });
+
+    ruthlessChallengeRows.forEach((row) => {
+        if (!saveHasAnyBeatenTagOnRuthless(saveData, row.tags)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    row.text,
+                    "ruthless"
+                ],
+                excludes: [
+                    "nightmare",
+                    "survival",
+                    "pure strategy"
+                ]
+            }
+        ]);
+    });
+
+    return checkedCount;
+}
+
+
+/* =========================================================
+   12J. Achievement-Based Main Logic
+========================================================= */
 
 function applyAchievementBasedChecklistInferences(saveData, rootElement = document) {
     let checkedCount = 0;
@@ -2664,6 +2809,10 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
 }
 
 
+/* =========================================================
+   12K. Master Checkbox Logic
+========================================================= */
+
 function applyMasterChecklistProgress(saveData, rootElement = document) {
     let checkedCount = 0;
 
@@ -2714,7 +2863,7 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
                 [{ includes: ["aquanos"] }],
                 [{ includes: ["city in the cliffs"] }]
             ],
-            master: [{ includes: ["real time strategist", "summoned minions"] }]
+            master: [{ includes: ["real time strategist", "complete the required maps"] }]
         }
     ];
 
@@ -2754,28 +2903,54 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
         [{ includes: ["infested ruins", "complete on nightmare"] }]
     ];
 
-    const eternalDefenderSectionMasterRule = [
-        {
-            includes: [
-                "eternal defender",
-                "complete all required lost quest maps on nightmare"
-            ]
-        }
-    ];
-
-    const eternalDefenderMainGoalRule = [
-        {
-            includes: [
-                "eternal defender",
-                "after ultimate defender",
-                "complete the required lost quest maps on nightmare"
-            ]
-        }
+    const ruthlessRequiredRowGroups = [
+        [{ includes: ["the deeper well", "ruthless"] }],
+        [{ includes: ["foundries and forges", "ruthless"] }],
+        [{ includes: ["magus quarters", "ruthless"] }],
+        [{ includes: ["alchemical laboratory", "ruthless"] }],
+        [{ includes: ["servants quarters", "ruthless"] }],
+        [{ includes: ["castle armory", "ruthless"] }],
+        [{ includes: ["hall of court", "ruthless"] }],
+        [{ includes: ["the throne room", "ruthless"] }],
+        [{ includes: ["royal gardens", "ruthless"] }],
+        [{ includes: ["the ramparts", "ruthless"] }],
+        [{ includes: ["endless spires", "ruthless"] }],
+        [{ includes: ["the summit", "ruthless"] }],
+        [{ includes: ["glitterhelm caverns", "ruthless"] }],
+        [{ includes: ["no towers allowed", "ruthless"] }],
+        [{ includes: ["unlikely allies", "ruthless"] }],
+        [{ includes: ["warping core", "ruthless"] }],
+        [{ includes: ["raining goblins", "ruthless"] }],
+        [{ includes: ["wizardry", "ruthless"] }],
+        [{ includes: ["ogre crush", "ruthless"] }],
+        [{ includes: ["zippy terror", "ruthless"] }],
+        [{ includes: ["chicken", "ruthless"] }],
+        [{ includes: ["moving core", "ruthless"] }],
+        [{ includes: ["death from above", "ruthless"] }],
+        [{ includes: ["assault", "ruthless"] }],
+        [{ includes: ["treasure hunt", "ruthless"] }],
+        [{ includes: ["monster fest", "ruthless"] }]
     ];
 
     if (areAllRequiredRuleGroupsChecked(rootElement, eternalDefenderRequiredRowGroups)) {
-        const sectionMasterMatches = findCheckboxesByTextRules(rootElement, eternalDefenderSectionMasterRule);
-        const mainGoalMatches = findCheckboxesByTextRules(rootElement, eternalDefenderMainGoalRule);
+        const sectionMasterMatches = findCheckboxesByTextRules(rootElement, [
+            {
+                includes: [
+                    "eternal defender",
+                    "complete all required lost quest maps on nightmare"
+                ]
+            }
+        ]);
+
+        const mainGoalMatches = findCheckboxesByTextRules(rootElement, [
+            {
+                includes: [
+                    "eternal defender",
+                    "after ultimate defender",
+                    "complete the required lost quest maps on nightmare"
+                ]
+            }
+        ]);
 
         if (sectionMasterMatches.length > 0 && !sectionMasterMatches[0].checked) {
             sectionMasterMatches[0].checked = true;
@@ -2788,9 +2963,46 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
         }
     }
 
+    if (areAllRequiredRuleGroupsChecked(rootElement, ruthlessRequiredRowGroups)) {
+        const ruthlessMainGoalMatches = findCheckboxesByTextRules(rootElement, [
+            {
+                includes: [
+                    "ruthless defender",
+                    "complete classic campaign and classic challenges on ruthless"
+                ]
+            }
+        ]);
+
+        const ruthlessSectionMatches = findCheckboxesByTextRules(rootElement, [
+            {
+                includes: [
+                    "ruthless defender",
+                    "ruthless"
+                ],
+                excludes: [
+                    "main completion goals"
+                ]
+            }
+        ]);
+
+        if (ruthlessMainGoalMatches.length > 0 && !ruthlessMainGoalMatches[0].checked) {
+            ruthlessMainGoalMatches[0].checked = true;
+            checkedCount++;
+        }
+
+        if (ruthlessSectionMatches.length > 0 && !ruthlessSectionMatches[0].checked) {
+            ruthlessSectionMatches[0].checked = true;
+            checkedCount++;
+        }
+    }
+
     return checkedCount;
 }
 
+
+/* =========================================================
+   12L. Debug Builder and Final Apply Function
+========================================================= */
 
 function buildSaveImportDebug(saveData, rootElement = document) {
     const eternalDefenderRequiredRowGroups = [
@@ -2816,7 +3028,47 @@ function buildSaveImportDebug(saveData, rootElement = document) {
         { name: "Infested Ruins", rules: [{ includes: ["infested ruins", "complete on nightmare"] }] }
     ];
 
+    const ruthlessRequiredRowGroups = [
+        { name: "The Deeper Well", rules: [{ includes: ["the deeper well", "ruthless"] }] },
+        { name: "Foundries and Forges", rules: [{ includes: ["foundries and forges", "ruthless"] }] },
+        { name: "Magus Quarters", rules: [{ includes: ["magus quarters", "ruthless"] }] },
+        { name: "Alchemical Laboratory", rules: [{ includes: ["alchemical laboratory", "ruthless"] }] },
+        { name: "Servants Quarters", rules: [{ includes: ["servants quarters", "ruthless"] }] },
+        { name: "Castle Armory", rules: [{ includes: ["castle armory", "ruthless"] }] },
+        { name: "Hall of Court", rules: [{ includes: ["hall of court", "ruthless"] }] },
+        { name: "The Throne Room", rules: [{ includes: ["the throne room", "ruthless"] }] },
+        { name: "Royal Gardens", rules: [{ includes: ["royal gardens", "ruthless"] }] },
+        { name: "The Ramparts", rules: [{ includes: ["the ramparts", "ruthless"] }] },
+        { name: "Endless Spires", rules: [{ includes: ["endless spires", "ruthless"] }] },
+        { name: "The Summit", rules: [{ includes: ["the summit", "ruthless"] }] },
+        { name: "Glitterhelm Caverns", rules: [{ includes: ["glitterhelm caverns", "ruthless"] }] },
+        { name: "No Towers Allowed", rules: [{ includes: ["no towers allowed", "ruthless"] }] },
+        { name: "Unlikely Allies", rules: [{ includes: ["unlikely allies", "ruthless"] }] },
+        { name: "Warping Core", rules: [{ includes: ["warping core", "ruthless"] }] },
+        { name: "Raining Goblins", rules: [{ includes: ["raining goblins", "ruthless"] }] },
+        { name: "Wizardry", rules: [{ includes: ["wizardry", "ruthless"] }] },
+        { name: "Ogre Crush", rules: [{ includes: ["ogre crush", "ruthless"] }] },
+        { name: "Zippy Terror", rules: [{ includes: ["zippy terror", "ruthless"] }] },
+        { name: "Chicken", rules: [{ includes: ["chicken", "ruthless"] }] },
+        { name: "Moving Core", rules: [{ includes: ["moving core", "ruthless"] }] },
+        { name: "Death From Above", rules: [{ includes: ["death from above", "ruthless"] }] },
+        { name: "Assault", rules: [{ includes: ["assault", "ruthless"] }] },
+        { name: "Treasure Hunt", rules: [{ includes: ["treasure hunt", "ruthless"] }] },
+        { name: "Monster Fest", rules: [{ includes: ["monster fest", "ruthless"] }] }
+    ];
+
     const eternalDefenderRows = eternalDefenderRequiredRowGroups.map((entry) => {
+        const matches = findCheckboxesByTextRules(rootElement, entry.rules);
+
+        return {
+            row: entry.name,
+            found: matches.length > 0,
+            checked: matches.some((checkbox) => checkbox.checked),
+            matchedText: matches.map((checkbox) => getCheckboxVisibleText(checkbox))
+        };
+    });
+
+    const ruthlessRows = ruthlessRequiredRowGroups.map((entry) => {
         const matches = findCheckboxesByTextRules(rootElement, entry.rules);
 
         return {
@@ -2836,7 +3088,8 @@ function buildSaveImportDebug(saveData, rootElement = document) {
         unlockedLevels: saveData.unlockedLevels || [],
         heroes: saveData.heroes || [],
         originalLevel70Classes: originalLevel70Classes,
-        eternalDefenderRows: eternalDefenderRows
+        eternalDefenderRows: eternalDefenderRows,
+        ruthlessRows: ruthlessRows
     };
 
     window.latestDd1ImportDebug = debugData;
@@ -2863,6 +3116,7 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
     });
 
     checkedCount += applyBeatenLevelChecklistProgress(saveData, rootElement);
+    checkedCount += applyRuthlessChecklistProgress(saveData, rootElement);
     checkedCount += applyAchievementBasedChecklistInferences(saveData, rootElement);
     checkedCount += applyMasterChecklistProgress(saveData, rootElement);
 
