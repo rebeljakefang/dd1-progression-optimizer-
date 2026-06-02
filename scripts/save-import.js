@@ -379,254 +379,247 @@ function readAsciiStringAt(bytes, position, length) {
 ========================================================= */
 
 function looksLikeZlibHeader(rawBytes, position) {
-  if (position < 0 || position + 1 >= rawBytes.length) {
-    return false;
-  }
-
-  const compressionMethodAndInfo = rawBytes[position];
-  const flags = rawBytes[position + 1];
-
-  const compressionMethod = compressionMethodAndInfo & 0x0f;
-  const compressionInfo = compressionMethodAndInfo >> 4;
-
-  if (compressionMethod !== 8) {
-    return false;
-  }
-
-  if (compressionInfo > 7) {
-    return false;
-  }
-
-  const headerValue = (compressionMethodAndInfo << 8) + flags;
-
-  return headerValue % 31 === 0;
-}
-
-function looksLikeGzipHeader(rawBytes, position) {
-  if (position < 0 || position + 2 >= rawBytes.length) {
-    return false;
-  }
-
-  return (
-    rawBytes[position] === 0x1f &&
-    rawBytes[position + 1] === 0x8b &&
-    rawBytes[position + 2] === 0x08
-  );
-}
-
-function findCompressedHeaderOffsets(rawBytes) {
-  const offsets = [];
-
-  for (let position = 0; position < rawBytes.length - 2; position++) {
-    if (looksLikeZlibHeader(rawBytes, position)) {
-      offsets.push({
-        offset: position,
-        type: "zlib"
-      });
-      continue;
+    if (position < 0 || position + 1 >= rawBytes.length) {
+        return false;
     }
 
-    if (looksLikeGzipHeader(rawBytes, position)) {
-      offsets.push({
-        offset: position,
-        type: "gzip"
-      });
-    }
-  }
+    const compressionMethodAndInfo = rawBytes[position];
+    const flags = rawBytes[position + 1];
 
-  return offsets;
+    const compressionMethod = compressionMethodAndInfo & 0x0f;
+    const compressionInfo = compressionMethodAndInfo >> 4;
+
+    if (compressionMethod !== 8) {
+        return false;
+    }
+
+    if (compressionInfo > 7) {
+        return false;
+    }
+
+    const headerValue = (compressionMethodAndInfo << 8) + flags;
+
+    return headerValue % 31 === 0;
 }
 
-function tryInflateSlice(rawBytes, offset, end, type) {
-  try {
-    const slice = rawBytes.slice(offset, end);
-    let decompressedBytes = null;
 
-    if (type === "gzip") {
-      decompressedBytes = pako.ungzip(slice);
-    } else {
-      decompressedBytes = pako.inflate(slice);
-    }
+function findZlibHeaderOffsets(rawBytes) {
+    const offsets = [];
 
-    if (decompressedBytes && decompressedBytes.length > 0) {
-      return {
-        success: true,
-        offset: offset,
-        end: end,
-        type: type,
-        rawLength: end - offset,
-        decompressedBytes: decompressedBytes,
-        decompressedSize: decompressedBytes.length,
-        error: ""
-      };
-    }
-  } catch {
-    // This slice did not inflate cleanly.
-  }
-
-  return {
-    success: false,
-    offset: offset,
-    end: end,
-    type: type,
-    rawLength: end - offset,
-    decompressedBytes: null,
-    decompressedSize: 0,
-    error: "Could not inflate this slice."
-  };
-}
-
-function findExactCompressedEnd(rawBytes, headerInfo, searchLimit) {
-  const offset = headerInfo.offset;
-  const type = headerInfo.type;
-
-  const minimumEnd = offset + 8;
-  const maximumEnd = Math.min(searchLimit || rawBytes.length, rawBytes.length);
-
-  const fullSliceResult = tryInflateSlice(rawBytes, offset, maximumEnd, type);
-
-  if (fullSliceResult.success) {
-    return fullSliceResult;
-  }
-
-  let fastEnd = minimumEnd;
-
-  while (fastEnd <= maximumEnd) {
-    const result = tryInflateSlice(rawBytes, offset, fastEnd, type);
-
-    if (result.success) {
-      const exactSearchStart = Math.max(minimumEnd, fastEnd - 4096);
-
-      for (let exactEnd = exactSearchStart; exactEnd <= fastEnd; exactEnd++) {
-        const exactResult = tryInflateSlice(rawBytes, offset, exactEnd, type);
-
-        if (exactResult.success) {
-          return exactResult;
+    for (let position = 0; position < rawBytes.length - 1; position++) {
+        if (looksLikeZlibHeader(rawBytes, position)) {
+            offsets.push(position);
         }
-      }
-
-      return result;
     }
 
-    fastEnd += 2048;
-  }
-
-  return {
-    success: false,
-    offset: offset,
-    end: maximumEnd,
-    type: type,
-    rawLength: maximumEnd - offset,
-    decompressedBytes: null,
-    decompressedSize: 0,
-    error: "No exact compressed end found from this offset."
-  };
+    return offsets;
 }
 
-function createRawFallbackDecompression(rawBytes, reason) {
-  return {
-    rawBytes: rawBytes,
-    zlibHeaderOffsets: [],
-    compressedHeaderOffsets: [],
-    blocks: [],
-    blockCount: 0,
-    combinedBytes: rawBytes,
-    combinedSize: rawBytes.length,
-    usedRawFallback: true,
-    fallbackReason: reason
-  };
+
+function parseDunCompressedBlockTable(rawBytes) {
+    const totalCompressedSize = readI32At(rawBytes, 28);
+    const totalDecompressedSize = readI32At(rawBytes, 32);
+
+    if (
+        totalCompressedSize === null ||
+        totalDecompressedSize === null ||
+        totalCompressedSize <= 0 ||
+        totalDecompressedSize <= 0 ||
+        totalCompressedSize > rawBytes.length
+    ) {
+        return null;
+    }
+
+    const blockTableEntries = [];
+    let tablePosition = 36;
+    let compressedTotal = 0;
+    let decompressedTotal = 0;
+
+    while (
+        tablePosition + 8 <= rawBytes.length &&
+        compressedTotal < totalCompressedSize
+    ) {
+        const compressedSize = readI32At(rawBytes, tablePosition);
+        const decompressedSize = readI32At(rawBytes, tablePosition + 4);
+
+        if (
+            compressedSize === null ||
+            decompressedSize === null ||
+            compressedSize <= 0 ||
+            decompressedSize <= 0 ||
+            compressedSize > rawBytes.length ||
+            decompressedSize > 1024 * 1024 * 4
+        ) {
+            return null;
+        }
+
+        blockTableEntries.push({
+            compressedSize: compressedSize,
+            decompressedSize: decompressedSize
+        });
+
+        compressedTotal += compressedSize;
+        decompressedTotal += decompressedSize;
+        tablePosition += 8;
+
+        if (blockTableEntries.length > 200) {
+            return null;
+        }
+    }
+
+    if (compressedTotal !== totalCompressedSize) {
+        return null;
+    }
+
+    const dataStart = tablePosition;
+    const dataEnd = dataStart + totalCompressedSize;
+
+    if (dataEnd > rawBytes.length) {
+        return null;
+    }
+
+    if (!looksLikeZlibHeader(rawBytes, dataStart)) {
+        return null;
+    }
+
+    return {
+        dataStart: dataStart,
+        dataEnd: dataEnd,
+        totalCompressedSize: totalCompressedSize,
+        totalDecompressedSize: totalDecompressedSize,
+        blockTableEntries: blockTableEntries
+    };
 }
 
-function decompressDunFile(arrayBuffer) {
-  const rawBytes = new Uint8Array(arrayBuffer);
-  const compressedHeaderOffsets = findCompressedHeaderOffsets(rawBytes);
-  const blocks = [];
 
-  if (compressedHeaderOffsets.length === 0) {
-    return createRawFallbackDecompression(
-      rawBytes,
-      "No zlib or gzip headers were found, so the importer scanned the raw save bytes instead."
-    );
-  }
+function inflateExactZlibBlock(rawBytes, offset, compressedSize, expectedDecompressedSize) {
+    try {
+        const end = offset + compressedSize;
+        const compressedBytes = rawBytes.slice(offset, end);
+        const decompressedBytes = pako.inflate(compressedBytes);
 
-  let headerIndex = 0;
+        if (!decompressedBytes || decompressedBytes.length === 0) {
+            return {
+                success: false,
+                error: "Block inflated to empty data."
+            };
+        }
 
-  while (headerIndex < compressedHeaderOffsets.length) {
-    const headerInfo = compressedHeaderOffsets[headerIndex];
-    const offset = headerInfo.offset;
+        return {
+            success: true,
+            offset: offset,
+            end: end,
+            rawLength: compressedSize,
+            expectedDecompressedSize: expectedDecompressedSize,
+            decompressedBytes: decompressedBytes,
+            decompressedSize: decompressedBytes.length,
+            error: ""
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: describeError(error)
+        };
+    }
+}
 
-    const alreadyInsideKnownBlock = blocks.some((block) => {
-      return offset >= block.offset && offset < block.end;
+
+function decompressUsingDunBlockTable(rawBytes, blockTable) {
+    const blocks = [];
+    let compressedOffset = blockTable.dataStart;
+
+    blockTable.blockTableEntries.forEach((entry, index) => {
+        const block = inflateExactZlibBlock(
+            rawBytes,
+            compressedOffset,
+            entry.compressedSize,
+            entry.decompressedSize
+        );
+
+        if (!block.success) {
+            throw new Error(
+                `Failed to decompress save block ${index + 1}: ${block.error}`
+            );
+        }
+
+        block.blockNumber = index + 1;
+        blocks.push(block);
+
+        compressedOffset += entry.compressedSize;
     });
 
-    if (alreadyInsideKnownBlock) {
-      headerIndex++;
-      continue;
+    let combinedSize = 0;
+
+    blocks.forEach((block) => {
+        combinedSize += block.decompressedBytes.length;
+    });
+
+    const combinedBytes = new Uint8Array(combinedSize);
+    let combinedOffset = 0;
+
+    blocks.forEach((block) => {
+        block.combinedStart = combinedOffset;
+
+        combinedBytes.set(block.decompressedBytes, combinedOffset);
+        combinedOffset += block.decompressedBytes.length;
+
+        block.combinedEnd = combinedOffset;
+    });
+
+    return {
+        blocks: blocks,
+        combinedBytes: combinedBytes,
+        combinedSize: combinedBytes.length
+    };
+}
+
+
+function createRawFallbackDecompression(rawBytes, reason) {
+    return {
+        rawBytes: rawBytes,
+        zlibHeaderOffsets: findZlibHeaderOffsets(rawBytes),
+        compressedHeaderOffsets: [],
+        blocks: [],
+        blockCount: 0,
+        combinedBytes: rawBytes,
+        combinedSize: rawBytes.length,
+        usedRawFallback: true,
+        fallbackReason: reason
+    };
+}
+
+
+function decompressDunFile(arrayBuffer) {
+    const rawBytes = new Uint8Array(arrayBuffer);
+    const zlibHeaderOffsets = findZlibHeaderOffsets(rawBytes);
+    const blockTable = parseDunCompressedBlockTable(rawBytes);
+
+    if (!blockTable) {
+        return createRawFallbackDecompression(
+            rawBytes,
+            "Could not read the Dungeon Defenders compressed block table, so the importer scanned the raw file bytes instead."
+        );
     }
 
-    const result = findExactCompressedEnd(rawBytes, headerInfo, rawBytes.length);
+    const decompressed = decompressUsingDunBlockTable(rawBytes, blockTable);
 
-    if (result.success && result.decompressedSize > 0) {
-      blocks.push(result);
-
-      while (
-        headerIndex < compressedHeaderOffsets.length &&
-        compressedHeaderOffsets[headerIndex].offset < result.end
-      ) {
-        headerIndex++;
-      }
-    } else {
-      headerIndex++;
-    }
-  }
-
-  if (blocks.length === 0) {
-    return createRawFallbackDecompression(
-      rawBytes,
-      "Compression headers were found, but none could be decompressed cleanly, so the importer scanned the raw save bytes instead."
-    );
-  }
-
-  blocks.sort((a, b) => {
-    return a.offset - b.offset;
-  });
-
-  let combinedSize = 0;
-
-  blocks.forEach((block) => {
-    combinedSize += block.decompressedBytes.length;
-  });
-
-  const combinedBytes = new Uint8Array(combinedSize);
-  let combinedOffset = 0;
-
-  blocks.forEach((block, index) => {
-    block.blockNumber = index + 1;
-    block.combinedStart = combinedOffset;
-
-    combinedBytes.set(block.decompressedBytes, combinedOffset);
-    combinedOffset += block.decompressedBytes.length;
-
-    block.combinedEnd = combinedOffset;
-  });
-
-  return {
-    rawBytes: rawBytes,
-    zlibHeaderOffsets: compressedHeaderOffsets
-      .filter((headerInfo) => {
-        return headerInfo.type === "zlib";
-      })
-      .map((headerInfo) => {
-        return headerInfo.offset;
-      }),
-    compressedHeaderOffsets: compressedHeaderOffsets,
-    blocks: blocks,
-    blockCount: blocks.length,
-    combinedBytes: combinedBytes,
-    combinedSize: combinedBytes.length,
-    usedRawFallback: false,
-    fallbackReason: ""
-  };
+    return {
+        rawBytes: rawBytes,
+        zlibHeaderOffsets: zlibHeaderOffsets,
+        compressedHeaderOffsets: zlibHeaderOffsets.map((offset) => {
+            return {
+                offset: offset,
+                type: "zlib"
+            };
+        }),
+        blocks: decompressed.blocks,
+        blockCount: decompressed.blocks.length,
+        combinedBytes: decompressed.combinedBytes,
+        combinedSize: decompressed.combinedSize,
+        usedRawFallback: false,
+        fallbackReason: "",
+        blockTable: blockTable
+    };
 }
 
 
