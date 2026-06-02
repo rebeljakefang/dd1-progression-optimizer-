@@ -1936,6 +1936,111 @@ function areAllRequiredRuleGroupsChecked(rootElement, ruleGroups) {
 }
 
 
+function getHeadingLevel(element) {
+    if (!element || !element.tagName) {
+        return 99;
+    }
+
+    const match = element.tagName.match(/^H([1-6])$/i);
+
+    if (!match) {
+        return 99;
+    }
+
+    return Number(match[1]);
+}
+
+
+function getSectionCheckboxesByHeading(rootElement, headingIncludes) {
+    const normalizedIncludes = headingIncludes.map(normalizeChecklistText);
+    const headings = Array.from(rootElement.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+
+    const startHeading = headings.find((heading) => {
+        const headingText = normalizeChecklistText(heading.textContent || "");
+
+        return normalizedIncludes.every((includeText) => {
+            return headingText.includes(includeText);
+        });
+    });
+
+    if (!startHeading) {
+        return [];
+    }
+
+    const startLevel = getHeadingLevel(startHeading);
+    const nextHeading = headings.find((heading) => {
+        if (heading === startHeading) {
+            return false;
+        }
+
+        const isAfterStart = Boolean(
+            startHeading.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING
+        );
+
+        return isAfterStart && getHeadingLevel(heading) <= startLevel;
+    });
+
+    return getAllChecklistCheckboxes(rootElement).filter((checkbox) => {
+        const isAfterStart = Boolean(
+            startHeading.compareDocumentPosition(checkbox) & Node.DOCUMENT_POSITION_FOLLOWING
+        );
+
+        if (!isAfterStart) {
+            return false;
+        }
+
+        if (!nextHeading) {
+            return true;
+        }
+
+        return Boolean(
+            checkbox.compareDocumentPosition(nextHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+        );
+    });
+}
+
+
+function checkBoxesInSectionByTextRules(rootElement, headingIncludes, rules) {
+    let checkedCount = 0;
+    const checkboxes = getSectionCheckboxesByHeading(rootElement, headingIncludes);
+
+    checkboxes.forEach((checkbox) => {
+        const visibleText = getCheckboxVisibleText(checkbox);
+
+        const matched = rules.some((rule) => {
+            const requiredText = normalizeChecklistText(rule.text || "");
+            const requiredIncludes = (rule.includes || []).map(normalizeChecklistText);
+            const excludedIncludes = (rule.excludes || []).map(normalizeChecklistText);
+
+            if (requiredText && !visibleText.includes(requiredText)) {
+                return false;
+            }
+
+            const hasAllRequiredIncludes = requiredIncludes.every((required) => {
+                return visibleText.includes(required);
+            });
+
+            if (!hasAllRequiredIncludes) {
+                return false;
+            }
+
+            const hasExcludedText = excludedIncludes.some((excluded) => {
+                return visibleText.includes(excluded);
+            });
+
+            return !hasExcludedText;
+        });
+
+        if (matched && !checkbox.checked) {
+            checkbox.checked = true;
+            checkedCount++;
+        }
+    });
+
+    return checkedCount;
+}
+
+
 function getHeroClassFromTemplate(template) {
     if (!template) {
         return null;
@@ -2070,6 +2175,131 @@ function applyGroupHugChecklistProgress(saveData, rootElement = document) {
 }
 
 
+function applyPerspectiveChecklistProgress(saveData, rootElement = document) {
+    if (!saveHasAchievement(saveData, "ACH_PERSPECTIVE")) {
+        return 0;
+    }
+
+    return checkBoxesInSectionByTextRules(rootElement, ["a matter of perspective"], [
+        { includes: ["apprentice", "defeat the summit"] },
+        { includes: ["monk", "defeat the summit"] },
+        { includes: ["huntress", "defeat the summit"] },
+        { includes: ["squire", "defeat the summit"] }
+    ]);
+}
+
+
+function applyDefenseBestOffenseChecklistProgress(saveData, rootElement = document) {
+    if (!saveHasAchievement(saveData, "ACH_OFFENSE")) {
+        return 0;
+    }
+
+    const originalCampaignMaps = [
+        "The Deeper Well",
+        "Foundries and Forges",
+        "Magus Quarters",
+        "Alchemical Laboratory",
+        "Servants Quarters",
+        "Castle Armory",
+        "Hall of Court",
+        "The Throne Room",
+        "Royal Gardens",
+        "The Ramparts",
+        "Endless Spires",
+        "The Summit",
+        "Glitterhelm Caverns"
+    ];
+
+    return checkBoxesInSectionByTextRules(
+        rootElement,
+        ["defense is the best offense"],
+        originalCampaignMaps.map((mapName) => {
+            return { text: mapName };
+        })
+    );
+}
+
+
+function applyPetChecklistProgress(saveData, rootElement = document) {
+    let checkedCount = 0;
+
+    const petRows = [
+        "The Deeper Well",
+        "Foundries and Forges",
+        "Omenak",
+        "Magus Quarters",
+        "Infested Ruins",
+        "Alchemical Laboratory",
+        "The Throne Room",
+        "Servants Quarters",
+        "Glitterhelm Caverns",
+        "Lover's Paradise",
+        "Castle Armory",
+        "Hall of Court",
+        "Tavern Defense",
+        "Coastal Bazaar",
+        "Royal Gardens",
+        "Temple of Water",
+        "The Striking Tree",
+        "The Ramparts",
+        "Endless Spires",
+        "Emerald City",
+        "The Summit",
+        "Magus Citadel",
+        "Palantir",
+        "Mistymire Forest",
+        "Crystalline Resurgence Part 1",
+        "Moraggo Desert Town",
+        "Crystalline Resurgence Part 2",
+        "Aquanos",
+        "Sky City",
+        "City in the Cliffs",
+        "Karathiki Jungle",
+        "Akatiti Jungle",
+        "Sky O' Love",
+        "Assault Pack Parts 1-3",
+        "Talay Mining Complex",
+        "Presidential Battle Royale"
+    ];
+
+    if (saveHasAchievement(saveData, "ACH_CATCH") || saveHasAchievement(saveData, "ACH_MONSTERS")) {
+        checkedCount += checkBoxesInSectionByTextRules(
+            rootElement,
+            ["pet achievement goals"],
+            petRows.map((rowText) => {
+                return { text: rowText };
+            })
+        );
+    }
+
+    return checkedCount;
+}
+
+
+function applyRtsChecklistProgress(saveData, rootElement = document) {
+    if (!saveHasAnyAchievement(saveData, ["ACH_RTS", "ACH_RTS_MYTHICAL"])) {
+        return 0;
+    }
+
+    const rtsRows = [
+        "The Deeper Well through The Summit",
+        "Glitterhelm Caverns",
+        "Mistymire Forest",
+        "Moraggo Desert Town",
+        "Aquanos",
+        "City in the Cliffs"
+    ];
+
+    return checkBoxesInSectionByTextRules(
+        rootElement,
+        ["real time strategist"],
+        rtsRows.map((rowText) => {
+            return { text: rowText };
+        })
+    );
+}
+
+
 function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     let checkedCount = 0;
 
@@ -2100,11 +2330,11 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
     const lostQuestNightmareRows = [
         { tags: ["CDTCDD"], text: "Dread Dungeon" },
         { tags: ["CDTARC"], text: "Arcane Library" },
-        { tags: ["CDTTWA", "CDTSBB"], text: "Buccaneer Bay" },
+        { tags: ["CDTTWA"], text: "Buccaneer Bay" },
         { tags: ["SPECHI"], text: "Pirate Invasion" },
-        { tags: ["CDTTWC", "CDTCBB"], text: "Coastal Bazaar" },
+        { tags: ["CDTTWC", "CDTCBB", "CDTCOB"], text: "Coastal Bazaar" },
         { tags: ["CDTARA", "CDTEMV"], text: "Embermount Volcano" },
-        { tags: ["LIFHOL"], text: "Flames of Rebirth" },
+        { tags: ["CDTFOR"], text: "Flames of Rebirth" },
         { tags: ["CDTTOW"], text: "Temple of Water" },
         { tags: ["CDTTOP"], text: "Temple of Polybius" },
         { tags: ["CDTVAL"], text: "Spring Valley" },
@@ -2134,6 +2364,16 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
         { tags: ["SPECES"], text: "Assault" },
         { tags: ["SPECTS"], text: "Treasure Hunt" },
         { tags: ["CAMPMF", "SPECMF"], text: "Monster Fest" }
+    ];
+
+    const extraCleanupRows = [
+        { tags: ["CDTSBB"], text: "Spooktacular Bay" },
+        { tags: ["CAMPST", "TBRUOO"], text: "The Striking Tree" },
+        { tags: ["CAMPTD"], text: "Tavern Defense" },
+        { tags: ["VDAY04"], text: "Lover's Paradise" },
+        { tags: ["SPECJC"], text: "Crystal Escort" },
+        { tags: ["LIFHOL"], text: "Lifesteam Hollow" },
+        { tags: ["CDHUNT"], text: "Forest Ogre Crush" }
     ];
 
     campaignRows.forEach((row) => {
@@ -2240,6 +2480,18 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
         ]);
     });
 
+    extraCleanupRows.forEach((row) => {
+        if (!saveHasAnyBeatenTagOnNightmare(saveData, row.tags)) {
+            return;
+        }
+
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [row.text]
+            }
+        ]);
+    });
+
     return checkedCount;
 }
 
@@ -2247,13 +2499,14 @@ function applyBeatenLevelChecklistProgress(saveData, rootElement = document) {
 function applyAchievementBasedChecklistInferences(saveData, rootElement = document) {
     let checkedCount = 0;
 
-    if (
-        saveHasAnyAchievement(saveData, [
-            "ACH_HUG"
-        ])
-    ) {
+    if (saveHasAchievement(saveData, "ACH_HUG")) {
         checkedCount += applyGroupHugChecklistProgress(saveData, rootElement);
     }
+
+    checkedCount += applyPerspectiveChecklistProgress(saveData, rootElement);
+    checkedCount += applyDefenseBestOffenseChecklistProgress(saveData, rootElement);
+    checkedCount += applyPetChecklistProgress(saveData, rootElement);
+    checkedCount += applyRtsChecklistProgress(saveData, rootElement);
 
     if (
         saveHasAnyAchievement(saveData, [
@@ -2364,6 +2617,10 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
             achievements: ["ACH_MOONBASE", "ACH_MOONBASE_NIGHTMARE"]
         },
         {
+            text: "Spooktacular Bay",
+            achievements: ["ACH_PUMPKIN_PARTY", "ACH_PUMPKINPARTY_NIGHTMARE"]
+        },
+        {
             text: "Crystalline Resurgence Part 1",
             achievements: ["ACH_CR_NIGHTMARE"]
         },
@@ -2409,6 +2666,70 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
 
 function applyMasterChecklistProgress(saveData, rootElement = document) {
     let checkedCount = 0;
+
+    const masterRules = [
+        {
+            required: [
+                [{ includes: ["apprentice", "defeat the summit"] }],
+                [{ includes: ["monk", "defeat the summit"] }],
+                [{ includes: ["huntress", "defeat the summit"] }],
+                [{ includes: ["squire", "defeat the summit"] }]
+            ],
+            master: [{ includes: ["a matter of perspective", "defeat the summit with each original hero"] }]
+        },
+        {
+            required: [
+                [{ includes: ["the deeper well"] }],
+                [{ includes: ["foundries and forges"] }],
+                [{ includes: ["magus quarters"] }],
+                [{ includes: ["alchemical laboratory"] }],
+                [{ includes: ["servants quarters"] }],
+                [{ includes: ["castle armory"] }],
+                [{ includes: ["hall of court"] }],
+                [{ includes: ["the throne room"] }],
+                [{ includes: ["royal gardens"] }],
+                [{ includes: ["the ramparts"] }],
+                [{ includes: ["endless spires"] }],
+                [{ includes: ["the summit"] }],
+                [{ includes: ["glitterhelm caverns"] }]
+            ],
+            master: [{ includes: ["defense is the best offense", "wave 10"] }]
+        },
+        {
+            required: [
+                [{ includes: ["mistymire forest", "complete shard"] }],
+                [{ includes: ["moraggo desert town", "complete shard"] }],
+                [{ includes: ["aquanos", "complete shard"] }],
+                [{ includes: ["sky city", "complete shard"] }],
+                [{ includes: ["crystalline dimension", "complete heroes"] }]
+            ],
+            master: [{ includes: ["quest for lost eternia shards", "complete the main shards"] }]
+        },
+        {
+            required: [
+                [{ includes: ["the deeper well through the summit"] }],
+                [{ includes: ["glitterhelm caverns"] }],
+                [{ includes: ["mistymire forest"] }],
+                [{ includes: ["moraggo desert town"] }],
+                [{ includes: ["aquanos"] }],
+                [{ includes: ["city in the cliffs"] }]
+            ],
+            master: [{ includes: ["real time strategist", "summoned minions"] }]
+        }
+    ];
+
+    masterRules.forEach((group) => {
+        if (!areAllRequiredRuleGroupsChecked(rootElement, group.required)) {
+            return;
+        }
+
+        const masterMatches = findCheckboxesByTextRules(rootElement, group.master);
+
+        if (masterMatches.length > 0 && !masterMatches[0].checked) {
+            masterMatches[0].checked = true;
+            checkedCount++;
+        }
+    });
 
     const eternalDefenderRequiredRowGroups = [
         [{ includes: ["dread dungeon", "complete on nightmare"] }],
