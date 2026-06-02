@@ -713,13 +713,22 @@ function scanHeroes(bytes) {
    10. Achievement Window Scanner
 ========================================================= */
 
-function countAchievementWindow(bytes, start) {
+function countAchievementWindow(bytes, start, count = maxAchievements) {
     let zeroCount = 0;
     let oneCount = 0;
     let nonZeroCount = 0;
     let otherNonZeroCount = 0;
 
-    for (let offset = 0; offset < maxAchievements; offset++) {
+    if (start < 0 || start + count > bytes.length) {
+        return {
+            zeroCount: 0,
+            oneCount: 0,
+            nonZeroCount: 0,
+            otherNonZeroCount: count
+        };
+    }
+
+    for (let offset = 0; offset < count; offset++) {
         const value = bytes[start + offset];
 
         if (value === 0) {
@@ -740,6 +749,215 @@ function countAchievementWindow(bytes, start) {
         oneCount: oneCount,
         nonZeroCount: nonZeroCount,
         otherNonZeroCount: otherNonZeroCount
+    };
+}
+
+
+function looksLikeAchievementWindow(bytes, start) {
+    const steamAchievementCount = dd1SteamAchievementIndex.length;
+
+    if (start < 0 || start + steamAchievementCount > bytes.length) {
+        return false;
+    }
+
+    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+
+    return (
+        steamCounts.nonZeroCount >= 1 &&
+        steamCounts.nonZeroCount <= steamAchievementCount &&
+        steamCounts.otherNonZeroCount === 0
+    );
+}
+
+
+function scoreAchievementWindow(bytes, start) {
+    const steamAchievementCount = dd1SteamAchievementIndex.length;
+
+    if (start < 0 || start + steamAchievementCount > bytes.length) {
+        return -999999;
+    }
+
+    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+
+    if (steamCounts.otherNonZeroCount > 0) {
+        return -999999;
+    }
+
+    if (steamCounts.nonZeroCount < 1 || steamCounts.nonZeroCount > steamAchievementCount) {
+        return -999999;
+    }
+
+    let score = 0;
+
+    score += steamCounts.nonZeroCount * 2;
+
+    const earlyAchievementIndexes = [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        10, 11, 12, 13, 14
+    ];
+
+    earlyAchievementIndexes.forEach((index) => {
+        if (bytes[start + index] === 1) {
+            score += 20;
+        }
+    });
+
+    const commonProgressIndexes = [
+        38, 39, 40, 41, 43, 44, 45, 50, 52, 53, 54, 55
+    ];
+
+    commonProgressIndexes.forEach((index) => {
+        if (bytes[start + index] === 1) {
+            score += 8;
+        }
+    });
+
+    const fullWindowFits = start + maxAchievements <= bytes.length;
+
+    if (fullWindowFits) {
+        const fullCounts = countAchievementWindow(bytes, start, maxAchievements);
+
+        if (fullCounts.otherNonZeroCount === 0) {
+            score += 25;
+        }
+
+        if (fullCounts.nonZeroCount <= steamAchievementCount) {
+            score += 15;
+        }
+    }
+
+    return score;
+}
+
+
+function findBestAchievementStartInRange(bytes, searchStart, searchEnd) {
+    let bestStart = -1;
+    let bestScore = -999999;
+
+    const steamAchievementCount = dd1SteamAchievementIndex.length;
+    const safeStart = Math.max(0, searchStart);
+    const safeEnd = Math.min(searchEnd, bytes.length - steamAchievementCount);
+
+    for (let position = safeStart; position <= safeEnd; position++) {
+        if (!looksLikeAchievementWindow(bytes, position)) {
+            continue;
+        }
+
+        const score = scoreAchievementWindow(bytes, position);
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestStart = position;
+        }
+    }
+
+    return bestStart;
+}
+
+
+function findLikelyAchievementStart(bytes, heroes) {
+    let searchStart = 0;
+
+    if (heroes.length > 0) {
+        const lastHero = heroes[heroes.length - 1];
+        searchStart = lastHero.templatePosition + 500;
+    }
+
+    const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
+
+    const heroBasedStart = findBestAchievementStartInRange(bytes, searchStart, searchEnd);
+
+    if (heroBasedStart !== -1) {
+        return heroBasedStart;
+    }
+
+    const fullFileStart = findBestAchievementStartInRange(bytes, 0, searchEnd);
+
+    if (fullFileStart !== -1) {
+        return fullFileStart;
+    }
+
+    return -1;
+}
+
+
+function findAchievementCandidates(bytes, heroes) {
+    const candidates = [];
+    let searchStart = 0;
+
+    if (heroes.length > 0) {
+        const lastHero = heroes[heroes.length - 1];
+        searchStart = lastHero.templatePosition + 500;
+    }
+
+    const searchEnd = bytes.length - dd1SteamAchievementIndex.length;
+
+    for (let position = searchStart; position <= searchEnd; position++) {
+        if (looksLikeAchievementWindow(bytes, position)) {
+            const steamCounts = countAchievementWindow(bytes, position, dd1SteamAchievementIndex.length);
+            const fullCounts = countAchievementWindow(bytes, position, Math.min(maxAchievements, bytes.length - position));
+            const achievementBytes = bytes.slice(position, position + dd1SteamAchievementIndex.length);
+
+            candidates.push({
+                start: position,
+                score: scoreAchievementWindow(bytes, position),
+                steamCounts: steamCounts,
+                counts: fullCounts,
+                previewHex: debugBytes(achievementBytes, 0, 160),
+                previewAscii: bytesToAscii(achievementBytes, 0, 160)
+            });
+
+            if (candidates.length >= 10) {
+                break;
+            }
+        }
+    }
+
+    return candidates;
+}
+
+
+function readAchievementBytes(bytes, heroes) {
+    const start = findLikelyAchievementStart(bytes, heroes);
+
+    if (start === -1) {
+        throw new Error("Could not find the Steam achievement byte window. This save may use a different format, or the achievement data may not be stored in this .dun file.");
+    }
+
+    const steamAchievementCount = dd1SteamAchievementIndex.length;
+    const achievementBytes = bytes.slice(start, start + Math.max(maxAchievements, steamAchievementCount));
+    const steamCounts = countAchievementWindow(bytes, start, steamAchievementCount);
+    const fullCounts = countAchievementWindow(
+        bytes,
+        start,
+        Math.min(maxAchievements, bytes.length - start)
+    );
+
+    const unlockedSteamAchievements = [];
+
+    for (let index = 0; index < dd1SteamAchievementIndex.length; index++) {
+        const steamId = dd1SteamAchievementIndex[index];
+        const value = achievementBytes[index];
+
+        if (value === 1) {
+            unlockedSteamAchievements.push({
+                index: index,
+                steamId: steamId,
+                name: getDd1AchievementName(steamId)
+            });
+        }
+    }
+
+    return {
+        start: start,
+        originalStart: start,
+        offsetAdjustment: 0,
+        bytes: achievementBytes,
+        counts: fullCounts,
+        steamCounts: steamCounts,
+        unlockedSteamAchievements: unlockedSteamAchievements,
+        previewHex: debugBytes(achievementBytes, 0, 200),
+        previewAscii: bytesToAscii(achievementBytes, 0, 200)
     };
 }
 
