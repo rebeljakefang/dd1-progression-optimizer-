@@ -1849,6 +1849,67 @@ function checkBoxesByTextRules(rootElement, rules) {
 }
 
 
+function findCheckboxesByTextRules(rootElement, rules) {
+    const checkboxes = getAllChecklistCheckboxes(rootElement);
+
+    return checkboxes.filter((checkbox) => {
+        const visibleText = getCheckboxVisibleText(checkbox);
+
+        return rules.some((rule) => {
+            const requiredText = normalizeChecklistText(rule.text || "");
+            const requiredIncludes = (rule.includes || []).map(normalizeChecklistText);
+            const excludedIncludes = (rule.excludes || []).map(normalizeChecklistText);
+
+            if (requiredText && !visibleText.includes(requiredText)) {
+                return false;
+            }
+
+            const hasAllRequiredIncludes = requiredIncludes.every((required) => {
+                return visibleText.includes(required);
+            });
+
+            if (!hasAllRequiredIncludes) {
+                return false;
+            }
+
+            const hasExcludedText = excludedIncludes.some((excluded) => {
+                return visibleText.includes(excluded);
+            });
+
+            return !hasExcludedText;
+        });
+    });
+}
+
+
+function setFirstMatchingCheckboxChecked(rootElement, rules) {
+    const matches = findCheckboxesByTextRules(rootElement, rules);
+
+    if (matches.length === 0) {
+        return false;
+    }
+
+    if (!matches[0].checked) {
+        matches[0].checked = true;
+    }
+
+    return true;
+}
+
+
+function areAllRequiredRuleGroupsChecked(rootElement, ruleGroups) {
+    return ruleGroups.every((rules) => {
+        const matches = findCheckboxesByTextRules(rootElement, rules);
+
+        if (matches.length === 0) {
+            return false;
+        }
+
+        return matches.some((checkbox) => checkbox.checked);
+    });
+}
+
+
 function getHeroClassFromTemplate(template) {
     if (!template) {
         return null;
@@ -2249,11 +2310,51 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
         {
             text: "Moonbase",
             achievements: ["ACH_MOONBASE", "ACH_MOONBASE_NIGHTMARE"]
+        },
+        {
+            text: "Buccaneer Bay",
+            achievements: ["ACH_BUCCANEER_BAY_NIGHTMARE"]
+        },
+        {
+            text: "Omenak",
+            achievements: ["ACH_OME_NIGHTMARE"]
+        },
+        {
+            text: "Crystalline Resurgence Part 1",
+            achievements: ["ACH_CR_NIGHTMARE"]
+        },
+        {
+            text: "Crystalline Resurgence Part 2",
+            achievements: ["ACH_CR_NIGHTMARE"]
+        },
+        {
+            text: "Crystalline Resurgence Part 3",
+            achievements: ["ACH_CR_NIGHTMARE"]
+        },
+        {
+            text: "Crystalline Resurgence Part 4",
+            achievements: ["ACH_CR_NIGHTMARE"]
         }
     ];
 
     extraAchievementRows.forEach((row) => {
         if (!saveHasAnyAchievement(saveData, row.achievements)) {
+            return;
+        }
+
+        if (
+            row.text === "Buccaneer Bay" ||
+            row.text === "Omenak" ||
+            row.text.startsWith("Crystalline Resurgence Part")
+        ) {
+            checkedCount += checkBoxesByTextRules(rootElement, [
+                {
+                    includes: [
+                        row.text,
+                        "complete on nightmare"
+                    ]
+                }
+            ]);
             return;
         }
 
@@ -2263,6 +2364,122 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
     });
 
     return checkedCount;
+}
+
+
+function applyMasterChecklistProgress(saveData, rootElement = document) {
+    let checkedCount = 0;
+
+    const eternalDefenderRequiredRowGroups = [
+        [{ includes: ["dread dungeon", "complete on nightmare"] }],
+        [{ includes: ["arcane library", "complete on nightmare"] }],
+        [{ includes: ["buccaneer bay", "complete on nightmare"] }],
+        [{ includes: ["pirate invasion", "wave 7", "nightmare"] }],
+        [{ includes: ["coastal bazaar", "complete on nightmare"] }],
+        [{ includes: ["embermount volcano", "complete on nightmare"] }],
+        [{ includes: ["flames of rebirth", "complete on nightmare"] }],
+        [{ includes: ["temple of water", "complete on nightmare"] }],
+        [{ includes: ["temple of polybius", "complete on nightmare"] }],
+        [{ includes: ["spring valley", "complete on nightmare"] }],
+        [{ includes: ["tomb of etheria", "complete on nightmare"] }],
+        [{ includes: ["emerald city", "complete on nightmare"] }],
+        [{ includes: ["crystalline resurgence part 1", "complete on nightmare"] }],
+        [{ includes: ["crystalline resurgence part 2", "complete on nightmare"] }],
+        [{ includes: ["crystalline resurgence part 3", "complete on nightmare"] }],
+        [{ includes: ["crystalline resurgence part 4", "complete on nightmare"] }],
+        [{ includes: ["wintermire", "complete on nightmare"] }],
+        [{ includes: ["magus citadel", "complete on nightmare"] }],
+        [{ includes: ["omenak", "complete on nightmare"] }],
+        [{ includes: ["infested ruins", "complete on nightmare"] }]
+    ];
+
+    const eternalDefenderSectionMasterRule = [
+        {
+            includes: [
+                "eternal defender",
+                "complete all required lost quest maps on nightmare"
+            ]
+        }
+    ];
+
+    const eternalDefenderMainGoalRule = [
+        {
+            includes: [
+                "eternal defender",
+                "after ultimate defender",
+                "complete the required lost quest maps on nightmare"
+            ]
+        }
+    ];
+
+    if (areAllRequiredRuleGroupsChecked(rootElement, eternalDefenderRequiredRowGroups)) {
+        const sectionMasterMatches = findCheckboxesByTextRules(rootElement, eternalDefenderSectionMasterRule);
+        const mainGoalMatches = findCheckboxesByTextRules(rootElement, eternalDefenderMainGoalRule);
+
+        if (sectionMasterMatches.length > 0 && !sectionMasterMatches[0].checked) {
+            sectionMasterMatches[0].checked = true;
+            checkedCount++;
+        }
+
+        if (mainGoalMatches.length > 0 && !mainGoalMatches[0].checked) {
+            mainGoalMatches[0].checked = true;
+            checkedCount++;
+        }
+    }
+
+    return checkedCount;
+}
+
+
+function buildSaveImportDebug(saveData, rootElement = document) {
+    const eternalDefenderRequiredRowGroups = [
+        { name: "Dread Dungeon", rules: [{ includes: ["dread dungeon", "complete on nightmare"] }] },
+        { name: "Arcane Library", rules: [{ includes: ["arcane library", "complete on nightmare"] }] },
+        { name: "Buccaneer Bay", rules: [{ includes: ["buccaneer bay", "complete on nightmare"] }] },
+        { name: "Pirate Invasion", rules: [{ includes: ["pirate invasion", "wave 7", "nightmare"] }] },
+        { name: "Coastal Bazaar", rules: [{ includes: ["coastal bazaar", "complete on nightmare"] }] },
+        { name: "Embermount Volcano", rules: [{ includes: ["embermount volcano", "complete on nightmare"] }] },
+        { name: "Flames of Rebirth", rules: [{ includes: ["flames of rebirth", "complete on nightmare"] }] },
+        { name: "Temple of Water", rules: [{ includes: ["temple of water", "complete on nightmare"] }] },
+        { name: "Temple of Polybius", rules: [{ includes: ["temple of polybius", "complete on nightmare"] }] },
+        { name: "Spring Valley", rules: [{ includes: ["spring valley", "complete on nightmare"] }] },
+        { name: "Tomb of Etheria", rules: [{ includes: ["tomb of etheria", "complete on nightmare"] }] },
+        { name: "Emerald City", rules: [{ includes: ["emerald city", "complete on nightmare"] }] },
+        { name: "Crystalline Resurgence Part 1", rules: [{ includes: ["crystalline resurgence part 1", "complete on nightmare"] }] },
+        { name: "Crystalline Resurgence Part 2", rules: [{ includes: ["crystalline resurgence part 2", "complete on nightmare"] }] },
+        { name: "Crystalline Resurgence Part 3", rules: [{ includes: ["crystalline resurgence part 3", "complete on nightmare"] }] },
+        { name: "Crystalline Resurgence Part 4", rules: [{ includes: ["crystalline resurgence part 4", "complete on nightmare"] }] },
+        { name: "Wintermire", rules: [{ includes: ["wintermire", "complete on nightmare"] }] },
+        { name: "Magus Citadel", rules: [{ includes: ["magus citadel", "complete on nightmare"] }] },
+        { name: "Omenak", rules: [{ includes: ["omenak", "complete on nightmare"] }] },
+        { name: "Infested Ruins", rules: [{ includes: ["infested ruins", "complete on nightmare"] }] }
+    ];
+
+    const eternalDefenderRows = eternalDefenderRequiredRowGroups.map((entry) => {
+        const matches = findCheckboxesByTextRules(rootElement, entry.rules);
+
+        return {
+            row: entry.name,
+            found: matches.length > 0,
+            checked: matches.some((checkbox) => checkbox.checked),
+            matchedText: matches.map((checkbox) => getCheckboxVisibleText(checkbox))
+        };
+    });
+
+    const originalLevel70Classes = Array.from(getOriginalLevel70HeroClasses(saveData));
+
+    const debugData = {
+        checkedCount: Array.from(rootElement.querySelectorAll("input[type='checkbox']")).filter((checkbox) => checkbox.checked).length,
+        totalCheckboxes: rootElement.querySelectorAll("input[type='checkbox']").length,
+        beatenLevels: saveData.beatenLevels || [],
+        unlockedLevels: saveData.unlockedLevels || [],
+        heroes: saveData.heroes || [],
+        originalLevel70Classes: originalLevel70Classes,
+        eternalDefenderRows: eternalDefenderRows
+    };
+
+    window.latestDd1ImportDebug = debugData;
+    return debugData;
 }
 
 
@@ -2286,6 +2503,7 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
 
     checkedCount += applyBeatenLevelChecklistProgress(saveData, rootElement);
     checkedCount += applyAchievementBasedChecklistInferences(saveData, rootElement);
+    checkedCount += applyMasterChecklistProgress(saveData, rootElement);
 
     const statusElements = rootElement.querySelectorAll("[data-steam-status]");
 
@@ -2298,6 +2516,8 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
             statusElement.textContent = "Missing";
         }
     });
+
+    buildSaveImportDebug(saveData, rootElement);
 
     const allCheckedBoxes = Array.from(rootElement.querySelectorAll("input[type='checkbox']")).filter((checkbox) => {
         return checkbox.checked;
