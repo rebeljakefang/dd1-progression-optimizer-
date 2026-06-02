@@ -375,8 +375,42 @@ function readAsciiStringAt(bytes, position, length) {
 
 
 /* =========================================================
-   7. Zlib Exact End Search
+   7. Zlib Block Search and Decompression
 ========================================================= */
+
+function looksLikeZlibHeader(rawBytes, position) {
+    if (position < 0 || position + 1 >= rawBytes.length) {
+        return false;
+    }
+
+    const firstByte = rawBytes[position];
+    const secondByte = rawBytes[position + 1];
+
+    if (firstByte !== 0x78) {
+        return false;
+    }
+
+    return (
+        secondByte === 0x01 ||
+        secondByte === 0x5e ||
+        secondByte === 0x9c ||
+        secondByte === 0xda
+    );
+}
+
+
+function findZlibHeaderOffsets(rawBytes) {
+    const offsets = [];
+
+    for (let position = 0; position < rawBytes.length - 1; position++) {
+        if (looksLikeZlibHeader(rawBytes, position)) {
+            offsets.push(position);
+        }
+    }
+
+    return offsets;
+}
+
 
 function tryInflateExactEnd(rawBytes, offset, maxEnd) {
     const startEnd = offset + 20;
@@ -399,7 +433,7 @@ function tryInflateExactEnd(rawBytes, offset, maxEnd) {
                 };
             }
         } catch {
-            // Keep searching for the exact zlib end.
+            // Keep searching until we find the exact end of this zlib stream.
         }
     }
 
@@ -410,25 +444,40 @@ function tryInflateExactEnd(rawBytes, offset, maxEnd) {
         rawLength: finalEnd - offset,
         decompressedBytes: null,
         decompressedSize: 0,
-        error: "No exact zlib end found in the target range."
+        error: "No exact zlib end found from this offset."
     };
 }
 
 
 function decompressDunFile(arrayBuffer) {
     const rawBytes = new Uint8Array(arrayBuffer);
+    const headerOffsets = findZlibHeaderOffsets(rawBytes);
     const blocks = [];
 
-    targetZlibOffsets.forEach((offset) => {
-        const maxEnd = targetSearchRanges[offset] || rawBytes.length;
-        const result = tryInflateExactEnd(rawBytes, offset, maxEnd);
+    let searchIndex = 0;
 
-        if (!result.success) {
-            throw new Error(`Failed to decompress zlib block at offset ${offset}: ${result.error}`);
+    while (searchIndex < headerOffsets.length) {
+        const offset = headerOffsets[searchIndex];
+
+        const result = tryInflateExactEnd(rawBytes, offset, rawBytes.length);
+
+        if (result.success && result.decompressedSize > 1000) {
+            blocks.push(result);
+
+            while (
+                searchIndex < headerOffsets.length &&
+                headerOffsets[searchIndex] < result.end
+            ) {
+                searchIndex++;
+            }
+        } else {
+            searchIndex++;
         }
+    }
 
-        blocks.push(result);
-    });
+    if (blocks.length === 0) {
+        throw new Error("No zlib save blocks were found. Make sure this is a valid DunDefHeroes.dun file.");
+    }
 
     let totalLength = 0;
 
