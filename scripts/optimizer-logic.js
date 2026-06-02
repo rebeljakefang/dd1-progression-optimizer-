@@ -99,24 +99,48 @@ function chooseGoalRecommendation(stepName, stepData, account) {
         if (!account.hasGenie && account.towerDamage >= 2500) {
             return {
                 name: "Coastal Bazaar",
-                goal: "Farm a Genie pet to help with mana generation and upgrading.",
+                goal: "Farm a Genie pet while also working on strong gear progression.",
                 difficulty: "Nightmare",
-                mode: "Campaign",
+                mode: "Campaign/Survival",
                 risk: "High",
                 reward: "High",
-                reason: "You selected pets and do not have a Genie yet, so Coastal Bazaar is worth considering."
+                reason: "You selected pets and do not have a Genie yet. Coastal Bazaar is useful because it can help with both Genie progression and gear."
+            };
+        }
+
+        if (!account.hasSeahorse && !account.hasHarpoonPet && account.towerDamage >= 2500) {
+            return {
+                name: "Harpoon Pet or Seahorse",
+                goal: "Farm a strong DPS pet. Harpoon Pet is easier to get early by lowering difficulty, while Seahorse is stronger for single-target DPS later.",
+                difficulty: "Hard to Nightmare",
+                mode: "Campaign/Survival",
+                risk: "Medium",
+                reward: "High",
+                reason: "You selected pets and do not have a major DPS pet yet, so Harpoon Pet or Seahorse should be a priority."
             };
         }
 
         if (!account.hasSeahorse && account.towerDamage >= 3500) {
             return {
                 name: "Aquanos",
-                goal: "Clear Aquanos and farm a Seahorse for strong DPS.",
+                goal: "Clear Aquanos and farm a Seahorse for strong single-target DPS.",
                 difficulty: "Nightmare",
                 mode: "Campaign/Survival",
                 risk: "High",
                 reward: "Very High",
-                reason: "You selected pets and do not have a Seahorse yet, so Aquanos is a good DPS pet goal."
+                reason: "You selected pets and do not have a Seahorse yet. Seahorse is still one of the best single-target DPS pet goals."
+            };
+        }
+
+        if (!account.hasHarpoonPet && account.towerDamage >= 2500) {
+            return {
+                name: "Harpoon Pet",
+                goal: "Farm a Harpoon Pet for strong wave clear. It is not as strong as Seahorse for single target, but it tears through waves and can be farmed earlier by lowering difficulty.",
+                difficulty: "Hard to Nightmare",
+                mode: "Campaign/Survival",
+                risk: "Medium",
+                reward: "High wave-clear DPS",
+                reason: "You selected pets and do not have a Harpoon Pet yet, so it is a good alternate DPS pet path."
             };
         }
 
@@ -213,8 +237,8 @@ function chooseOtherRecommendations(stepName, recommendation, account) {
             addOption("Moonbase Insane for Fish", "Useful if you still need stronger Fish in a Bowl pets for builders.");
         }
 
-        if (!account.hasSeahorse && account.towerDamage >= 3500) {
-            addOption("Aquanos or Sky City", "Good if you want to work toward major DPS pet milestones.");
+        if ((!account.hasSeahorse || !account.hasHarpoonPet) && account.towerDamage >= 2500) {
+            addOption("Aquanos or Sky City", "Useful for DPS pet progression. Seahorse is stronger single-target, while Harpoon Pet is easier earlier and better for wave clear.");
         }
 
         if (!account.hasPropellerCat && account.towerDamage >= 3500) {
@@ -229,7 +253,7 @@ function chooseOtherRecommendations(stepName, recommendation, account) {
         }
 
         if (account.towerDamage >= 3000 && account.towerDamage < 4000) {
-            addOption("Arcane or Coastal", "Good option for accessories, Genie farming, and general Nightmare progression.");
+            addOption("Arcane or Coastal", "Coastal is a strong gear map similar to King's Game, while Arcane is useful for accessories and support farming.");
             addOption("Aquanos or Sky City", "Good next step if you want pet progression while still improving gear.");
         }
 

@@ -501,6 +501,7 @@ function buildAccountFromForm() {
         hasGenie: document.querySelector("#has-genie").checked,
         hasFish: document.querySelector("#has-fish").checked,
         hasSeahorse: document.querySelector("#has-seahorse").checked,
+        hasHarpoonPet: document.querySelector("#has-harpoon-pet").checked,
         hasPropellerCat: document.querySelector("#has-propeller-cat").checked
     };
 }
@@ -630,6 +631,7 @@ function fillDemoOptimizerData() {
     const hasGenie = document.querySelector("#has-genie");
     const hasFish = document.querySelector("#has-fish");
     const hasSeahorse = document.querySelector("#has-seahorse");
+    const hasHarpoonPet = document.querySelector("#has-harpoon-pet");
     const hasPropellerCat = document.querySelector("#has-propeller-cat");
 
     if (mainGoal) {
@@ -646,6 +648,10 @@ function fillDemoOptimizerData() {
 
     if (hasSeahorse) {
         hasSeahorse.checked = false;
+    }
+
+    if (hasHarpoonPet) {
+        hasHarpoonPet.checked = false;
     }
 
     if (hasPropellerCat) {
