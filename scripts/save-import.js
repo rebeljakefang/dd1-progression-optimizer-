@@ -2813,6 +2813,21 @@ function applyAchievementBasedChecklistInferences(saveData, rootElement = docume
    12K. Master Checkbox Logic
 ========================================================= */
 
+function checkAllMatchingUncheckedBoxes(rootElement, rules) {
+    const matches = findCheckboxesByTextRules(rootElement, rules);
+    let checkedCount = 0;
+
+    matches.forEach((checkbox) => {
+        if (!checkbox.checked) {
+            checkbox.checked = true;
+            checkedCount++;
+        }
+    });
+
+    return checkedCount;
+}
+
+
 function checkFirstMatchingUncheckedBox(rootElement, rules) {
     const matches = findCheckboxesByTextRules(rootElement, rules);
 
@@ -2830,6 +2845,58 @@ function checkFirstMatchingUncheckedBox(rootElement, rules) {
 
     uncheckedMatch.checked = true;
     return 1;
+}
+
+
+function saveHasAllRuthlessClassicCampaign(saveData) {
+    const requiredCampaignTags = [
+        ["CAMPDW"],
+        ["CAMPFF"],
+        ["CAMPMQ"],
+        ["CAMPAL"],
+        ["CAMPSQ"],
+        ["CAMPCA"],
+        ["CAMPHC"],
+        ["CAMPTR"],
+        ["CAMPRG"],
+        ["CAMPRP"],
+        ["CAMPES"],
+        ["CAMPTS"],
+        ["CAMPGC"]
+    ];
+
+    return requiredCampaignTags.every((tagGroup) => {
+        return saveHasAnyBeatenTagOnRuthless(saveData, tagGroup);
+    });
+}
+
+
+function saveHasAllRuthlessClassicChallenges(saveData) {
+    const requiredChallengeTags = [
+        ["SPECDW"],
+        ["SPECFF"],
+        ["SPECMQ"],
+        ["SPECAL"],
+        ["SPECSQ"],
+        ["SPECCA"],
+        ["SPECHC"],
+        ["SPECTR"],
+        ["SPECRG"],
+        ["SPECRP"],
+        ["SPECES", "ASSLT1"],
+        ["SPECTS"],
+        ["CAMPMF", "SPECMF"]
+    ];
+
+    return requiredChallengeTags.every((tagGroup) => {
+        return saveHasAnyBeatenTagOnRuthless(saveData, tagGroup);
+    });
+}
+
+
+function saveHasRuthlessDefenderProgress(saveData) {
+    return saveHasAllRuthlessClassicCampaign(saveData) &&
+        saveHasAllRuthlessClassicChallenges(saveData);
 }
 
 
@@ -2918,37 +2985,8 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
         [{ includes: ["infested ruins", "complete on nightmare"] }]
     ];
 
-    const ruthlessRequiredRowGroups = [
-        [{ includes: ["the deeper well", "ruthless"] }],
-        [{ includes: ["foundries and forges", "ruthless"] }],
-        [{ includes: ["magus quarters", "ruthless"] }],
-        [{ includes: ["alchemical laboratory", "ruthless"] }],
-        [{ includes: ["servants quarters", "ruthless"] }],
-        [{ includes: ["castle armory", "ruthless"] }],
-        [{ includes: ["hall of court", "ruthless"] }],
-        [{ includes: ["the throne room", "ruthless"] }],
-        [{ includes: ["royal gardens", "ruthless"] }],
-        [{ includes: ["the ramparts", "ruthless"] }],
-        [{ includes: ["endless spires", "ruthless"] }],
-        [{ includes: ["the summit", "ruthless"] }],
-        [{ includes: ["glitterhelm caverns", "ruthless"] }],
-        [{ includes: ["no towers allowed", "ruthless"] }],
-        [{ includes: ["unlikely allies", "ruthless"] }],
-        [{ includes: ["warping core", "ruthless"] }],
-        [{ includes: ["raining goblins", "ruthless"] }],
-        [{ includes: ["wizardry", "ruthless"] }],
-        [{ includes: ["ogre crush", "ruthless"] }],
-        [{ includes: ["zippy terror", "ruthless"] }],
-        [{ includes: ["chicken", "ruthless"] }],
-        [{ includes: ["moving core", "ruthless"] }],
-        [{ includes: ["death from above", "ruthless"] }],
-        [{ includes: ["assault", "ruthless"] }],
-        [{ includes: ["treasure hunt", "ruthless"] }],
-        [{ includes: ["monster fest", "ruthless"] }]
-    ];
-
     if (areAllRequiredRuleGroupsChecked(rootElement, eternalDefenderRequiredRowGroups)) {
-        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
+        checkedCount += checkAllMatchingUncheckedBoxes(rootElement, [
             {
                 includes: [
                     "eternal defender",
@@ -2957,7 +2995,7 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
             }
         ]);
 
-        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
+        checkedCount += checkAllMatchingUncheckedBoxes(rootElement, [
             {
                 includes: [
                     "eternal defender",
@@ -2968,8 +3006,17 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
         ]);
     }
 
-    if (areAllRequiredRuleGroupsChecked(rootElement, ruthlessRequiredRowGroups)) {
-        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
+    const ruthlessReady = saveHasRuthlessDefenderProgress(saveData);
+
+    window.latestDd1RuthlessMasterDebug = {
+        ruthlessReady: ruthlessReady,
+        campaignReady: saveHasAllRuthlessClassicCampaign(saveData),
+        challengeReady: saveHasAllRuthlessClassicChallenges(saveData),
+        beatenLevels: saveData.beatenLevels || []
+    };
+
+    if (ruthlessReady) {
+        checkedCount += checkAllMatchingUncheckedBoxes(rootElement, [
             {
                 includes: [
                     "ruthless defender",
@@ -2978,11 +3025,20 @@ function applyMasterChecklistProgress(saveData, rootElement = document) {
             }
         ]);
 
-        checkedCount += checkFirstMatchingUncheckedBox(rootElement, [
+        checkedCount += checkAllMatchingUncheckedBoxes(rootElement, [
             {
                 includes: [
                     "ruthless defender",
                     "complete the classic campaign"
+                ]
+            }
+        ]);
+
+        checkedCount += checkAllMatchingUncheckedBoxes(rootElement, [
+            {
+                includes: [
+                    "ruthless defender",
+                    "ruthless"
                 ]
             }
         ]);
