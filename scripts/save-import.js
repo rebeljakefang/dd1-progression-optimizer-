@@ -3137,7 +3137,8 @@ function buildSaveImportDebug(saveData, rootElement = document) {
         heroes: saveData.heroes || [],
         originalLevel70Classes: originalLevel70Classes,
         eternalDefenderRows: eternalDefenderRows,
-        ruthlessRows: ruthlessRows
+        ruthlessRows: ruthlessRows,
+        chromaticRows: window.latestDd1ChromaticDebug || null
     };
 
     window.latestDd1ImportDebug = debugData;
@@ -3165,6 +3166,7 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
 
     checkedCount += applyBeatenLevelChecklistProgress(saveData, rootElement);
     checkedCount += applyRuthlessChecklistProgress(saveData, rootElement);
+    checkedCount += applyChromaticDefenderChecklistProgress(saveData, rootElement);
     checkedCount += applyAchievementBasedChecklistInferences(saveData, rootElement);
     checkedCount += applyMasterChecklistProgress(saveData, rootElement);
 
@@ -3192,6 +3194,410 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
     };
 }
 
+
+/* =========================================================
+   12M. Chromatic Defender Matching
+========================================================= */
+
+function levelMaskHasNightmareHardcore(difficultyMask) {
+    return levelMaskHasNightmare(difficultyMask) &&
+        (
+            levelMaskHasDifficulty(difficultyMask, 32) ||
+            difficultyMask === 4095
+        );
+}
+
+
+function saveHasBeatenTagOnNightmareHardcore(saveData, campaignTag) {
+    const beatenMap = getBeatenLevelMap(saveData);
+
+    if (!beatenMap.has(campaignTag)) {
+        return false;
+    }
+
+    return levelMaskHasNightmareHardcore(beatenMap.get(campaignTag));
+}
+
+
+function saveHasAnyBeatenTagOnNightmareHardcore(saveData, campaignTags) {
+    return campaignTags.some((campaignTag) => {
+        return saveHasBeatenTagOnNightmareHardcore(saveData, campaignTag);
+    });
+}
+
+
+function getChromaticDefenderRows() {
+    return [
+        {
+            text: "Spooktacular Bay",
+            tags: [
+                "CDTSBB",
+                "SPOOKBAY",
+                "SPOOKYBAY",
+                "SBB"
+            ]
+        },
+        {
+            text: "Halloween Invasion",
+            tags: [
+                "HALINV",
+                "HINVASION",
+                "HALLOWEENINVASION",
+                "SPECHINV"
+            ]
+        },
+        {
+            text: "The Striking Tree",
+            tags: [
+                "CAMPST",
+                "TBRUOO",
+                "STRIKINGTREE",
+                "STRTREE"
+            ]
+        },
+        {
+            text: "Tavern Incursion",
+            tags: [
+                "TAVINC",
+                "TAVERNINC",
+                "CAMPTD",
+                "TAVDEF"
+            ]
+        },
+        {
+            text: "Lover's Paradise",
+            tags: [
+                "VDAY04",
+                "LOVEPARADISE",
+                "LOVERPARADISE",
+                "LPARADISE"
+            ]
+        },
+        {
+            text: "Crystal Escort",
+            tags: [
+                "SPECJC",
+                "WANDHEART",
+                "WANDERINGHEART",
+                "CRYSTALESCORT",
+                "CRYESC"
+            ]
+        },
+        {
+            text: "Lifestream Hollow",
+            tags: [
+                "LHOLOC",
+                "LIFHOL",
+                "LIFESTREAM",
+                "LIFESTREAMHOLLOW"
+            ]
+        },
+        {
+            text: "Forest Ogre Crush",
+            tags: [
+                "CDHUNT",
+                "FORESTOGRE",
+                "FOROGRE",
+                "OGREFOREST"
+            ]
+        },
+        {
+            text: "Tropics of Etheria",
+            tags: [
+                "TROPIC",
+                "TROPICS",
+                "TROPICSETHERIA",
+                "TROPE"
+            ]
+        },
+        {
+            text: "Crystal Cave",
+            tags: [
+                "CDCAVE",
+                "CRYSTALCAVE",
+                "CCAVE"
+            ]
+        },
+        {
+            text: "No Towers Allowed: Crystal Cave",
+            tags: [
+                "CDNTAC",
+                "CDTNTAC",
+                "NTACAVE",
+                "NTACRYSTALCAVE",
+                "SPECCAVE"
+            ]
+        },
+        {
+            text: "Eternia Gauntlet",
+            tags: [
+                "EGAUNT",
+                "ETGAUNT",
+                "ETERNIA_GAUNTLET",
+                "ETERNIAGAUNTLET",
+                "CDTEG"
+            ]
+        },
+        {
+            text: "Frostdale Wonderland",
+            tags: [
+                "FROSTW",
+                "FROSTDALE",
+                "FROSTDALEWONDERLAND",
+                "FWD"
+            ]
+        },
+        {
+            text: "Love Machine",
+            tags: [
+                "LOVEMACHINE",
+                "LOVE_MACHINE",
+                "VDAYLM",
+                "LMACH"
+            ]
+        },
+        {
+            text: "Tinkerer's Workshop",
+            tags: [
+                "TINKWORK",
+                "TINKERWORKSHOP",
+                "TINKERERSWORKSHOP",
+                "CDTLAB",
+                "LAB"
+            ]
+        },
+        {
+            text: "Workshop Assault",
+            tags: [
+                "WORKSHOPASSAULT",
+                "TINKASSAULT",
+                "LABASSAULT",
+                "SPECLAB"
+            ]
+        },
+        {
+            text: "Sky Spooktacular",
+            tags: [
+                "SKYSPOOK",
+                "SKYSPOOKTACULAR",
+                "SKYSP"
+            ]
+        },
+        {
+            text: "Frostdale Royal Court",
+            tags: [
+                "FROSTCOURT",
+                "FROSTDALEROYALCOURT",
+                "FRC",
+                "ROYALCOURT"
+            ]
+        },
+        {
+            text: "Scorched Arabia",
+            tags: [
+                "SCORCHED",
+                "SCORCHEDARABIA",
+                "ARABIA",
+                "SARABIA"
+            ]
+        },
+        {
+            text: "Warping Core Challenge Pack 2: Part 1",
+            tags: [
+                "WC2P1",
+                "WARPINGCORE2P1",
+                "WARPINGCOREIIP1",
+                "WARP2A"
+            ]
+        },
+        {
+            text: "Warping Core Challenge Pack 2: Part 2",
+            tags: [
+                "WC2P2",
+                "WARPINGCORE2P2",
+                "WARPINGCOREIIP2",
+                "WARP2B"
+            ]
+        },
+        {
+            text: "Warping Core Challenge Pack 2: Part 3",
+            tags: [
+                "WC2P3",
+                "WARPINGCORE2P3",
+                "WARPINGCOREIIP3",
+                "WARP2C"
+            ]
+        },
+        {
+            text: "Jester's Spooktacular",
+            tags: [
+                "JESTSPOOK",
+                "JESTERSPOOKTACULAR",
+                "JESTSP"
+            ]
+        },
+        {
+            text: "Valentine Citadel",
+            tags: [
+                "VALCIT",
+                "VALENTINECITADEL",
+                "VDAYCT",
+                "VCIT"
+            ]
+        },
+        {
+            text: "Return to Mistymire",
+            tags: [
+                "RETMIS",
+                "RETURNMISTY",
+                "RETURNTOMISTYMIRE"
+            ]
+        },
+        {
+            text: "Return to Moraggo",
+            tags: [
+                "RETMOR",
+                "RETURNMORAGGO",
+                "RETURNTOMORAGGO"
+            ]
+        },
+        {
+            text: "Return to Aquanos",
+            tags: [
+                "RETAQU",
+                "RETURNAQUANOS",
+                "RETURNTOAQUANOS"
+            ]
+        },
+        {
+            text: "Return to Sky City",
+            tags: [
+                "RETSKY",
+                "RETURNSKYCITY",
+                "RETURNTOSKYCITY"
+            ]
+        },
+        {
+            text: "Return to Crystalline Dimension",
+            tags: [
+                "RETCRD",
+                "RETURNCD",
+                "RETURNTOCRYSTALLINEDIMENSION"
+            ]
+        },
+        {
+            text: "Boss Rush II",
+            tags: [
+                "BOSSR2",
+                "BOSSRUSH2",
+                "BOSSRUSHII",
+                "BR2"
+            ]
+        }
+    ];
+}
+
+
+function getCompletedChromaticTags(saveData, row) {
+    const beatenMap = getBeatenLevelMap(saveData);
+
+    return row.tags.filter((campaignTag) => {
+        if (!beatenMap.has(campaignTag)) {
+            return false;
+        }
+
+        return levelMaskHasNightmareHardcore(beatenMap.get(campaignTag));
+    });
+}
+
+
+function applyChromaticDefenderChecklistProgress(saveData, rootElement = document) {
+    let checkedCount = 0;
+    const chromaticRows = getChromaticDefenderRows();
+
+    const debugRows = chromaticRows.map((row) => {
+        const completedTags = getCompletedChromaticTags(saveData, row);
+        const completed = completedTags.length > 0;
+
+        if (completed) {
+            checkedCount += checkBoxesInSectionByTextRules(rootElement, ["chromatic defender"], [
+                {
+                    text: row.text
+                },
+                {
+                    includes: [
+                        row.text,
+                        "nightmare"
+                    ]
+                },
+                {
+                    includes: [
+                        row.text,
+                        "nightmare hardcore"
+                    ]
+                }
+            ]);
+        }
+
+        const matches = findCheckboxesByTextRules(rootElement, [
+            {
+                text: row.text
+            }
+        ]);
+
+        return {
+            row: row.text,
+            completed: completed,
+            completedTags: completedTags,
+            possibleTags: row.tags,
+            foundOnPage: matches.length > 0,
+            checkedOnPage: matches.some((checkbox) => {
+                return checkbox.checked;
+            }),
+            matchedText: matches.map((checkbox) => {
+                return getCheckboxVisibleText(checkbox);
+            })
+        };
+    });
+
+    const chromaticReady = debugRows.every((row) => {
+        return row.completed;
+    });
+
+    if (chromaticReady) {
+        checkedCount += checkBoxesByTextRules(rootElement, [
+            {
+                includes: [
+                    "chromatic defender",
+                    "post 9 0"
+                ]
+            },
+            {
+                includes: [
+                    "chromatic defender",
+                    "nightmare hardcore"
+                ]
+            },
+            {
+                includes: [
+                    "chromatic defender",
+                    "required post 9 0 maps"
+                ]
+            }
+        ]);
+    }
+
+    window.latestDd1ChromaticDebug = {
+        chromaticReady: chromaticReady,
+        completedCount: debugRows.filter((row) => {
+            return row.completed;
+        }).length,
+        totalRequired: debugRows.length,
+        rows: debugRows
+    };
+
+    return checkedCount;
+}
 
 /* =========================================================
    13. Save Import Summary Builder
