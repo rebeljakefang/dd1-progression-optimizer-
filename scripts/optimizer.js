@@ -171,13 +171,16 @@ const heroSlots = document.querySelectorAll(".hero-slot");
 heroSlots.forEach((slot, index) => {
     const newHeroNumber = index + 1;
     const oldHeroNumber = slot.dataset.heroNumber;
+    const heroName = (slot.dataset.heroName || "").trim();
 
     slot.dataset.heroNumber = newHeroNumber;
 
     const heading = slot.querySelector("h3");
 
     if (heading) {
-        heading.textContent = `Hero ${newHeroNumber}`;
+        heading.textContent = heroName
+            ? `Hero ${newHeroNumber}: ${heroName}`
+            : `Hero ${newHeroNumber}`;
     }
 
     const fields = [
@@ -228,8 +231,11 @@ if (heroSlot) {
 renumberHeroSlots();
 updateAddHeroButton();
 
+if (typeof saveOptimizerData === "function") {
+    saveOptimizerData();
 }
 
+}
 
 /* =========================================================
 5. Hero Slot Creation
@@ -358,189 +364,195 @@ updateAddHeroButton();
 }
 
 /* =========================================================
-   6. Build Account Object From Form
+6. Build Account Object From Form
 ========================================================= */
 
 function buildHeroRosterFromForm() {
-    const heroes = [];
-    const heroSlots = document.querySelectorAll(".hero-slot");
+const heroes = [];
+const heroSlots = document.querySelectorAll(".hero-slot");
 
-    heroSlots.forEach((slot) => {
-        const heroNumber = slot.dataset.heroNumber;
+heroSlots.forEach((slot) => {
+    const heroNumber = slot.dataset.heroNumber;
+    const name = (slot.dataset.heroName || "").trim();
+    const imported = slot.dataset.imported === "true";
 
-        const className = document.querySelector(
-            `#hero-${heroNumber}-class`
-        ).value;
+    const className = document.querySelector(
+        `#hero-${heroNumber}-class`
+    ).value;
 
-        const role = document.querySelector(
-            `#hero-${heroNumber}-role`
-        ).value;
+    const role = document.querySelector(
+        `#hero-${heroNumber}-role`
+    ).value;
 
-        const level = getNumberValue(
-            `#hero-${heroNumber}-level`
-        );
+    const level = getNumberValue(
+        `#hero-${heroNumber}-level`
+    );
 
-        const towerHealth = getNumberValue(
-            `#hero-${heroNumber}-tower-health`
-        );
+    const towerHealth = getNumberValue(
+        `#hero-${heroNumber}-tower-health`
+    );
 
-        const towerDamage = getNumberValue(
-            `#hero-${heroNumber}-tower-damage`
-        );
+    const towerDamage = getNumberValue(
+        `#hero-${heroNumber}-tower-damage`
+    );
 
-        const towerRange = getNumberValue(
-            `#hero-${heroNumber}-tower-range`
-        );
+    const towerRange = getNumberValue(
+        `#hero-${heroNumber}-tower-range`
+    );
 
-        const towerRate = getNumberValue(
-            `#hero-${heroNumber}-tower-rate`
-        );
+    const towerRate = getNumberValue(
+        `#hero-${heroNumber}-tower-rate`
+    );
 
-        const heroHealth = getNumberValue(
-            `#hero-${heroNumber}-hero-health`
-        );
+    const heroHealth = getNumberValue(
+        `#hero-${heroNumber}-hero-health`
+    );
 
-        const heroDamage = getNumberValue(
-            `#hero-${heroNumber}-hero-damage`
-        );
+    const heroDamage = getNumberValue(
+        `#hero-${heroNumber}-hero-damage`
+    );
 
-        const heroSpeed = getNumberValue(
-            `#hero-${heroNumber}-hero-speed`
-        );
+    const heroSpeed = getNumberValue(
+        `#hero-${heroNumber}-hero-speed`
+    );
 
-        const heroCasting = getNumberValue(
-            `#hero-${heroNumber}-hero-casting`
-        );
+    const heroCasting = getNumberValue(
+        `#hero-${heroNumber}-hero-casting`
+    );
 
-        const lowestResistance = getNumberValue(
-            `#hero-${heroNumber}-lowest-resistance`
-        );
+    const lowestResistance = getNumberValue(
+        `#hero-${heroNumber}-lowest-resistance`
+    );
 
-        const ability1 = getNumberValue(
-            `#hero-${heroNumber}-ability-1`
-        );
+    const ability1 = getNumberValue(
+        `#hero-${heroNumber}-ability-1`
+    );
 
-        const ability2 = getNumberValue(
-            `#hero-${heroNumber}-ability-2`
-        );
+    const ability2 = getNumberValue(
+        `#hero-${heroNumber}-ability-2`
+    );
 
-        if (
-            className !== "" ||
-            role !== "" ||
-            level > 0 ||
-            towerHealth > 0 ||
-            towerDamage > 0 ||
-            towerRange > 0 ||
-            towerRate > 0 ||
-            heroHealth > 0 ||
-            heroDamage > 0 ||
-            heroSpeed > 0 ||
-            heroCasting !== 0 ||
-            lowestResistance !== 0 ||
-            ability1 > 0 ||
-            ability2 > 0
-        ) {
-            heroes.push({
-                className: className,
-                role: role,
-                level: level,
-                towerHealth: towerHealth,
-                towerDamage: towerDamage,
-                towerRange: towerRange,
-                towerRate: towerRate,
-                heroHealth: heroHealth,
-                heroDamage: heroDamage,
-                heroSpeed: heroSpeed,
-                heroCasting: heroCasting,
-                lowestResistance: lowestResistance,
-                ability1: ability1,
-                ability2: ability2
-            });
-        }
-    });
+    if (
+        name !== "" ||
+        className !== "" ||
+        role !== "" ||
+        level > 0 ||
+        towerHealth > 0 ||
+        towerDamage > 0 ||
+        towerRange > 0 ||
+        towerRate > 0 ||
+        heroHealth > 0 ||
+        heroDamage > 0 ||
+        heroSpeed > 0 ||
+        heroCasting !== 0 ||
+        lowestResistance !== 0 ||
+        ability1 > 0 ||
+        ability2 > 0
+    ) {
+        heroes.push({
+            number: Number(heroNumber),
+            name: name,
+            imported: imported,
+            className: className,
+            role: role,
+            level: level,
+            towerHealth: towerHealth,
+            towerDamage: towerDamage,
+            towerRange: towerRange,
+            towerRate: towerRate,
+            heroHealth: heroHealth,
+            heroDamage: heroDamage,
+            heroSpeed: heroSpeed,
+            heroCasting: heroCasting,
+            lowestResistance: lowestResistance,
+            ability1: ability1,
+            ability2: ability2
+        });
+    }
+});
 
-    return heroes;
+return heroes;
+
 }
-
 
 function getHighestHeroLevel(heroes, fallbackLevel) {
-    let highestLevel = fallbackLevel;
+let highestLevel = fallbackLevel;
 
-    heroes.forEach((hero) => {
-        if (hero.level > highestLevel) {
-            highestLevel = hero.level;
-        }
-    });
+heroes.forEach((hero) => {
+    if (hero.level > highestLevel) {
+        highestLevel = hero.level;
+    }
+});
 
-    return highestLevel;
+return highestLevel;
+
 }
-
 
 function getBestBuilderDamage(heroes, fallbackTowerDamage) {
-    let bestTowerDamage = fallbackTowerDamage;
+let bestTowerDamage = fallbackTowerDamage;
 
-    heroes.forEach((hero) => {
-        const role = hero.role.toLowerCase();
+heroes.forEach((hero) => {
+    const role = hero.role.toLowerCase();
 
-        if (
-            role === "builder" ||
-            role === "waller" ||
-            role === "waller summoner" ||
-            role === "hybrid" ||
-            role === "aura monk" ||
-            role === "beam ev" ||
-            role === "minion summoner" ||
-            role === "trap huntress"
-        ) {
-            if (hero.towerDamage > bestTowerDamage) {
-                bestTowerDamage = hero.towerDamage;
-            }
+    if (
+        role === "builder" ||
+        role === "waller" ||
+        role === "waller summoner" ||
+        role === "hybrid" ||
+        role === "aura monk" ||
+        role === "beam ev" ||
+        role === "minion summoner" ||
+        role === "trap huntress"
+    ) {
+        if (hero.towerDamage > bestTowerDamage) {
+            bestTowerDamage = hero.towerDamage;
         }
-    });
+    }
+});
 
-    return bestTowerDamage;
+return bestTowerDamage;
+
 }
-
 
 function getBestDpsDamage(heroes) {
-    let bestHeroDamage = 0;
+let bestHeroDamage = 0;
 
-    heroes.forEach((hero) => {
-        const role = hero.role.toLowerCase();
+heroes.forEach((hero) => {
+    const role = hero.role.toLowerCase();
 
-        if (role === "dps" || role === "hybrid") {
-            if (hero.heroDamage > bestHeroDamage) {
-                bestHeroDamage = hero.heroDamage;
-            }
+    if (role === "dps" || role === "hybrid") {
+        if (hero.heroDamage > bestHeroDamage) {
+            bestHeroDamage = hero.heroDamage;
         }
-    });
+    }
+});
 
-    return bestHeroDamage;
+return bestHeroDamage;
+
 }
-
 
 function buildAccountFromForm() {
-    const heroes = buildHeroRosterFromForm();
+const heroes = buildHeroRosterFromForm();
 
-    const level = getHighestHeroLevel(heroes, 0);
-    const towerDamage = getBestBuilderDamage(heroes, 0);
-    const bestDpsDamage = getBestDpsDamage(heroes);
+const level = getHighestHeroLevel(heroes, 0);
+const towerDamage = getBestBuilderDamage(heroes, 0);
+const bestDpsDamage = getBestDpsDamage(heroes);
 
-    return {
-        level: level,
-        towerDamage: towerDamage,
-        bestDpsDamage: bestDpsDamage,
-        heroes: heroes,
-        experiencedPlayer: determineExperience(level),
-        mainGoal: document.querySelector("#main-goal").value,
-        hasGenie: document.querySelector("#has-genie").checked,
-        hasFish: document.querySelector("#has-fish").checked,
-        hasSeahorse: document.querySelector("#has-seahorse").checked,
-        hasHarpoonPet: document.querySelector("#has-harpoon-pet").checked,
-        hasPropellerCat: document.querySelector("#has-propeller-cat").checked
-    };
+return {
+    level: level,
+    towerDamage: towerDamage,
+    bestDpsDamage: bestDpsDamage,
+    heroes: heroes,
+    experiencedPlayer: determineExperience(level),
+    mainGoal: document.querySelector("#main-goal").value,
+    hasGenie: document.querySelector("#has-genie").checked,
+    hasFish: document.querySelector("#has-fish").checked,
+    hasSeahorse: document.querySelector("#has-seahorse").checked,
+    hasHarpoonPet: document.querySelector("#has-harpoon-pet").checked,
+    hasPropellerCat: document.querySelector("#has-propeller-cat").checked
+};
+
 }
-
 
 /* =========================================================
    7. Temporary Demo Fill Tools
@@ -711,6 +723,13 @@ function fillDemoOptimizerData() {
    8. Results: Roster Summary
 ========================================================= */
 
+function escapeOptimizerDisplayText(value) {
+    const element = document.createElement("div");
+    element.textContent = String(value);
+    return element.innerHTML;
+}
+
+
 function renderHeroSummary(account) {
     if (account.heroes.length === 0) {
         return `
@@ -722,16 +741,30 @@ function renderHeroSummary(account) {
     }
 
     const heroRows = account.heroes.map((hero, index) => {
+        const heroName = hero.name
+            ? escapeOptimizerDisplayText(hero.name)
+            : `Hero ${index + 1}`;
+
+        const className = escapeOptimizerDisplayText(
+            hero.className || "Unknown Class"
+        );
+
+        const role = escapeOptimizerDisplayText(
+            hero.role || "No role"
+        );
+
         return `
             <div class="hero-result-detail">
                 <h4>
-                    Hero ${index + 1}:
-                    ${hero.className || "Unknown Hero"}
+                    ${heroName}
                     —
-                    ${hero.role || "No role"}
+                    ${className}
+                    —
+                    ${role}
                 </h4>
 
                 <p>
+                    Level ${hero.level || 0},
                     Tower HP ${hero.towerHealth || 0},
                     Tower Damage ${hero.towerDamage || 0},
                     Tower Range ${hero.towerRange || 0},
@@ -742,7 +775,7 @@ function renderHeroSummary(account) {
                     Hero HP ${hero.heroHealth || 0},
                     Hero Damage ${hero.heroDamage || 0},
                     Hero Speed ${hero.heroSpeed || 0},
-                    Hero Casting ${hero.heroCasting || 0},
+                    Hero Casting ${hero.heroCasting ?? 0},
                     Lowest Resistance ${hero.lowestResistance ?? 0},
                     Ability 1 ${hero.ability1 || 0},
                     Ability 2 ${hero.ability2 || 0}
