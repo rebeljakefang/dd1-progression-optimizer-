@@ -3195,33 +3195,38 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
 }
 
 
+
 /* =========================================================
    12M. Chromatic Defender Matching
 ========================================================= */
 
-function levelMaskHasNightmareHardcore(difficultyMask) {
-    return levelMaskHasNightmare(difficultyMask) &&
-        (
-            levelMaskHasDifficulty(difficultyMask, 32) ||
-            difficultyMask === 4095
-        );
+function levelMaskHasChromaticCompletion(difficultyMask) {
+    return (
+        levelMaskHasNightmare(difficultyMask) ||
+        levelMaskHasRuthless(difficultyMask)
+    );
 }
 
 
-function saveHasBeatenTagOnNightmareHardcore(saveData, campaignTag) {
+function saveHasBeatenTagForChromatic(saveData, campaignTag) {
     const beatenMap = getBeatenLevelMap(saveData);
 
     if (!beatenMap.has(campaignTag)) {
         return false;
     }
 
-    return levelMaskHasNightmareHardcore(beatenMap.get(campaignTag));
+    return levelMaskHasChromaticCompletion(
+        beatenMap.get(campaignTag)
+    );
 }
 
 
-function saveHasAnyBeatenTagOnNightmareHardcore(saveData, campaignTags) {
+function saveHasAnyBeatenTagForChromatic(saveData, campaignTags) {
     return campaignTags.some((campaignTag) => {
-        return saveHasBeatenTagOnNightmareHardcore(saveData, campaignTag);
+        return saveHasBeatenTagForChromatic(
+            saveData,
+            campaignTag
+        );
     });
 }
 
@@ -3302,40 +3307,11 @@ function getChromaticDefenderRows() {
             ]
         },
         {
-            text: "Tropics of Etheria",
+            text: "Jester's Spooktacular",
             tags: [
-                "TROPIC",
-                "TROPICS",
-                "TROPICSETHERIA",
-                "TROPE"
-            ]
-        },
-        {
-            text: "Crystal Cave",
-            tags: [
-                "CDCAVE",
-                "CRYSTALCAVE",
-                "CCAVE"
-            ]
-        },
-        {
-            text: "No Towers Allowed: Crystal Cave",
-            tags: [
-                "CDNTAC",
-                "CDTNTAC",
-                "NTACAVE",
-                "NTACRYSTALCAVE",
-                "SPECCAVE"
-            ]
-        },
-        {
-            text: "Eternia Gauntlet",
-            tags: [
-                "EGAUNT",
-                "ETGAUNT",
-                "ETERNIA_GAUNTLET",
-                "ETERNIAGAUNTLET",
-                "CDTEG"
+                "JESTSPOOK",
+                "JESTERSPOOKTACULAR",
+                "JESTSP"
             ]
         },
         {
@@ -3348,6 +3324,15 @@ function getChromaticDefenderRows() {
             ]
         },
         {
+            text: "Valentine Citadel",
+            tags: [
+                "VALCIT",
+                "VALENTINECITADEL",
+                "VDAYCT",
+                "VCIT"
+            ]
+        },
+        {
             text: "Love Machine",
             tags: [
                 "LOVEMACHINE",
@@ -3357,10 +3342,51 @@ function getChromaticDefenderRows() {
             ]
         },
         {
-            text: "Tinkerer's Workshop",
+            text: "Return to Mistymire",
+            tags: [
+                "RETMIS",
+                "RETURNMISTY",
+                "RETURNTOMISTYMIRE"
+            ]
+        },
+        {
+            text: "Return to Moraggo",
+            tags: [
+                "RETMOR",
+                "RETURNMORAGGO",
+                "RETURNTOMORAGGO"
+            ]
+        },
+        {
+            text: "Return to Aquanos",
+            tags: [
+                "RETAQU",
+                "RETURNAQUANOS",
+                "RETURNTOAQUANOS"
+            ]
+        },
+        {
+            text: "Return to Sky City",
+            tags: [
+                "RETSKY",
+                "RETURNSKYCITY",
+                "RETURNTOSKYCITY"
+            ]
+        },
+        {
+            text: "Return to Crystalline Dimension",
+            tags: [
+                "RETCRD",
+                "RETURNCD",
+                "RETURNTOCRYSTALLINEDIMENSION"
+            ]
+        },
+        {
+            text: "Tinker's Workshop",
             tags: [
                 "TINKWORK",
                 "TINKERWORKSHOP",
+                "TINKERSWORKSHOP",
                 "TINKERERSWORKSHOP",
                 "CDTLAB",
                 "LAB"
@@ -3429,63 +3455,6 @@ function getChromaticDefenderRows() {
             ]
         },
         {
-            text: "Jester's Spooktacular",
-            tags: [
-                "JESTSPOOK",
-                "JESTERSPOOKTACULAR",
-                "JESTSP"
-            ]
-        },
-        {
-            text: "Valentine Citadel",
-            tags: [
-                "VALCIT",
-                "VALENTINECITADEL",
-                "VDAYCT",
-                "VCIT"
-            ]
-        },
-        {
-            text: "Return to Mistymire",
-            tags: [
-                "RETMIS",
-                "RETURNMISTY",
-                "RETURNTOMISTYMIRE"
-            ]
-        },
-        {
-            text: "Return to Moraggo",
-            tags: [
-                "RETMOR",
-                "RETURNMORAGGO",
-                "RETURNTOMORAGGO"
-            ]
-        },
-        {
-            text: "Return to Aquanos",
-            tags: [
-                "RETAQU",
-                "RETURNAQUANOS",
-                "RETURNTOAQUANOS"
-            ]
-        },
-        {
-            text: "Return to Sky City",
-            tags: [
-                "RETSKY",
-                "RETURNSKYCITY",
-                "RETURNTOSKYCITY"
-            ]
-        },
-        {
-            text: "Return to Crystalline Dimension",
-            tags: [
-                "RETCRD",
-                "RETURNCD",
-                "RETURNTOCRYSTALLINEDIMENSION"
-            ]
-        },
-        {
             text: "Boss Rush II",
             tags: [
                 "BOSSR2",
@@ -3506,98 +3475,208 @@ function getCompletedChromaticTags(saveData, row) {
             return false;
         }
 
-        return levelMaskHasNightmareHardcore(beatenMap.get(campaignTag));
+        return levelMaskHasChromaticCompletion(
+            beatenMap.get(campaignTag)
+        );
     });
 }
 
 
-function applyChromaticDefenderChecklistProgress(saveData, rootElement = document) {
+function findChromaticPageCheckboxes(
+    rootElement,
+    rowText
+) {
+    const section = rootElement.querySelector(
+        "#chromatic-checklist"
+    );
+
+    if (!section) {
+        return [];
+    }
+
+    const normalizedRowText = normalizeChecklistText(
+        rowText
+    );
+
+    return getAllChecklistCheckboxes(section).filter(
+        (checkbox) => {
+            const visibleText = getCheckboxVisibleText(
+                checkbox
+            );
+
+            return visibleText.includes(
+                normalizedRowText
+            );
+        }
+    );
+}
+
+
+function checkChromaticRow(
+    rootElement,
+    rowText
+) {
+    const matches = findChromaticPageCheckboxes(
+        rootElement,
+        rowText
+    );
+
     let checkedCount = 0;
-    const chromaticRows = getChromaticDefenderRows();
+
+    matches.forEach((checkbox) => {
+        if (!checkbox.checked) {
+            checkbox.checked = true;
+            checkedCount++;
+        }
+    });
+
+    return checkedCount;
+}
+
+
+function checkChromaticMasterCheckboxes(
+    rootElement
+) {
+    const masterCheckboxes = Array.from(
+        rootElement.querySelectorAll(
+            'input[data-master="chromatic"]'
+        )
+    );
+
+    let checkedCount = 0;
+
+    masterCheckboxes.forEach((checkbox) => {
+        if (!checkbox.checked) {
+            checkbox.checked = true;
+            checkedCount++;
+        }
+    });
+
+    return checkedCount;
+}
+
+
+function getChromaticSaveLevelDebug(saveData) {
+    return (saveData.beatenLevels || []).map(
+        (levelInfo) => {
+            return {
+                campaignTag: levelInfo.campaignTag,
+                difficultyMask:
+                    levelInfo.difficultyMask,
+                countsForChromatic:
+                    levelMaskHasChromaticCompletion(
+                        levelInfo.difficultyMask
+                    )
+            };
+        }
+    );
+}
+
+
+function applyChromaticDefenderChecklistProgress(
+    saveData,
+    rootElement = document
+) {
+    let checkedCount = 0;
+
+    const chromaticRows =
+        getChromaticDefenderRows();
 
     const debugRows = chromaticRows.map((row) => {
-        const completedTags = getCompletedChromaticTags(saveData, row);
-        const completed = completedTags.length > 0;
+        const completedTags =
+            getCompletedChromaticTags(
+                saveData,
+                row
+            );
+
+        const completed =
+            completedTags.length > 0;
+
+        const pageCheckboxes =
+            findChromaticPageCheckboxes(
+                rootElement,
+                row.text
+            );
 
         if (completed) {
-            checkedCount += checkBoxesInSectionByTextRules(rootElement, ["chromatic defender"], [
-                {
-                    text: row.text
-                },
-                {
-                    includes: [
-                        row.text,
-                        "nightmare"
-                    ]
-                },
-                {
-                    includes: [
-                        row.text,
-                        "nightmare hardcore"
-                    ]
-                }
-            ]);
+            checkedCount += checkChromaticRow(
+                rootElement,
+                row.text
+            );
         }
-
-        const matches = findCheckboxesByTextRules(rootElement, [
-            {
-                text: row.text
-            }
-        ]);
 
         return {
             row: row.text,
             completed: completed,
             completedTags: completedTags,
             possibleTags: row.tags,
-            foundOnPage: matches.length > 0,
-            checkedOnPage: matches.some((checkbox) => {
-                return checkbox.checked;
-            }),
-            matchedText: matches.map((checkbox) => {
-                return getCheckboxVisibleText(checkbox);
-            })
+            foundOnPage:
+                pageCheckboxes.length > 0,
+            checkedOnPage:
+                pageCheckboxes.some(
+                    (checkbox) => {
+                        return checkbox.checked;
+                    }
+                ),
+            matchedText:
+                pageCheckboxes.map(
+                    (checkbox) => {
+                        return getCheckboxVisibleText(
+                            checkbox
+                        );
+                    }
+                )
         };
     });
 
-    const chromaticReady = debugRows.every((row) => {
-        return row.completed;
-    });
+    const requiredPageRows =
+        debugRows.filter((row) => {
+            return row.foundOnPage;
+        });
+
+    const chromaticReady =
+        requiredPageRows.length > 0 &&
+        requiredPageRows.every((row) => {
+            return row.completed;
+        });
 
     if (chromaticReady) {
-        checkedCount += checkBoxesByTextRules(rootElement, [
-            {
-                includes: [
-                    "chromatic defender",
-                    "post 9 0"
-                ]
-            },
-            {
-                includes: [
-                    "chromatic defender",
-                    "nightmare hardcore"
-                ]
-            },
-            {
-                includes: [
-                    "chromatic defender",
-                    "required post 9 0 maps"
-                ]
-            }
-        ]);
+        checkedCount +=
+            checkChromaticMasterCheckboxes(
+                rootElement
+            );
     }
 
     window.latestDd1ChromaticDebug = {
         chromaticReady: chromaticReady,
-        completedCount: debugRows.filter((row) => {
-            return row.completed;
-        }).length,
-        totalRequired: debugRows.length,
-        rows: debugRows
+
+        completedCount:
+            requiredPageRows.filter((row) => {
+                return row.completed;
+            }).length,
+
+        totalRequired:
+            requiredPageRows.length,
+
+        missingRows:
+            requiredPageRows.filter((row) => {
+                return !row.completed;
+            }).map((row) => {
+                return row.row;
+            }),
+
+        rows: debugRows,
+
+        saveLevels:
+            getChromaticSaveLevelDebug(
+                saveData
+            )
     };
 
     return checkedCount;
 }
+
+
 
 /* =========================================================
    13. Save Import Summary Builder
