@@ -326,120 +326,122 @@ function getHeroesByRole(heroes, roleNames) {
 
 
 /* =========================================================
-   5. Account Review Logic
+5. Account Review Logic
 ========================================================= */
 
 function buildAccountReview(account) {
-    const notes = [];
+const notes = [];
 
-    const hasBuilder = hasAnyRole(account.heroes, [
-        "Builder",
-        "Hybrid",
-        "Aura Monk",
-        "Trap Huntress",
-        "Beam EV",
-        "Minion Summoner"
-    ]);
 
-    const hasWalls = hasAnyRole(account.heroes, [
-        "Waller",
-        "Waller Summoner"
-    ]);
+const hasBuilder = hasAnyRole(account.heroes, [
+    "Builder",
+    "Hybrid",
+    "Aura Monk",
+    "Trap Huntress",
+    "Beam EV",
+    "Minion Summoner"
+]);
 
-    const hasDps = hasAnyRole(account.heroes, [
-        "DPS",
-        "Hybrid"
-    ]);
+const hasWalls = hasAnyRole(account.heroes, [
+    "Waller",
+    "Waller Summoner"
+]);
 
-    const hasBeamEv = hasAnyRole(account.heroes, ["Beam EV"]);
-    const hasWallerSummoner = hasAnyRole(account.heroes, ["Waller Summoner"]);
-    const hasBoostMonk = hasAnyRole(account.heroes, ["Boost Monk"]);
-    const hasMinionSummoner = hasAnyRole(account.heroes, ["Minion Summoner", "Waller Summoner"]);
-    const hasUpgradeInitiate = hasAnyRole(account.heroes, ["Upgrade Initiate"]);
+const hasDps = hasAnyRole(account.heroes, [
+    "DPS",
+    "Hybrid"
+]);
 
-    const bestWallHealth = getBestStat(account.heroes, "towerHealth", [
-        "waller",
-        "waller summoner"
-    ]);
+const hasBeamEv = hasAnyRole(account.heroes, ["Beam EV"]);
+const hasWallerSummoner = hasAnyRole(account.heroes, ["Waller Summoner"]);
+const hasBoostMonk = hasAnyRole(account.heroes, ["Boost Monk"]);
+const hasMinionSummoner = hasAnyRole(account.heroes, ["Minion Summoner", "Waller Summoner"]);
+const hasUpgradeInitiate = hasAnyRole(account.heroes, ["Upgrade Initiate"]);
 
-    const wallerSummoners = getHeroesByRole(account.heroes, ["Waller Summoner"]);
-    const dpsHeroes = getHeroesByRole(account.heroes, ["DPS", "Hybrid"]);
+const bestWallHealth = getBestStat(account.heroes, "towerHealth", [
+    "waller",
+    "waller summoner"
+]);
 
-    if (!hasBuilder) {
-        notes.push("No clear builder role was detected. Add a Builder, Hybrid, Aura Monk, Trap Huntress, Beam EV, or Minion Summoner for better recommendations.");
+const wallerSummoners = getHeroesByRole(account.heroes, ["Waller Summoner"]);
+const dpsHeroes = getHeroesByRole(account.heroes, ["DPS", "Hybrid"]);
+
+if (!hasBuilder) {
+    notes.push("No clear builder role was detected. Add a Builder, Hybrid, Aura Monk, Trap Huntress, Beam EV, or Minion Summoner for better recommendations.");
+}
+
+if (!hasWalls) {
+    notes.push("No wall role was detected. A Waller or Waller Summoner becomes more important as you push harder Nightmare maps.");
+}
+
+if (!hasDps) {
+    notes.push("No hero is marked as DPS or Hybrid. Any class can work for DPS, but marking one helps the optimizer judge your boss damage setup.");
+}
+
+wallerSummoners.forEach((hero) => {
+    if (account.towerDamage >= 1500 && hero.towerHealth < 1000) {
+        notes.push(`${hero.className || "Your Waller Summoner"} has low tower health for a Waller Summoner. Minion walls need enough health to survive.`);
     }
 
-    if (!hasWalls) {
-        notes.push("No wall role was detected. A Waller or Waller Summoner becomes more important as you push harder Nightmare maps.");
+    if (account.towerDamage >= 1500 && hero.towerDamage < 800) {
+        notes.push(`${hero.className || "Your Waller Summoner"} has low tower damage for a Waller Summoner. Minion walls should still contribute damage.`);
     }
 
-    if (!hasDps) {
-        notes.push("No hero is marked as DPS or Hybrid. Any class can work for DPS, but marking one helps the optimizer judge your boss damage setup.");
+    if (account.towerDamage >= 1500 && hero.towerRange < 600) {
+        notes.push(`${hero.className || "Your Waller Summoner"} has low tower range for a Waller Summoner. Better range helps minion coverage.`);
     }
 
-    wallerSummoners.forEach((hero) => {
-        if (account.towerDamage >= 1500 && hero.towerHealth < 1000) {
-            notes.push(`${hero.className || "Your Waller Summoner"} has low tower health for a Waller Summoner. Minion walls need enough health to survive.`);
-        }
+    if (account.towerDamage >= 1500 && hero.towerRate < 600) {
+        notes.push(`${hero.className || "Your Waller Summoner"} has low tower rate for a Waller Summoner. Better rate helps minions attack faster.`);
+    }
+});
 
-        if (account.towerDamage >= 1500 && hero.towerDamage < 800) {
-            notes.push(`${hero.className || "Your Waller Summoner"} has low tower damage for a Waller Summoner. Minion walls should still contribute damage.`);
-        }
-
-        if (account.towerDamage >= 1500 && hero.towerRange < 600) {
-            notes.push(`${hero.className || "Your Waller Summoner"} has low tower range for a Waller Summoner. Better range helps minion coverage.`);
-        }
-
-        if (account.towerDamage >= 1500 && hero.towerRate < 600) {
-            notes.push(`${hero.className || "Your Waller Summoner"} has low tower rate for a Waller Summoner. Better rate helps minions attack faster.`);
-        }
-    });
-
-    dpsHeroes.forEach((hero) => {
-        if (account.level >= 78 && hero.heroDamage > 0 && hero.heroDamage < 1000) {
-            notes.push(`${hero.className || "Your DPS hero"} has low hero damage for this stage, so boss maps may feel harder.`);
-        }
-
-        if (account.level >= 78 && hero.heroHealth > 0 && hero.heroHealth < 700) {
-            notes.push(`${hero.className || "Your DPS hero"} has low hero health for this stage. Survivability matters more on boss maps and harder Nightmare content.`);
-        }
-
-        if (account.level >= 78 && hero.heroSpeed > 0 && hero.heroSpeed < 500) {
-            notes.push(`${hero.className || "Your DPS hero"} has low hero speed. Movement speed helps with dodging, map control, and boss fights.`);
-        }
-
-        if (account.level >= 78 && hero.lowestResistance > 0 && hero.lowestResistance < 70) {
-            notes.push(`${hero.className || "Your DPS hero"} has a low resistance value. Try to improve your lowest resistance before harder Nightmare fights.`);
-        }
-    });
-
-    if (account.towerDamage >= 1500 && !hasWallerSummoner) {
-        notes.push("At this stage, a Waller Summoner can help a lot with survival builds and safer Nightmare progression.");
+dpsHeroes.forEach((hero) => {
+    if (account.level >= 78 && hero.heroDamage > 0 && hero.heroDamage < 1000) {
+        notes.push(`${hero.className || "Your DPS hero"} has low hero damage for this stage, so boss maps may feel harder.`);
     }
 
-    if (account.towerDamage >= 1500 && !hasBeamEv) {
-        notes.push("At this stage, a Beam EV is worth building because buff beams become very important for Nightmare setups.");
+    if (account.level >= 78 && hero.heroHealth > 0 && hero.heroHealth < 700) {
+        notes.push(`${hero.className || "Your DPS hero"} has low hero health for this stage. Survivability matters more on boss maps and harder Nightmare content.`);
     }
 
-    if (account.towerDamage >= 2500 && !hasBoostMonk) {
-        notes.push("At this stage, a Boost Monk becomes very useful for boss maps, harder survivals, and pushing into tougher content.");
+    if (account.level >= 78 && hero.heroSpeed > 0 && hero.heroSpeed < 500) {
+        notes.push(`${hero.className || "Your DPS hero"} has low hero speed. Movement speed helps with dodging, map control, and boss fights.`);
     }
 
-    if (account.towerDamage >= 2500 && !hasMinionSummoner) {
-        notes.push("At this stage, a Minion Summoner is useful for minion-based defenses and safer survival layouts.");
+    if (account.level >= 78 && hero.lowestResistance < 70) {
+        notes.push(`${hero.className || "Your DPS hero"} has a low resistance value. Try to improve your lowest resistance before harder Nightmare fights.`);
     }
+});
 
-    if (account.towerDamage >= 3500 && !hasUpgradeInitiate) {
-        notes.push("At this stage, an Upgrade Initiate can help with faster upgrading during harder survival waves.");
-    }
+if (account.towerDamage >= 1500 && !hasWallerSummoner) {
+    notes.push("At this stage, a Waller Summoner can help a lot with survival builds and safer Nightmare progression.");
+}
 
-    if (account.towerDamage >= 2500 && bestWallHealth > 0 && bestWallHealth < 1200) {
-        notes.push("Your wall health looks low for this stage. Stronger walls or minion walls may help before pushing harder survival maps.");
-    }
+if (account.towerDamage >= 1500 && !hasBeamEv) {
+    notes.push("At this stage, a Beam EV is worth building because buff beams become very important for Nightmare setups.");
+}
 
-    if (notes.length === 0) {
-        notes.push("No major roster weaknesses were detected from the current inputs.");
-    }
+if (account.towerDamage >= 2500 && !hasBoostMonk) {
+    notes.push("At this stage, a Boost Monk becomes very useful for boss maps, harder survivals, and pushing into tougher content.");
+}
 
-    return notes;
+if (account.towerDamage >= 2500 && !hasMinionSummoner) {
+    notes.push("At this stage, a Minion Summoner is useful for minion-based defenses and safer survival layouts.");
+}
+
+if (account.towerDamage >= 3500 && !hasUpgradeInitiate) {
+    notes.push("At this stage, an Upgrade Initiate can help with faster upgrading during harder survival waves.");
+}
+
+if (account.towerDamage >= 2500 && bestWallHealth > 0 && bestWallHealth < 1200) {
+    notes.push("Your wall health looks low for this stage. Stronger walls or minion walls may help before pushing harder survival maps.");
+}
+
+if (notes.length === 0) {
+    notes.push("No major roster weaknesses were detected from the current inputs.");
+}
+
+return notes;
+
 }

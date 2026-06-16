@@ -49,6 +49,34 @@
                             </select>
 
                             <fieldset>
+                                <legend>Import DD1 Save</legend>
+
+                                <p>
+                                    Select your <strong>DunDefHeroes.dun</strong> file to import your heroes,
+                                    levels, equipped gear stats, and suggested roles. The file is processed
+                                    locally in your browser and is not uploaded anywhere.
+                                </p>
+
+                                <div class="guide-warning">
+                                    <p>
+                                        Importing a save replaces the heroes currently entered below. You can
+                                        still change any imported class, role, or stat before getting a recommendation.
+                                    </p>
+                                </div>
+
+                                <label for="optimizer-save-file-input">Dungeon Defenders Save File</label>
+                                <input
+                                    id="optimizer-save-file-input"
+                                    type="file"
+                                    accept=".dun,application/octet-stream"
+                                >
+
+                                <div id="optimizer-save-file-output" aria-live="polite">
+                                    <p>No save file selected yet.</p>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
                                 <legend>Hero Roster</legend>
 
                                 <p>
@@ -133,9 +161,11 @@
     </button>
 
     <script src="scripts/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     <script src="scripts/optimizer-data.js"></script>
     <script src="scripts/optimizer-logic.js"></script>
     <script src="scripts/optimizer.js"></script>
+    <script src="scripts/optimizer-save-import.js"></script>
     <script src="scripts/storage.js"></script>
 </body>
 </html>
