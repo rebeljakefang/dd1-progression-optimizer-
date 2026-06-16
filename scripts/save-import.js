@@ -3196,6 +3196,7 @@ function applySaveDataToChecklist(saveData, rootElement = document) {
 
 
 
+
 /* =========================================================
    12M. Chromatic Defender Matching
 ========================================================= */
@@ -3236,56 +3237,41 @@ function getChromaticDefenderRows() {
         {
             text: "Spooktacular Bay",
             tags: [
-                "CDTSBB",
-                "SPOOKBAY",
-                "SPOOKYBAY",
-                "SBB"
+                "CDTSBB"
             ]
         },
         {
             text: "Halloween Invasion",
             tags: [
-                "HALINV",
-                "HINVASION",
-                "HALLOWEENINVASION",
-                "SPECHINV"
+                "SPECH2"
             ]
         },
         {
             text: "The Striking Tree",
             tags: [
-                "CAMPST",
-                "TBRUOO",
-                "STRIKINGTREE",
-                "STRTREE"
+                "CAMPST"
             ]
         },
         {
             text: "Tavern Incursion",
             tags: [
-                "TAVINC",
-                "TAVERNINC",
-                "CAMPTD",
-                "TAVDEF"
+                "CAMPTD"
             ]
         },
         {
             text: "Lover's Paradise",
             tags: [
                 "VDAY04",
-                "LOVEPARADISE",
-                "LOVERPARADISE",
-                "LPARADISE"
+                "VDAY03",
+                "VDAY02",
+                "VDAY01"
             ]
         },
         {
             text: "Crystal Escort",
             tags: [
                 "SPECJC",
-                "WANDHEART",
-                "WANDERINGHEART",
-                "CRYSTALESCORT",
-                "CRYESC"
+                "SPECTI"
             ]
         },
         {
@@ -3293,174 +3279,134 @@ function getChromaticDefenderRows() {
             tags: [
                 "LHOLOC",
                 "LIFHOL",
-                "LIFESTREAM",
-                "LIFESTREAMHOLLOW"
+                "CDTFOR"
             ]
         },
         {
             text: "Forest Ogre Crush",
             tags: [
                 "CDHUNT",
-                "FORESTOGRE",
-                "FOROGRE",
-                "OGREFOREST"
+                "CDMONK",
+                "CDMAGE",
+                "CDKGHT"
             ]
         },
         {
             text: "Jester's Spooktacular",
             tags: [
-                "JESTSPOOK",
-                "JESTERSPOOKTACULAR",
-                "JESTSP"
+                "JSTSPK"
             ]
         },
         {
             text: "Frostdale Wonderland",
             tags: [
-                "FROSTW",
-                "FROSTDALE",
-                "FROSTDALEWONDERLAND",
-                "FWD"
+                "CWWEHE",
+                "CDTSIL"
             ]
         },
         {
             text: "Valentine Citadel",
             tags: [
-                "VALCIT",
-                "VALENTINECITADEL",
-                "VDAYCT",
-                "VCIT"
+                "CDTVAL"
             ]
         },
         {
             text: "Love Machine",
             tags: [
-                "LOVEMACHINE",
-                "LOVE_MACHINE",
-                "VDAYLM",
-                "LMACH"
+                "VDAY02",
+                "VDAY01"
             ]
         },
         {
             text: "Return to Mistymire",
             tags: [
                 "RETMIS",
-                "RETURNMISTY",
-                "RETURNTOMISTYMIRE"
+                "CAMPAR"
             ]
         },
         {
             text: "Return to Moraggo",
             tags: [
                 "RETMOR",
-                "RETURNMORAGGO",
-                "RETURNTOMORAGGO"
+                "CAMPMB"
             ]
         },
         {
             text: "Return to Aquanos",
             tags: [
                 "RETAQU",
-                "RETURNAQUANOS",
-                "RETURNTOAQUANOS"
+                "CAMPAQ"
             ]
         },
         {
             text: "Return to Sky City",
             tags: [
                 "RETSKY",
-                "RETURNSKYCITY",
-                "RETURNTOSKYCITY"
+                "CAMPSC"
             ]
         },
         {
             text: "Return to Crystalline Dimension",
             tags: [
                 "RETCRD",
-                "RETURNCD",
-                "RETURNTOCRYSTALLINEDIMENSION"
+                "CAMPCL"
             ]
         },
         {
             text: "Tinker's Workshop",
             tags: [
-                "TINKWORK",
-                "TINKERWORKSHOP",
-                "TINKERSWORKSHOP",
-                "TINKERERSWORKSHOP",
-                "CDTLAB",
-                "LAB"
+                "CAMPTL"
             ]
         },
         {
             text: "Workshop Assault",
             tags: [
-                "WORKSHOPASSAULT",
-                "TINKASSAULT",
-                "LABASSAULT",
-                "SPECLAB"
+                "SPECTL"
             ]
         },
         {
             text: "Sky Spooktacular",
             tags: [
-                "SKYSPOOK",
-                "SKYSPOOKTACULAR",
-                "SKYSP"
+                "SKYSPK"
             ]
         },
         {
             text: "Frostdale Royal Court",
             tags: [
-                "FROSTCOURT",
-                "FROSTDALEROYALCOURT",
-                "FRC",
-                "ROYALCOURT"
+                "CDTSIL",
+                "MONUB4",
+                "CWWEHE"
             ]
         },
         {
             text: "Scorched Arabia",
             tags: [
-                "SCORCHED",
-                "SCORCHEDARABIA",
-                "ARABIA",
-                "SARABIA"
+                "TBRCP5",
+                "CDTARA"
             ]
         },
         {
             text: "Warping Core Challenge Pack 2: Part 1",
             tags: [
-                "WC2P1",
-                "WARPINGCORE2P1",
-                "WARPINGCOREIIP1",
-                "WARP2A"
+                "WARPP1"
             ]
         },
         {
             text: "Warping Core Challenge Pack 2: Part 2",
             tags: [
-                "WC2P2",
-                "WARPINGCORE2P2",
-                "WARPINGCOREIIP2",
-                "WARP2B"
+                "WARPP2"
             ]
         },
         {
             text: "Warping Core Challenge Pack 2: Part 3",
             tags: [
-                "WC2P3",
-                "WARPINGCORE2P3",
-                "WARPINGCOREIIP3",
-                "WARP2C"
+                "WARPP3"
             ]
         },
         {
             text: "Boss Rush II",
             tags: [
-                "BOSSR2",
-                "BOSSRUSH2",
-                "BOSSRUSHII",
-                "BR2"
+                "DDTBR2"
             ]
         }
     ];
@@ -3482,13 +3428,18 @@ function getCompletedChromaticTags(saveData, row) {
 }
 
 
+function getChromaticSection(rootElement = document) {
+    return rootElement.querySelector(
+        "#chromatic-checklist"
+    );
+}
+
+
 function findChromaticPageCheckboxes(
     rootElement,
     rowText
 ) {
-    const section = rootElement.querySelector(
-        "#chromatic-checklist"
-    );
+    const section = getChromaticSection(rootElement);
 
     if (!section) {
         return [];
@@ -3647,6 +3598,23 @@ function applyChromaticDefenderChecklistProgress(
             );
     }
 
+    const recognizedTags = new Set(
+        chromaticRows.flatMap((row) => {
+            return row.tags;
+        })
+    );
+
+    const unrecognizedChromaticSaveLevels =
+        getChromaticSaveLevelDebug(saveData)
+            .filter((levelInfo) => {
+                return (
+                    levelInfo.countsForChromatic &&
+                    !recognizedTags.has(
+                        levelInfo.campaignTag
+                    )
+                );
+            });
+
     window.latestDd1ChromaticDebug = {
         chromaticReady: chromaticReady,
 
@@ -3670,7 +3638,10 @@ function applyChromaticDefenderChecklistProgress(
         saveLevels:
             getChromaticSaveLevelDebug(
                 saveData
-            )
+            ),
+
+        unrecognizedChromaticSaveLevels:
+            unrecognizedChromaticSaveLevels
     };
 
     return checkedCount;
