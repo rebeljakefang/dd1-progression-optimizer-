@@ -1010,590 +1010,284 @@
         };
     }
 
-    /* =========================================================
-       11. Hero Class, Equipment, and Stat Analysis
-    ========================================================= */
 
-    function getOptimizerHeroClass(template) {
-        if (!template) {
-            return "Unknown";
-        }
+/* =========================================================
+   11A. Hero Class and Equipment Stat Analysis
+========================================================= */
 
-        if (optimizerHeroTemplateMap[template]) {
-            return optimizerHeroTemplateMap[template];
-        }
-
-        const normalizedTemplate = String(template).toLowerCase();
-
-        const fallbackRules = [
-            ["herotemplateapprentice", "Apprentice"],
-            ["herotemplatesquire", "Squire"],
-            ["herotemplateinitiate", "Huntress"],
-            ["herotemplaterecruit", "Monk"],
-            ["herotemplatesorceress", "Adept"],
-            ["herotemplateladyknight", "Countess"],
-            ["herotemplatehunter", "Ranger"],
-            ["herotemplatemonkette", "Initiate"],
-            ["herotemplatejester", "Jester"],
-            ["herotemplatesummoner", "Summoner"],
-            ["herotemplaterobotgirl", "Series EV"],
-            ["herotemplatebarbarian", "Barbarian"],
-            ["herotemplatehermit", "Hermit"],
-            ["herotemplategunwitch", "Gunwitch"],
-            ["herotemplatewarden", "Warden"],
-            ["herotemplateguardian", "Guardian"]
-        ];
-
-        const matchedRule = fallbackRules.find(([templatePart]) => {
-            return normalizedTemplate.includes(templatePart);
-        });
-
-        return matchedRule ? matchedRule[1] : "Unknown";
+function getOptimizerHeroClass(template) {
+    if (!template) {
+        return "Unknown";
     }
 
-    function createEmptyOptimizerStats() {
-        return {
-            heroHealth: 0,
-            heroSpeed: 0,
-            heroDamage: 0,
-            heroCasting: 0,
-            ability1: 0,
-            ability2: 0,
-            towerHealth: 0,
-            towerRate: 0,
-            towerDamage: 0,
-            towerRange: 0,
-            specialStat: 0
-        };
+    if (optimizerHeroTemplateMap[template]) {
+        return optimizerHeroTemplateMap[template];
     }
 
-    function getBaseOptimizerStats(heroInfo, className) {
-        const stats = {
-            heroHealth: heroInfo.heroHealthModifier,
-            heroSpeed: heroInfo.heroSpeedModifier,
-            heroDamage: heroInfo.heroDamageModifier,
-            heroCasting: heroInfo.heroCastingModifier,
-            ability1: heroInfo.heroAbilityOneModifier,
-            ability2: heroInfo.heroAbilityTwoModifier,
-            towerHealth: heroInfo.heroDefenseHealthModifier,
-            towerRate: heroInfo.heroDefenseAttackRateModifier,
-            towerDamage: heroInfo.heroDefenseDamageModifier,
-            towerRange: heroInfo.heroDefenseAreaOfEffectModifier,
-            specialStat: 0
-        };
+    const normalizedTemplate = String(template).toLowerCase();
+
+    const fallbackRules = [
+        ["herotemplateapprentice", "Apprentice"],
+        ["herotemplatesquire", "Squire"],
+        ["herotemplateinitiate", "Huntress"],
+        ["herotemplaterecruit", "Monk"],
+        ["herotemplatesorceress", "Adept"],
+        ["herotemplateladyknight", "Countess"],
+        ["herotemplatehunter", "Ranger"],
+        ["herotemplatemonkette", "Initiate"],
+        ["herotemplatejester", "Jester"],
+        ["herotemplatesummoner", "Summoner"],
+        ["herotemplaterobotgirl", "Series EV"],
+        ["herotemplatebarbarian", "Barbarian"],
+        ["herotemplatehermit", "Hermit"],
+        ["herotemplategunwitch", "Gunwitch"],
+        ["herotemplatewarden", "Warden"],
+        ["herotemplateguardian", "Guardian"]
+    ];
+
+    const matchedRule = fallbackRules.find(([templatePart]) => {
+        return normalizedTemplate.includes(templatePart);
+    });
+
+    return matchedRule ? matchedRule[1] : "Unknown";
+}
+
+
+function createEmptyOptimizerStats() {
+    return {
+        heroHealth: 0,
+        heroSpeed: 0,
+        heroDamage: 0,
+        heroCasting: 0,
+        ability1: 0,
+        ability2: 0,
+        towerHealth: 0,
+        towerRate: 0,
+        towerDamage: 0,
+        towerRange: 0,
+        specialStat: 0
+    };
+}
+
+
+function getBaseOptimizerStats(heroInfo, className) {
+    const stats = {
+        heroHealth: heroInfo.heroHealthModifier,
+        heroSpeed: heroInfo.heroSpeedModifier,
+        heroDamage: heroInfo.heroDamageModifier,
+        heroCasting: heroInfo.heroCastingModifier,
+        ability1: heroInfo.heroAbilityOneModifier,
+        ability2: heroInfo.heroAbilityTwoModifier,
+        towerHealth: heroInfo.heroDefenseHealthModifier,
+        towerRate: heroInfo.heroDefenseAttackRateModifier,
+        towerDamage: heroInfo.heroDefenseDamageModifier,
+        towerRange: heroInfo.heroDefenseAreaOfEffectModifier,
+        specialStat: 0
+    };
+
+    if (className === "Series EV") {
+        stats.specialStat = stats.towerRange;
+        stats.towerRange = 0;
+    }
+
+    return stats;
+}
+
+
+function getEquipmentQuality(equipment) {
+    return optimizerEquipmentQualityNames[
+        equipment.nameIndexQualityDescriptor
+    ] || "Unknown";
+}
+
+
+function getArmorSetFromTemplate(template) {
+    const match = String(template || "").match(
+        /(?:Helmet|Torso|Gauntlet|Boots)ArmorBase_([A-Za-z0-9]+)/i
+    );
+
+    return match ? match[1] : null;
+}
+
+
+function isArmorEquipment(equipment) {
+    return getArmorSetFromTemplate(
+        equipment.equipmentTemplate
+    ) !== null;
+}
+
+
+function getArmorSetBonusMultiplier(equipment) {
+    const qualityIndex =
+        equipment.nameIndexQualityDescriptor;
+
+    if (qualityIndex >= 16 && qualityIndex <= 19) {
+        return 1.4;
+    }
+
+    if (qualityIndex === 15) {
+        return 1.36;
+    }
+
+    if (qualityIndex === 14) {
+        return 1.33;
+    }
+
+    if (qualityIndex === 13) {
+        return 1.3;
+    }
+
+    return 1.25;
+}
+
+
+function hasMatchingArmorSetBonus(equipments) {
+    const armorPieces =
+        equipments.filter(isArmorEquipment);
+
+    if (armorPieces.length < 4) {
+        return false;
+    }
+
+    const armorSets = armorPieces.map((equipment) => {
+        return getArmorSetFromTemplate(
+            equipment.equipmentTemplate
+        );
+    });
+
+    const firstSpecificSet = armorSets.find((armorSet) => {
+        return (
+            armorSet &&
+            armorSet.toLowerCase() !== "any"
+        );
+    });
+
+    if (!firstSpecificSet) {
+        return true;
+    }
+
+    return armorSets.every((armorSet) => {
+        return armorSet && (
+            armorSet.toLowerCase() === "any" ||
+            armorSet.toLowerCase() ===
+                firstSpecificSet.toLowerCase()
+        );
+    });
+}
+
+
+function getAdjustedEquipmentValue(
+    equipment,
+    value,
+    hasArmorSetBonus
+) {
+    if (
+        !hasArmorSetBonus ||
+        !isArmorEquipment(equipment) ||
+        value < 0
+    ) {
+        return value;
+    }
+
+    return Math.ceil(
+        value *
+        getArmorSetBonusMultiplier(equipment)
+    );
+}
+
+
+function getEquipmentOptimizerStats(
+    equipments,
+    className
+) {
+    const stats = createEmptyOptimizerStats();
+
+    const hasArmorSetBonus =
+        hasMatchingArmorSetBonus(equipments);
+
+    equipments.forEach((equipment) => {
+        const values =
+            equipment.statModifiers || [];
+
+        function adjusted(statIndex) {
+            const value = values[statIndex] || 0;
+
+            return getAdjustedEquipmentValue(
+                equipment,
+                value,
+                hasArmorSetBonus
+            );
+        }
+
+        stats.heroHealth += adjusted(
+            optimizerEquipmentStatIndex.heroHealth
+        );
+
+        stats.heroSpeed += adjusted(
+            optimizerEquipmentStatIndex.heroSpeed
+        );
+
+        stats.heroDamage += adjusted(
+            optimizerEquipmentStatIndex.heroDamage
+        );
+
+        stats.heroCasting += adjusted(
+            optimizerEquipmentStatIndex.heroCasting
+        );
+
+        stats.ability1 += adjusted(
+            optimizerEquipmentStatIndex.ability1
+        );
+
+        stats.ability2 += adjusted(
+            optimizerEquipmentStatIndex.ability2
+        );
+
+        stats.towerHealth += adjusted(
+            optimizerEquipmentStatIndex.towerHealth
+        );
+
+        stats.towerRate += adjusted(
+            optimizerEquipmentStatIndex.towerRate
+        );
+
+        stats.towerDamage += adjusted(
+            optimizerEquipmentStatIndex.towerDamage
+        );
+
+        const rangeOrSpecial = adjusted(
+            optimizerEquipmentStatIndex
+                .towerRangeOrSpecial
+        );
 
         if (className === "Series EV") {
-            stats.specialStat = stats.towerRange;
-            stats.towerRange = 0;
+            stats.specialStat += rangeOrSpecial;
+        } else {
+            stats.towerRange += rangeOrSpecial;
         }
+    });
 
-        return stats;
-    }
+    return stats;
+}
 
-    function getEquipmentQuality(equipment) {
-        return optimizerEquipmentQualityNames[equipment.nameIndexQualityDescriptor] || "Unknown";
-    }
 
-    function getArmorSetFromTemplate(template) {
-        const match = String(template || "").match(
-            /(?:Helmet|Torso|Gauntlet|Boots)ArmorBase_([A-Za-z0-9]+)/i
+function addOptimizerStats(
+    firstStats,
+    secondStats
+) {
+    const totals = createEmptyOptimizerStats();
+
+    Object.keys(totals).forEach((statName) => {
+        totals[statName] = Math.max(
+            0,
+            (firstStats[statName] || 0) +
+            (secondStats[statName] || 0)
         );
+    });
 
-        return match ? match[1] : null;
-    }
+    return totals;
+}
 
-    function isArmorEquipment(equipment) {
-        return getArmorSetFromTemplate(equipment.equipmentTemplate) !== null;
-    }
-
-    function getArmorSetBonusMultiplier(equipment) {
-        const qualityIndex = equipment.nameIndexQualityDescriptor;
-
-        if (qualityIndex >= 16 && qualityIndex <= 19) {
-            return 1.4;
-        }
-
-        if (qualityIndex === 15) {
-            return 1.36;
-        }
-
-        if (qualityIndex === 14) {
-            return 1.33;
-        }
-
-        if (qualityIndex === 13) {
-            return 1.3;
-        }
-
-        return 1.25;
-    }
-
-    function hasMatchingArmorSetBonus(equipments) {
-        const armorPieces = equipments.filter(isArmorEquipment);
-
-        if (armorPieces.length < 4) {
-            return false;
-        }
-
-        const armorSets = armorPieces.map((equipment) => {
-            return getArmorSetFromTemplate(equipment.equipmentTemplate);
-        });
-
-        const firstSpecificSet = armorSets.find((armorSet) => {
-            return armorSet && armorSet.toLowerCase() !== "any";
-        });
-
-        if (!firstSpecificSet) {
-            return true;
-        }
-
-        return armorSets.every((armorSet) => {
-            return armorSet && (
-                armorSet.toLowerCase() === "any" ||
-                armorSet.toLowerCase() === firstSpecificSet.toLowerCase()
-            );
-        });
-    }
-
-    function getAdjustedEquipmentValue(equipment, value, hasArmorSetBonus) {
-        if (
-            !hasArmorSetBonus ||
-            !isArmorEquipment(equipment) ||
-            value < 0
-        ) {
-            return value;
-        }
-
-        return Math.ceil(value * getArmorSetBonusMultiplier(equipment));
-    }
-
-    function getEquipmentOptimizerStats(equipments, className) {
-        const stats = createEmptyOptimizerStats();
-        const hasArmorSetBonus = hasMatchingArmorSetBonus(equipments);
-
-        equipments.forEach((equipment) => {
-            const values = equipment.statModifiers || [];
-
-            function adjusted(statIndex) {
-                const value = values[statIndex] || 0;
-                return getAdjustedEquipmentValue(equipment, value, hasArmorSetBonus);
-            }
-
-            stats.heroHealth += adjusted(optimizerEquipmentStatIndex.heroHealth);
-            stats.heroSpeed += adjusted(optimizerEquipmentStatIndex.heroSpeed);
-            stats.heroDamage += adjusted(optimizerEquipmentStatIndex.heroDamage);
-            stats.heroCasting += adjusted(optimizerEquipmentStatIndex.heroCasting);
-            stats.ability1 += adjusted(optimizerEquipmentStatIndex.ability1);
-            stats.ability2 += adjusted(optimizerEquipmentStatIndex.ability2);
-            stats.towerHealth += adjusted(optimizerEquipmentStatIndex.towerHealth);
-            stats.towerRate += adjusted(optimizerEquipmentStatIndex.towerRate);
-            stats.towerDamage += adjusted(optimizerEquipmentStatIndex.towerDamage);
-
-            const rangeOrSpecial = adjusted(optimizerEquipmentStatIndex.towerRangeOrSpecial);
-
-            if (className === "Series EV") {
-                stats.specialStat += rangeOrSpecial;
-            } else {
-                stats.towerRange += rangeOrSpecial;
-            }
-        });
-
-        return stats;
-    }
-
-    function addOptimizerStats(firstStats, secondStats) {
-        const totals = createEmptyOptimizerStats();
-
-        Object.keys(totals).forEach((statName) => {
-            totals[statName] = Math.max(
-                0,
-                (firstStats[statName] || 0) + (secondStats[statName] || 0)
-            );
-        });
-
-        return totals;
-    }
-
-    function getResistanceTotals(equipments) {
-        const rawTotals = [0, 0, 0, 0];
-        const hasArmorSetBonus = hasMatchingArmorSetBonus(equipments);
-
-        equipments.forEach((equipment) => {
-            const values = equipment.damageReductionPercentage || [];
-
-            for (let index = 0; index < rawTotals.length; index++) {
-                const value = values[index] || 0;
-                rawTotals[index] += getAdjustedEquipmentValue(
-                    equipment,
-                    value,
-                    hasArmorSetBonus
-                );
-            }
-        });
-
-        const displayedTotals = rawTotals.map((value) => {
-            const nightmareValue = value < 0
-                ? Math.ceil(value * 0.55)
-                : Math.floor(value * 0.55);
-
-            return Math.min(90, nightmareValue);
-        });
-
-        return {
-            raw: {
-                generic: rawTotals[0],
-                poison: rawTotals[1],
-                fire: rawTotals[2],
-                lightning: rawTotals[3]
-            },
-            displayed: {
-                generic: displayedTotals[0],
-                poison: displayedTotals[1],
-                fire: displayedTotals[2],
-                lightning: displayedTotals[3]
-            }
-        };
-    }
-
-    function getLowestResistance(resistances) {
-        return Math.min(
-            resistances.generic,
-            resistances.poison,
-            resistances.fire,
-            resistances.lightning
-        );
-    }
-
-    function cleanImportedEquipment(equipment, index) {
-        return {
-            number: index + 1,
-            name: equipment.userEquipmentName || equipment.description || "Unnamed Equipment",
-            template: equipment.equipmentTemplate || "Unknown Equipment Template",
-            currentUpgradeLevel: equipment.level,
-            maximumUpgradeLevel: equipment.maxEquipmentLevel,
-            quality: getEquipmentQuality(equipment),
-            qualityIndex: equipment.nameIndexQualityDescriptor,
-            isArmor: isArmorEquipment(equipment),
-            armorSet: getArmorSetFromTemplate(equipment.equipmentTemplate),
-            setBonusMultiplier: isArmorEquipment(equipment)
-                ? getArmorSetBonusMultiplier(equipment)
-                : 1,
-            statModifiers: [...equipment.statModifiers],
-            spawnStatModifiers: [...equipment.spawnStatModifiers],
-            resistances: [...equipment.damageReductionPercentage],
-            isSecondary: equipment.isSecondary,
-            isLocked: Boolean(equipment.isLocked),
-            equipmentIds: [equipment.equipmentId1, equipment.equipmentId2]
-        };
-    }
-
-    function suggestImportedHeroRole(hero) {
-        const stats = hero.totalStats;
-        const towerScore = stats.towerHealth + stats.towerDamage + stats.towerRange + stats.towerRate;
-        const heroScore =
-            stats.heroHealth +
-            stats.heroDamage +
-            stats.heroSpeed +
-            stats.heroCasting +
-            stats.ability1 +
-            stats.ability2;
-
-        switch (hero.className) {
-            case "Summoner":
-                return stats.towerHealth > stats.towerDamage * 1.15
-                    ? "Waller Summoner"
-                    : "Minion Summoner";
-
-            case "Series EV":
-                return stats.towerHealth > stats.towerDamage * 1.25
-                    ? "Waller"
-                    : "Beam EV";
-
-            case "Monk":
-                if (stats.heroDamage > stats.towerDamage && stats.ability1 + stats.ability2 > stats.towerDamage) {
-                    return "Boost Monk";
-                }
-
-                return towerScore >= heroScore ? "Aura Monk" : "DPS";
-
-            case "Initiate":
-                if (
-                    stats.heroSpeed +
-                    stats.heroCasting +
-                    stats.ability1 +
-                    stats.ability2 >
-                    towerScore
-                ) {
-                    return "Upgrade Initiate";
-                }
-
-                return towerScore >= heroScore ? "Aura Monk" : "DPS";
-
-            case "Huntress":
-            case "Ranger":
-                return towerScore >= heroScore ? "Trap Huntress" : "DPS";
-
-            case "Squire":
-            case "Countess":
-                if (stats.towerHealth > stats.towerDamage * 1.25) {
-                    return "Waller";
-                }
-
-                return towerScore >= heroScore ? "Builder" : "DPS";
-
-            case "Apprentice":
-            case "Adept":
-            case "Hermit":
-            case "Warden":
-            case "Guardian":
-                return towerScore >= heroScore ? "Builder" : "DPS";
-
-            case "Jester":
-            case "Barbarian":
-            case "Gunwitch":
-                return "DPS";
-
-            default:
-                return towerScore >= heroScore ? "Builder" : "DPS";
-        }
-    }
-
-    function normalizeOptimizerHero(rawHero, index) {
-        const heroInfo = rawHero.heroInfo;
-        const className = getOptimizerHeroClass(heroInfo.heroTemplate);
-        const baseStats = getBaseOptimizerStats(heroInfo, className);
-        const equipmentStats = getEquipmentOptimizerStats(rawHero.equipments, className);
-        const totalStats = addOptimizerStats(baseStats, equipmentStats);
-        const resistanceTotals = getResistanceTotals(rawHero.equipments);
-        const resistances = resistanceTotals.displayed;
-
-        const hero = {
-            number: index + 1,
-            name: heroInfo.heroName || `Hero ${index + 1}`,
-            template: heroInfo.heroTemplate || "Unknown Hero Template",
-            className: className,
-            level: heroInfo.heroLevel,
-            experience: heroInfo.heroExperience,
-            manaPower: heroInfo.manaPower,
-            baseStats: baseStats,
-            equipmentStats: equipmentStats,
-            totalStats: totalStats,
-            resistances: resistances,
-            rawResistances: resistanceTotals.raw,
-            lowestResistance: getLowestResistance(resistances),
-            hasArmorSetBonus: hasMatchingArmorSetBonus(rawHero.equipments),
-            equipmentCount: rawHero.equipments.length,
-            equipment: rawHero.equipments.map(cleanImportedEquipment),
-            suggestedRole: ""
-        };
-
-        hero.suggestedRole = suggestImportedHeroRole(hero);
-        return hero;
-    }
-
-    function parseOptimizerSaveFile(arrayBuffer, fileName) {
-        const decompression = decompressDunFile(arrayBuffer);
-        const saveInfo = readOptimizerSaveInfo(decompression.combinedBytes);
-        const heroes = saveInfo.heroes.map(normalizeOptimizerHero);
-        const warnings = [];
-
-        if (heroes.some((hero) => hero.className === "Unknown")) {
-            warnings.push("At least one hero template is not mapped yet. That hero was imported as Unknown.");
-        }
-
-        warnings.push(
-            "Imported totals decode DD1's +127 equipment storage offset, apply matching armor-set quality bonuses, and convert resistances to their Nightmare/Ruthless display values. Please compare a few heroes with the in-game stat screen while this importer is still being validated."
-        );
-
-        return {
-            fileName: fileName,
-            importedAt: new Date().toISOString(),
-            versionNumber: saveInfo.versionNumber,
-            saveSize: saveInfo.size,
-            heroCount: heroes.length,
-            heroes: heroes,
-            warnings: warnings,
-            decompression: {
-                method: decompression.decompressionMethod || "unknown",
-                blockCount: decompression.blockCount,
-                combinedSize: decompression.combinedSize
-            }
-        };
-    }
-
-
-    /* =========================================================
-    12. Optimizer Page Population and Import Output
-    ========================================================= */
-
-    function ensureSelectOption(selectElement, value) {
-        if (!selectElement || !value) {
-            return;
-        }
-
-        const hasOption = Array.from(selectElement.options).some((option) => {
-            return option.value === value;
-        });
-
-        if (!hasOption) {
-            const option = document.createElement("option");
-            option.value = value;
-            option.textContent = value;
-            selectElement.appendChild(option);
-        }
-    }
-
-
-    function setImportedHeroHeading(slot, heroNumber, heroName) {
-        if (!slot) {
-            return;
-        }
-
-        slot.dataset.heroName = heroName;
-
-        const heading = slot.querySelector("h3");
-
-        if (heading) {
-            heading.textContent = `Hero ${heroNumber}: ${heroName}`;
-        }
-    }
-
-
-    function populateOptimizerFromImportedSave(importedSaveData) {
-        const heroRosterGrid = document.querySelector("#hero-roster-grid");
-
-        if (!heroRosterGrid) {
-            throw new Error("The optimizer hero roster could not be found.");
-        }
-
-        if (typeof addHeroSlot !== "function") {
-            throw new Error("optimizer.js must load before optimizer-save-import.js.");
-        }
-
-        heroRosterGrid.innerHTML = "";
-
-        const heroesToImport = importedSaveData.heroes;
-
-        heroesToImport.forEach(() => {
-            addHeroSlot();
-        });
-
-        heroesToImport.forEach((hero, index) => {
-            const heroNumber = index + 1;
-            const slot = heroRosterGrid.querySelector(`.hero-slot[data-hero-number="${heroNumber}"]`);
-            const classSelect = document.querySelector(`#hero-${heroNumber}-class`);
-
-            ensureSelectOption(classSelect, hero.className);
-            setHeroField(heroNumber, "class", hero.className);
-            updateRoleOptions(heroNumber);
-
-            const roleSelect = document.querySelector(`#hero-${heroNumber}-role`);
-
-            ensureSelectOption(roleSelect, hero.suggestedRole);
-            setHeroField(heroNumber, "role", hero.suggestedRole);
-            updateRoleHint(heroNumber);
-
-            setHeroField(heroNumber, "level", hero.level);
-            setHeroField(heroNumber, "tower-health", hero.totalStats.towerHealth);
-            setHeroField(heroNumber, "tower-damage", hero.totalStats.towerDamage);
-            setHeroField(heroNumber, "tower-range", hero.totalStats.towerRange);
-            setHeroField(heroNumber, "tower-rate", hero.totalStats.towerRate);
-            setHeroField(heroNumber, "hero-health", hero.totalStats.heroHealth);
-            setHeroField(heroNumber, "hero-damage", hero.totalStats.heroDamage);
-            setHeroField(heroNumber, "hero-speed", hero.totalStats.heroSpeed);
-            setHeroField(heroNumber, "hero-casting", hero.totalStats.heroCasting);
-            setHeroField(heroNumber, "lowest-resistance", hero.lowestResistance);
-            setHeroField(heroNumber, "ability-1", hero.totalStats.ability1);
-            setHeroField(heroNumber, "ability-2", hero.totalStats.ability2);
-
-            if (slot) {
-                slot.dataset.heroTemplate = hero.template;
-                slot.dataset.imported = "true";
-                slot.dataset.equipmentCount = String(hero.equipmentCount);
-            }
-
-            setImportedHeroHeading(slot, heroNumber, hero.name);
-        });
-
-        if (typeof updateAddHeroButton === "function") {
-            updateAddHeroButton();
-        }
-
-        if (typeof saveOptimizerData === "function") {
-            saveOptimizerData();
-        }
-    }
-
-
-    function escapeOptimizerImportHtml(value) {
-        return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-    }
-
-
-    function buildOptimizerImportOutput(importedSaveData) {
-        const heroRows = importedSaveData.heroes.map((hero) => {
-            const specialText = hero.className === "Series EV"
-                ? ` | EV Special ${hero.totalStats.specialStat}`
-                : "";
-
-            return `
-                <li>
-                    <strong>${escapeOptimizerImportHtml(hero.name)}</strong>
-                    — ${escapeOptimizerImportHtml(hero.className)}
-                    — Level ${hero.level}
-                    — Suggested role: ${escapeOptimizerImportHtml(hero.suggestedRole)}
-                    <br>
-                    Tower HP ${hero.totalStats.towerHealth},
-                    Damage ${hero.totalStats.towerDamage},
-                    Range ${hero.totalStats.towerRange},
-                    Rate ${hero.totalStats.towerRate}${specialText}
-                    <br>
-                    Hero HP ${hero.totalStats.heroHealth},
-                    Damage ${hero.totalStats.heroDamage},
-                    Speed ${hero.totalStats.heroSpeed},
-                    Casting ${hero.totalStats.heroCasting},
-                    AB1 ${hero.totalStats.ability1},
-                    AB2 ${hero.totalStats.ability2},
-                    Lowest resistance ${hero.lowestResistance}%
-                    <br>
-                    Equipped items read: ${hero.equipmentCount}
-                </li>
-            `;
-        }).join("");
-
-        const warningRows = importedSaveData.warnings.map((warning) => {
-            return `<li>${escapeOptimizerImportHtml(warning)}</li>`;
-        }).join("");
-
-        return `
-            <div class="result-box">
-                <h3>Save Imported</h3>
-                <p><strong>File:</strong> ${escapeOptimizerImportHtml(importedSaveData.fileName)}</p>
-                <p><strong>Heroes read:</strong> ${importedSaveData.heroCount}</p>
-                <p>
-                    <strong>Decompression:</strong>
-                    ${escapeOptimizerImportHtml(importedSaveData.decompression.method)},
-                    ${importedSaveData.decompression.blockCount} block(s),
-                    ${importedSaveData.decompression.combinedSize.toLocaleString()} decompressed bytes
-                </p>
-
-                <details>
-                    <summary>Show Imported Hero Stats</summary>
-                    <ol>${heroRows}</ol>
-                </details>
-
-                <div class="guide-warning">
-                    <h4>Current Import Notes</h4>
-                    <ul>${warningRows}</ul>
-                </div>
-            </div>
-        `;
-    }
 
 
     /* =========================================================
