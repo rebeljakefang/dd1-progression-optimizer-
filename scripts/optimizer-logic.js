@@ -288,9 +288,14 @@ function chooseOtherRecommendations(stepName, recommendation, account) {
    4. Role Helper Functions
 ========================================================= */
 
+function getUsableHeroes(heroes) {
+    return heroes.filter((hero) => !hero.ignored);
+}
+
+
 function hasAnyRole(heroes, roleNames) {
-    return heroes.some((hero) => {
-        const role = hero.role.toLowerCase();
+    return getUsableHeroes(heroes).some((hero) => {
+        const role = String(hero.role || "").toLowerCase();
 
         return roleNames.some((roleName) => {
             return role === roleName.toLowerCase();
@@ -302,10 +307,13 @@ function hasAnyRole(heroes, roleNames) {
 function getBestStat(heroes, statName, allowedRoles) {
     let bestValue = 0;
 
-    heroes.forEach((hero) => {
-        const role = hero.role.toLowerCase();
+    getUsableHeroes(heroes).forEach((hero) => {
+        const role = String(hero.role || "").toLowerCase();
 
-        if (allowedRoles.includes(role) && hero[statName] > bestValue) {
+        if (
+            allowedRoles.includes(role) &&
+            hero[statName] > bestValue
+        ) {
             bestValue = hero[statName];
         }
     });
@@ -315,8 +323,8 @@ function getBestStat(heroes, statName, allowedRoles) {
 
 
 function getHeroesByRole(heroes, roleNames) {
-    return heroes.filter((hero) => {
-        const role = hero.role.toLowerCase();
+    return getUsableHeroes(heroes).filter((hero) => {
+        const role = String(hero.role || "").toLowerCase();
 
         return roleNames.some((roleName) => {
             return role === roleName.toLowerCase();
@@ -352,11 +360,6 @@ function formatAccountReviewNumber(value) {
 }
 
 
-function shouldReviewAccountStat(hero, value) {
-    return hero.imported || value !== 0;
-}
-
-
 function getAccountReviewHeroHeading(hero, index) {
     const heroName = String(hero.name || "").trim() || `Hero ${index + 1}`;
     const className = hero.className || "Unknown Class";
@@ -371,10 +374,41 @@ function getAccountReviewHeroHeading(hero, index) {
 }
 
 
+function addReviewTarget(improvements, label, currentValue, targetValue, suffix = "") {
+    if (currentValue < targetValue) {
+        improvements.push(
+            `${label} ${formatAccountReviewNumber(currentValue)}${suffix} → ${formatAccountReviewNumber(targetValue)}${suffix}+`
+        );
+    }
+}
+
+
+function addResistanceTarget(improvements, hero) {
+    addReviewTarget(
+        improvements,
+        "Lowest Resistance",
+        getAccountReviewStat(hero, "lowestResistance"),
+        70,
+        "%"
+    );
+}
+
+
+function addHeroSpeedTarget(improvements, hero) {
+    addReviewTarget(
+        improvements,
+        "Hero Speed",
+        getAccountReviewStat(hero, "heroSpeed"),
+        100
+    );
+}
+
+
 function buildAccountReview(account) {
     const notes = [];
+    const activeHeroes = getUsableHeroes(account.heroes);
 
-    const hasBuilder = hasAnyRole(account.heroes, [
+    const hasBuilder = hasAnyRole(activeHeroes, [
         "Builder",
         "Hybrid",
         "Aura Monk",
@@ -383,205 +417,153 @@ function buildAccountReview(account) {
         "Minion Summoner"
     ]);
 
-    const hasWalls = hasAnyRole(account.heroes, [
+    const hasWalls = hasAnyRole(activeHeroes, [
         "Waller",
         "Waller Summoner"
     ]);
 
-    const hasDps = hasAnyRole(account.heroes, [
+    const hasDps = hasAnyRole(activeHeroes, [
         "DPS",
+        "Ability DPS",
+        "Damage Summoner",
         "Hybrid"
     ]);
 
-    const hasBeamEv = hasAnyRole(
-        account.heroes,
-        ["Beam EV"]
-    );
-
-    const hasWallerSummoner = hasAnyRole(
-        account.heroes,
-        ["Waller Summoner"]
-    );
-
-    const hasBoostMonk = hasAnyRole(
-        account.heroes,
-        ["Boost Monk"]
-    );
-
-    const hasMinionSummoner = hasAnyRole(
-        account.heroes,
-        ["Minion Summoner", "Waller Summoner"]
-    );
-
-    const hasUpgradeInitiate = hasAnyRole(
-        account.heroes,
-        ["Upgrade Initiate"]
-    );
+    const hasBeamEv = hasAnyRole(activeHeroes, ["Beam EV"]);
+    const hasWallerSummoner = hasAnyRole(activeHeroes, ["Waller Summoner"]);
+    const hasBoostMonk = hasAnyRole(activeHeroes, ["Boost Monk"]);
+    const hasMinionSummoner = hasAnyRole(activeHeroes, ["Minion Summoner", "Waller Summoner"]);
+    const hasUpgradeInitiate = hasAnyRole(activeHeroes, ["Upgrade Initiate"]);
 
     if (!hasBuilder) {
         notes.push(
-            "No clear builder role was detected. Add a Builder, Hybrid, Aura Monk, Trap Huntress, Beam EV, or Minion Summoner for better recommendations."
+            "No clear builder role was detected among the heroes that are not ignored."
         );
     }
 
     if (!hasWalls) {
         notes.push(
-            "No wall role was detected. A Waller or Waller Summoner becomes more important as you push harder Nightmare maps."
+            "No wall role was detected. A Waller or Waller Summoner becomes more important on harder Nightmare maps."
         );
     }
 
     if (!hasDps) {
         notes.push(
-            "No hero is marked as DPS or Hybrid. Marking one helps the optimizer judge boss damage and survivability."
+            "No active hero is marked as DPS, Ability DPS, Damage Summoner, or Hybrid."
         );
     }
 
-    account.heroes.forEach((hero, index) => {
+    activeHeroes.forEach((hero, index) => {
         const role = String(hero.role || "").toLowerCase();
         const improvements = [];
         let explanation = "";
+        let informationOnly = "";
 
-        if (
-            account.towerDamage >= 1500 &&
-            (
-                role === "waller" ||
-                role === "waller summoner"
-            )
-        ) {
-            const towerHealth = getAccountReviewStat(
-                hero,
-                "towerHealth"
-            );
-
-            const wallHealthTarget = account.towerDamage >= 2500
-                ? 1200
-                : 1000;
-
-            if (
-                shouldReviewAccountStat(hero, towerHealth) &&
-                towerHealth < wallHealthTarget
-            ) {
-                improvements.push(
-                    `Tower Health ${formatAccountReviewNumber(towerHealth)} → ${formatAccountReviewNumber(wallHealthTarget)}+`
-                );
-            }
-
-            if (role === "waller summoner") {
-                const towerDamage = getAccountReviewStat(
-                    hero,
-                    "towerDamage"
-                );
-
-                const towerRange = getAccountReviewStat(
-                    hero,
-                    "towerRange"
-                );
-
-                const towerRate = getAccountReviewStat(
-                    hero,
-                    "towerRate"
-                );
-
-                if (
-                    shouldReviewAccountStat(hero, towerDamage) &&
-                    towerDamage < 800
-                ) {
-                    improvements.push(
-                        `Tower Damage ${formatAccountReviewNumber(towerDamage)} → 800+`
-                    );
-                }
-
-                if (
-                    shouldReviewAccountStat(hero, towerRange) &&
-                    towerRange < 600
-                ) {
-                    improvements.push(
-                        `Tower Range ${formatAccountReviewNumber(towerRange)} → 600+`
-                    );
-                }
-
-                if (
-                    shouldReviewAccountStat(hero, towerRate) &&
-                    towerRate < 600
-                ) {
-                    improvements.push(
-                        `Tower Rate ${formatAccountReviewNumber(towerRate)} → 600+`
-                    );
-                }
-
-                explanation =
-                    "These upgrades will make the minion wall stronger and help the minions contribute more damage and coverage.";
-            } else {
-                explanation =
-                    "More Tower Health will help this wall survive harder Nightmare and survival waves.";
-            }
+        if (role === "builder") {
+            addReviewTarget(improvements, "Tower Damage", getAccountReviewStat(hero, "towerDamage"), 1000);
+            addReviewTarget(improvements, "Tower Rate", getAccountReviewStat(hero, "towerRate"), 600);
+            addReviewTarget(improvements, "Tower Range", getAccountReviewStat(hero, "towerRange"), 600);
+            addReviewTarget(improvements, "Tower Health", getAccountReviewStat(hero, "towerHealth"), 500);
+            explanation = "These are general builder targets; the exact priority still depends on the class and defenses used.";
         }
 
-        if (
-            account.level >= 78 &&
-            (
-                role === "dps" ||
-                role === "hybrid"
-            )
-        ) {
-            const heroDamage = getAccountReviewStat(
-                hero,
-                "heroDamage"
+        if (role === "waller") {
+            addReviewTarget(improvements, "Tower Health", getAccountReviewStat(hero, "towerHealth"), 1200);
+            explanation = "Tower Health is the main priority for a waller.";
+        }
+
+        if (role === "waller summoner") {
+            addReviewTarget(improvements, "Tower Health", getAccountReviewStat(hero, "towerHealth"), 1200);
+            addReviewTarget(improvements, "Tower Damage", getAccountReviewStat(hero, "towerDamage"), 600);
+            addReviewTarget(improvements, "Tower Range", getAccountReviewStat(hero, "towerRange"), 500);
+            addReviewTarget(improvements, "Tower Rate", getAccountReviewStat(hero, "towerRate"), 500);
+            explanation = "Tower Health is the main wall stat; the other minion stats help the wall contribute damage and coverage.";
+        }
+
+        if (role === "minion summoner") {
+            addReviewTarget(improvements, "Tower Damage", getAccountReviewStat(hero, "towerDamage"), 1000);
+            addReviewTarget(improvements, "Tower Rate", getAccountReviewStat(hero, "towerRate"), 600);
+            addReviewTarget(improvements, "Tower Range", getAccountReviewStat(hero, "towerRange"), 600);
+            addReviewTarget(improvements, "Tower Health", getAccountReviewStat(hero, "towerHealth"), 600);
+            explanation = "These stats improve minion damage, attack speed, coverage, and survivability.";
+        }
+
+        if (role === "guardian summoner") {
+            addReviewTarget(improvements, "Hero Health", getAccountReviewStat(hero, "heroHealth"), 1000);
+            addResistanceTarget(improvements, hero);
+            explanation = "Guardian Summoners only need enough Hero Health and resistances to stay alive while supporting defenses.";
+        }
+
+        if (role === "damage summoner") {
+            informationOnly = "Detailed Damage Summoner evaluation is not available yet because weapon and pet damage still need to be read and analyzed.";
+        }
+
+        if (role === "dps") {
+            addReviewTarget(improvements, "Hero Damage", getAccountReviewStat(hero, "heroDamage"), 1000);
+            addReviewTarget(improvements, "Hero Health", getAccountReviewStat(hero, "heroHealth"), 700);
+            addResistanceTarget(improvements, hero);
+            addHeroSpeedTarget(improvements, hero);
+            explanation = "These stats improve normal hero damage and survivability. Hero Speed is capped at 100.";
+        }
+
+        if (role === "ability dps") {
+            const primaryAbility = Math.max(
+                getAccountReviewStat(hero, "ability1"),
+                getAccountReviewStat(hero, "ability2")
             );
 
-            const heroHealth = getAccountReviewStat(
-                hero,
-                "heroHealth"
-            );
+            addReviewTarget(improvements, "Primary Ability", primaryAbility, 1000);
+            addReviewTarget(improvements, "Hero Health", getAccountReviewStat(hero, "heroHealth"), 700);
+            addResistanceTarget(improvements, hero);
+            addHeroSpeedTarget(improvements, hero);
+            explanation = "Only the stronger of the two ability stats is used because some builds rely mainly on one ability.";
+        }
 
-            const heroSpeed = getAccountReviewStat(
-                hero,
-                "heroSpeed"
-            );
+        if (role === "boost monk") {
+            addReviewTarget(improvements, "Ability 1", getAccountReviewStat(hero, "ability1"), 1000);
+            addReviewTarget(improvements, "Ability 2", getAccountReviewStat(hero, "ability2"), 1000);
+            addReviewTarget(improvements, "Hero Health", getAccountReviewStat(hero, "heroHealth"), 700);
+            addResistanceTarget(improvements, hero);
+            addHeroSpeedTarget(improvements, hero);
+            explanation = "Boost Monk recommendations focus on boost abilities and staying alive, not Hero Damage.";
+        }
 
-            const lowestResistance = getAccountReviewStat(
-                hero,
-                "lowestResistance"
-            );
+        if (role === "upgrade initiate") {
+            addReviewTarget(improvements, "Hero Casting", getAccountReviewStat(hero, "heroCasting"), 500);
+            addReviewTarget(improvements, "Hero Health", getAccountReviewStat(hero, "heroHealth"), 700);
+            addResistanceTarget(improvements, hero);
+            addHeroSpeedTarget(improvements, hero);
+            explanation = "Upgrade Initiates are judged on upgrading speed and survivability, not Hero Damage.";
+        }
 
-            if (
-                shouldReviewAccountStat(hero, heroDamage) &&
-                heroDamage < 1000
-            ) {
-                improvements.push(
-                    `Hero Damage ${formatAccountReviewNumber(heroDamage)} → 1,000+`
-                );
-            }
+        if (role === "aura monk") {
+            addReviewTarget(improvements, "Tower Range", getAccountReviewStat(hero, "towerRange"), 1000);
+            addReviewTarget(improvements, "Tower Damage", getAccountReviewStat(hero, "towerDamage"), 1000);
+            addReviewTarget(improvements, "Tower Rate", getAccountReviewStat(hero, "towerRate"), 600);
+            addReviewTarget(improvements, "Tower Health", getAccountReviewStat(hero, "towerHealth"), 600);
+            explanation = "Aura Range and Damage are the main priorities, followed by rate and health.";
+        }
 
-            if (
-                shouldReviewAccountStat(hero, heroHealth) &&
-                heroHealth < 700
-            ) {
-                improvements.push(
-                    `Hero Health ${formatAccountReviewNumber(heroHealth)} → 700+`
-                );
-            }
+        if (role === "beam ev") {
+            addReviewTarget(improvements, "Tower Damage", getAccountReviewStat(hero, "towerDamage"), 1000);
+            addReviewTarget(improvements, "Tower Health", getAccountReviewStat(hero, "towerHealth"), 800);
+            explanation = "Beam EV recommendations focus mainly on buff strength and beam durability.";
+        }
 
-            if (
-                shouldReviewAccountStat(hero, heroSpeed) &&
-                heroSpeed < 500
-            ) {
-                improvements.push(
-                    `Hero Speed ${formatAccountReviewNumber(heroSpeed)} → 500+`
-                );
-            }
+        if (role === "trap huntress") {
+            addReviewTarget(improvements, "Tower Damage", getAccountReviewStat(hero, "towerDamage"), 1000);
+            addReviewTarget(improvements, "Tower Range", getAccountReviewStat(hero, "towerRange"), 600);
+            addReviewTarget(improvements, "Tower Rate", getAccountReviewStat(hero, "towerRate"), 600);
+            addReviewTarget(improvements, "Tower Health", getAccountReviewStat(hero, "towerHealth"), 600);
+            explanation = "These stats improve trap damage, coverage, reset speed, and charge count.";
+        }
 
-            if (
-                shouldReviewAccountStat(hero, lowestResistance) &&
-                lowestResistance < 70
-            ) {
-                improvements.push(
-                    `Lowest Resistance ${formatAccountReviewNumber(lowestResistance)}% → 70%+`
-                );
-            }
-
-            explanation =
-                "Improving these stats will make boss fights and harder Nightmare maps more manageable.";
+        if (role === "hybrid") {
+            addReviewTarget(improvements, "Tower Damage", getAccountReviewStat(hero, "towerDamage"), 800);
+            addReviewTarget(improvements, "Hero Damage", getAccountReviewStat(hero, "heroDamage"), 800);
+            addReviewTarget(improvements, "Hero Health", getAccountReviewStat(hero, "heroHealth"), 600);
+            addResistanceTarget(improvements, hero);
+            explanation = "Hybrid targets are intentionally moderate because the hero is splitting stats between two jobs.";
         }
 
         if (improvements.length > 0) {
@@ -590,49 +572,39 @@ function buildAccountReview(account) {
                 Improve ${improvements.join("; ")}.
                 ${explanation}
             `);
+        } else if (informationOnly) {
+            notes.push(`
+                ${getAccountReviewHeroHeading(hero, index)}:
+                ${informationOnly}
+            `);
         }
     });
 
-    if (
-        account.towerDamage >= 1500 &&
-        !hasWallerSummoner
-    ) {
+    if (account.towerDamage >= 1500 && !hasWallerSummoner) {
         notes.push(
-            "A Waller Summoner would help with safer Nightmare progression and survival layouts."
+            "A Waller Summoner can help with safer Nightmare progression and survival layouts."
         );
     }
 
-    if (
-        account.towerDamage >= 1500 &&
-        !hasBeamEv
-    ) {
+    if (account.towerDamage >= 1500 && !hasBeamEv) {
         notes.push(
-            "A Beam EV is worth building because buff beams become very important for Nightmare setups."
+            "A Beam EV is worth building because buff beams become important for Nightmare setups."
         );
     }
 
-    if (
-        account.towerDamage >= 2500 &&
-        !hasBoostMonk
-    ) {
+    if (account.towerDamage >= 2500 && !hasBoostMonk) {
         notes.push(
-            "A Boost Monk becomes useful for boss maps, harder survivals, and tougher progression."
+            "A Boost Monk becomes useful for boss maps and harder survivals."
         );
     }
 
-    if (
-        account.towerDamage >= 2500 &&
-        !hasMinionSummoner
-    ) {
+    if (account.towerDamage >= 2500 && !hasMinionSummoner) {
         notes.push(
-            "A Minion Summoner is useful for minion-based defenses and safer survival layouts."
+            "A Minion Summoner is useful for minion defenses and safer survival layouts."
         );
     }
 
-    if (
-        account.towerDamage >= 3500 &&
-        !hasUpgradeInitiate
-    ) {
+    if (account.towerDamage >= 3500 && !hasUpgradeInitiate) {
         notes.push(
             "An Upgrade Initiate can help with faster upgrading during harder survival waves."
         );
@@ -640,9 +612,10 @@ function buildAccountReview(account) {
 
     if (notes.length === 0) {
         notes.push(
-            "No major roster weaknesses were detected from the current inputs."
+            "No major roster weaknesses were detected from the active heroes."
         );
     }
 
     return notes;
 }
+

@@ -67,10 +67,10 @@
     };
 
     const optimizerImportedClassRoles = {
-        "Hermit": ["Builder", "DPS", "Hybrid"],
-        "Gunwitch": ["DPS", "Hybrid"],
-        "Warden": ["Builder", "DPS", "Hybrid"],
-        "Guardian": ["Builder", "Waller", "DPS", "Hybrid"]
+        "Hermit": ["Builder", "DPS", "Ability DPS", "Hybrid"],
+        "Gunwitch": ["DPS", "Ability DPS", "Hybrid"],
+        "Warden": ["Builder", "DPS", "Ability DPS", "Hybrid"],
+        "Guardian": ["Builder", "Waller", "DPS", "Ability DPS", "Hybrid"]
     };
 
     function extendOptimizerClassData() {
@@ -1294,74 +1294,104 @@
         };
     }
 
+    function stripDd1ColorTags(value) {
+        return String(value || "")
+            .replace(/<\/?color(?::[^>]*)?>/gi, "")
+            .replace(/<color[^>]*>/gi, "")
+            .trim();
+    }
+
+    function getImportedAbilityScore(stats) {
+        return Math.max(stats.ability1 || 0, stats.ability2 || 0);
+    }
+
     function suggestImportedHeroRole(hero) {
         const stats = hero.totalStats;
         const towerScore = stats.towerHealth + stats.towerDamage + stats.towerRange + stats.towerRate;
-        const heroScore =
-            stats.heroHealth +
-            stats.heroDamage +
-            stats.heroSpeed +
-            stats.heroCasting +
-            stats.ability1 +
-            stats.ability2;
+        const abilityScore = getImportedAbilityScore(stats);
+        const heroScore = stats.heroHealth + stats.heroDamage + stats.heroSpeed + stats.heroCasting + abilityScore;
+        const abilityFocused = abilityScore > stats.heroDamage * 1.25 && abilityScore > 500;
 
         switch (hero.className) {
             case "Summoner":
-                return stats.towerHealth > stats.towerDamage * 1.15
-                    ? "Waller Summoner"
-                    : "Minion Summoner";
+                if (towerScore >= heroScore) {
+                    return stats.towerHealth > stats.towerDamage * 1.35
+                        ? "Waller Summoner"
+                        : "Minion Summoner";
+                }
+
+                return "Damage Summoner";
 
             case "Series EV":
-                return stats.towerHealth > stats.towerDamage * 1.25
-                    ? "Waller"
-                    : "Beam EV";
+                if (towerScore >= heroScore) {
+                    return stats.towerHealth > stats.towerDamage * 1.25
+                        ? "Waller"
+                        : "Beam EV";
+                }
+
+                return abilityFocused ? "Ability DPS" : "DPS";
 
             case "Monk":
-                if (stats.heroDamage > stats.towerDamage && stats.ability1 + stats.ability2 > stats.towerDamage) {
+                if (
+                    stats.ability1 > 500 &&
+                    stats.ability2 > 500 &&
+                    abilityScore >= stats.heroDamage
+                ) {
                     return "Boost Monk";
                 }
 
-                return towerScore >= heroScore ? "Aura Monk" : "DPS";
+                if (towerScore >= heroScore) {
+                    return "Aura Monk";
+                }
+
+                return abilityFocused ? "Ability DPS" : "DPS";
 
             case "Initiate":
                 if (
-                    stats.heroSpeed +
-                    stats.heroCasting +
-                    stats.ability1 +
-                    stats.ability2 >
+                    stats.heroCasting + stats.heroSpeed + abilityScore >
                     towerScore
                 ) {
                     return "Upgrade Initiate";
                 }
 
-                return towerScore >= heroScore ? "Aura Monk" : "DPS";
+                return towerScore >= heroScore
+                    ? "Aura Monk"
+                    : abilityFocused ? "Ability DPS" : "DPS";
 
             case "Huntress":
             case "Ranger":
-                return towerScore >= heroScore ? "Trap Huntress" : "DPS";
+                return towerScore >= heroScore
+                    ? "Trap Huntress"
+                    : abilityFocused ? "Ability DPS" : "DPS";
 
             case "Squire":
             case "Countess":
-                if (stats.towerHealth > stats.towerDamage * 1.25) {
-                    return "Waller";
+                if (towerScore >= heroScore) {
+                    return stats.towerHealth > stats.towerDamage * 1.25
+                        ? "Waller"
+                        : "Builder";
                 }
 
-                return towerScore >= heroScore ? "Builder" : "DPS";
+                return abilityFocused ? "Ability DPS" : "DPS";
 
             case "Apprentice":
             case "Adept":
             case "Hermit":
             case "Warden":
             case "Guardian":
-                return towerScore >= heroScore ? "Builder" : "DPS";
+                return towerScore >= heroScore
+                    ? "Builder"
+                    : abilityFocused ? "Ability DPS" : "DPS";
 
             case "Jester":
             case "Barbarian":
             case "Gunwitch":
-                return "DPS";
+                return abilityFocused ? "Ability DPS" : "DPS";
 
             default:
-                return towerScore >= heroScore ? "Builder" : "DPS";
+                return towerScore >= heroScore
+                    ? "Builder"
+                    : abilityFocused ? "Ability DPS" : "DPS";
         }
     }
 
@@ -1373,10 +1403,12 @@
         const totalStats = addOptimizerStats(baseStats, equipmentStats);
         const resistanceTotals = getResistanceTotals(rawHero.equipments);
         const resistances = resistanceTotals.displayed;
+        const fallbackName = `Hero ${index + 1}`;
+        const cleanName = stripDd1ColorTags(heroInfo.heroName) || fallbackName;
 
         const hero = {
             number: index + 1,
-            name: heroInfo.heroName || `Hero ${index + 1}`,
+            name: cleanName,
             template: heroInfo.heroTemplate || "Unknown Hero Template",
             className: className,
             level: heroInfo.heroLevel,
@@ -1491,6 +1523,12 @@
             ensureSelectOption(roleSelect, hero.suggestedRole);
             setHeroField(heroNumber, "role", hero.suggestedRole);
             updateRoleHint(heroNumber);
+
+            const ignoreField = document.querySelector(`#hero-${heroNumber}-ignore`);
+
+            if (ignoreField) {
+                ignoreField.checked = false;
+            }
 
             setHeroField(heroNumber, "level", hero.level);
             setHeroField(heroNumber, "tower-health", hero.totalStats.towerHealth);

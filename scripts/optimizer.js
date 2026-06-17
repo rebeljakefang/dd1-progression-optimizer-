@@ -1,58 +1,73 @@
 /* =========================================================
-
-Hero Class + Role Data
+   1. Hero Class + Role Data
 ========================================================= */
 
 const heroClasses = [
-"Apprentice",
-"Squire",
-"Huntress",
-"Monk",
-"Series EV",
-"Summoner",
-"Jester",
-"Barbarian",
-"Adept",
-"Countess",
-"Ranger",
-"Initiate"
+    "Apprentice",
+    "Squire",
+    "Huntress",
+    "Monk",
+    "Series EV",
+    "Summoner",
+    "Jester",
+    "Barbarian",
+    "Adept",
+    "Countess",
+    "Ranger",
+    "Initiate",
+    "Hermit",
+    "Gunwitch",
+    "Warden",
+    "Guardian"
 ];
 
 const rolesByClass = {
-"Apprentice": ["Builder", "DPS", "Hybrid"],
-"Adept": ["Builder", "DPS", "Hybrid"],
+    "Apprentice": ["Builder", "DPS", "Ability DPS", "Hybrid"],
+    "Adept": ["Builder", "DPS", "Ability DPS", "Hybrid"],
 
-"Squire": ["Builder", "Waller", "DPS", "Hybrid"],
-"Countess": ["Builder", "Waller", "DPS", "Hybrid"],
+    "Squire": ["Builder", "Waller", "DPS", "Ability DPS", "Hybrid"],
+    "Countess": ["Builder", "Waller", "DPS", "Ability DPS", "Hybrid"],
 
-"Huntress": ["Trap Huntress", "DPS", "Hybrid"],
-"Ranger": ["Trap Huntress", "DPS", "Hybrid"],
+    "Huntress": ["Trap Huntress", "DPS", "Ability DPS", "Hybrid"],
+    "Ranger": ["Trap Huntress", "DPS", "Ability DPS", "Hybrid"],
 
-"Monk": ["Aura Monk", "Boost Monk", "DPS", "Hybrid"],
-"Initiate": ["Aura Monk", "Upgrade Initiate", "DPS", "Hybrid"],
+    "Monk": ["Aura Monk", "Boost Monk", "DPS", "Ability DPS", "Hybrid"],
+    "Initiate": ["Aura Monk", "Upgrade Initiate", "DPS", "Ability DPS", "Hybrid"],
 
-"Series EV": ["Beam EV", "Waller", "DPS", "Hybrid"],
+    "Series EV": ["Beam EV", "Waller", "DPS", "Ability DPS", "Hybrid"],
 
-"Summoner": ["Minion Summoner", "Waller Summoner", "Hybrid"],
+    "Summoner": [
+        "Minion Summoner",
+        "Waller Summoner",
+        "Guardian Summoner",
+        "Damage Summoner",
+        "Ability DPS",
+        "Hybrid"
+    ],
 
-"Jester": ["DPS", "Hybrid"],
-
-"Barbarian": ["DPS"]
-
+    "Jester": ["DPS", "Ability DPS", "Hybrid"],
+    "Barbarian": ["DPS", "Ability DPS", "Hybrid"],
+    "Hermit": ["Builder", "DPS", "Ability DPS", "Hybrid"],
+    "Gunwitch": ["DPS", "Ability DPS", "Hybrid"],
+    "Warden": ["Builder", "DPS", "Ability DPS", "Hybrid"],
+    "Guardian": ["Builder", "Waller", "DPS", "Ability DPS", "Hybrid"]
 };
 
 const roleStatHints = {
-"Builder": "Stat priority: Tower Damage > Tower Rate > Tower Range > Tower Health.",
-"Waller": "Stat priority: Tower Health > Tower Damage > Tower Rate > Tower Range.",
-"Waller Summoner": "Stat priority: Tower Health > Tower Damage > Tower Range > Tower Rate.",
-"DPS": "Stat priority: Hero Damage > Lowest Resistance > Hero Health > Hero Speed.",
-"Boost Monk": "Stat priority: Boost abilities > Lowest Resistance > Hero Health > Hero Speed.",
-"Aura Monk": "Stat priority: Tower Range > Tower Damage > Tower Rate > Tower Health.",
-"Beam EV": "Stat priority: Tower Damage > Tower Health > Tower Range > Tower Rate.",
-"Minion Summoner": "Stat priority: Tower Damage > Tower Health > Tower Range > Tower Rate.",
-"Trap Huntress": "Stat priority: Tower Damage > Tower Range > Tower Rate > Tower Health.",
-"Upgrade Initiate": "Stat priority: Hero Speed > Lowest Resistance > Hero Health > Ability stats.",
-"Hybrid": "Stat priority: Depends on the job. Usually Tower Damage or Hero Damage first, then survivability."
+    "Builder": "Stat priority: Tower Damage > Tower Rate > Tower Range > Tower Health.",
+    "Waller": "Stat priority: Tower Health first. Other tower stats are secondary.",
+    "Waller Summoner": "Stat priority: Tower Health first, then useful minion damage, range, and rate.",
+    "Minion Summoner": "Stat priority: Tower Damage > Tower Rate > Tower Range > Tower Health.",
+    "Guardian Summoner": "Stat priority: Hero Health and resistances only.",
+    "Damage Summoner": "Detailed damage evaluation will be added after weapon and pet analysis is available.",
+    "DPS": "Stat priority: Hero Damage > resistances > Hero Health. Hero Speed only needs to reach 100.",
+    "Ability DPS": "Stat priority: Main Ability stat > resistances > Hero Health. Hero Speed only needs to reach 100.",
+    "Boost Monk": "Stat priority: Hero Boost and Tower Boost abilities > resistances > Hero Health.",
+    "Aura Monk": "Stat priority: Tower Range > Tower Damage > Tower Rate > Tower Health.",
+    "Beam EV": "Stat priority: Tower Damage > Tower Health > Tower Range > Tower Rate.",
+    "Trap Huntress": "Stat priority: Tower Damage > Tower Range > Tower Rate > Tower Health.",
+    "Upgrade Initiate": "Stat priority: Casting Rate > Hero Speed up to 100 > resistances > Hero Health.",
+    "Hybrid": "Stat priority depends on how you use this hero. Use Ignore Hero if it should not affect recommendations."
 };
 
 /* =========================================================
@@ -150,409 +165,389 @@ function updateRoleHint(heroNumber) {
 
 
 /* =========================================================
-4. Hero Slot Buttons + Renumbering
+   4. Hero Slot Buttons + Renumbering
 ========================================================= */
 
 function updateAddHeroButton() {
-const addHeroButton = document.querySelector("#add-hero-button");
+    const addHeroButton = document.querySelector("#add-hero-button");
 
-if (!addHeroButton) {
-    return;
-}
-
-addHeroButton.disabled = false;
-addHeroButton.textContent = "Add Hero";
-
-}
-
-function renumberHeroSlots() {
-const heroSlots = document.querySelectorAll(".hero-slot");
-
-heroSlots.forEach((slot, index) => {
-    const newHeroNumber = index + 1;
-    const oldHeroNumber = slot.dataset.heroNumber;
-    const heroName = (slot.dataset.heroName || "").trim();
-
-    slot.dataset.heroNumber = newHeroNumber;
-
-    const heading = slot.querySelector("h3");
-
-    if (heading) {
-        heading.textContent = heroName
-            ? `Hero ${newHeroNumber}: ${heroName}`
-            : `Hero ${newHeroNumber}`;
+    if (!addHeroButton) {
+        return;
     }
 
-    const fields = [
-        "class",
-        "role",
-        "role-hint",
-        "role-hint-text",
-        "level",
-        "tower-health",
-        "tower-damage",
-        "tower-range",
-        "tower-rate",
-        "hero-health",
-        "hero-damage",
-        "hero-speed",
-        "hero-casting",
-        "lowest-resistance",
-        "ability-1",
-        "ability-2"
-    ];
-
-    fields.forEach((field) => {
-        const oldId = `hero-${oldHeroNumber}-${field}`;
-        const newId = `hero-${newHeroNumber}-${field}`;
-
-        const element = slot.querySelector(`#${CSS.escape(oldId)}`);
-        const label = slot.querySelector(`label[for="${oldId}"]`);
-
-        if (element) {
-            element.id = newId;
-        }
-
-        if (label) {
-            label.setAttribute("for", newId);
-        }
-    });
-});
-
+    addHeroButton.disabled = false;
+    addHeroButton.textContent = "Add Hero";
 }
+
+
+function renumberHeroSlots() {
+    const heroSlots = document.querySelectorAll(".hero-slot");
+
+    heroSlots.forEach((slot, index) => {
+        const newHeroNumber = index + 1;
+        const oldHeroNumber = slot.dataset.heroNumber;
+        const heroName = (slot.dataset.heroName || "").trim();
+
+        slot.dataset.heroNumber = newHeroNumber;
+
+        const heading = slot.querySelector("h3");
+
+        if (heading) {
+            heading.textContent = heroName
+                ? `Hero ${newHeroNumber}: ${heroName}`
+                : `Hero ${newHeroNumber}`;
+        }
+
+        const fields = [
+            "class",
+            "role",
+            "ignore",
+            "role-hint",
+            "role-hint-text",
+            "level",
+            "tower-health",
+            "tower-damage",
+            "tower-range",
+            "tower-rate",
+            "hero-health",
+            "hero-damage",
+            "hero-speed",
+            "hero-casting",
+            "lowest-resistance",
+            "ability-1",
+            "ability-2"
+        ];
+
+        fields.forEach((field) => {
+            const oldId = `hero-${oldHeroNumber}-${field}`;
+            const newId = `hero-${newHeroNumber}-${field}`;
+
+            const element = slot.querySelector(`#${CSS.escape(oldId)}`);
+            const label = slot.querySelector(`label[for="${oldId}"]`);
+
+            if (element) {
+                element.id = newId;
+            }
+
+            if (label) {
+                label.setAttribute("for", newId);
+            }
+        });
+    });
+}
+
 
 function removeHeroSlot(event) {
-const heroSlot = event.target.closest(".hero-slot");
+    const heroSlot = event.target.closest(".hero-slot");
 
-if (heroSlot) {
-    heroSlot.remove();
+    if (heroSlot) {
+        heroSlot.remove();
+    }
+
+    renumberHeroSlots();
+    updateAddHeroButton();
+
+    if (typeof saveOptimizerData === "function") {
+        saveOptimizerData();
+    }
 }
 
-renumberHeroSlots();
-updateAddHeroButton();
-
-if (typeof saveOptimizerData === "function") {
-    saveOptimizerData();
-}
-
-}
 
 /* =========================================================
-5. Hero Slot Creation
+   5. Hero Slot Creation
 ========================================================= */
 
 function createHeroSlot(heroNumber) {
-const heroSlot = document.createElement("div");
-heroSlot.classList.add("hero-slot");
-heroSlot.dataset.heroNumber = heroNumber;
+    const heroSlot = document.createElement("div");
+    heroSlot.classList.add("hero-slot");
+    heroSlot.dataset.heroNumber = heroNumber;
 
-heroSlot.innerHTML = `
-    <div class="hero-slot-header">
-        <h3>Hero ${heroNumber}</h3>
-        <button class="remove-hero-button" type="button">Remove</button>
-    </div>
-
-    <label for="hero-${heroNumber}-class">Class</label>
-    <select id="hero-${heroNumber}-class" class="hero-class">
-        ${buildOptions(heroClasses, "None")}
-    </select>
-
-    <label for="hero-${heroNumber}-role">Role</label>
-    <select id="hero-${heroNumber}-role" class="hero-role">
-        <option value="">Choose a class first</option>
-    </select>
-
-    <details id="hero-${heroNumber}-role-hint" class="role-stat-hint">
-        <summary>Show Stat Priority</summary>
-        <p id="hero-${heroNumber}-role-hint-text">
-            Choose a role to see stat priority.
-        </p>
-    </details>
-
-    <details class="hero-stat-details">
-        <summary>Show / Hide Hero Stats</summary>
-
-        <div class="hero-stat-grid">
-            <label for="hero-${heroNumber}-level">Level</label>
-            <input id="hero-${heroNumber}-level" class="hero-level" type="number" min="0" max="100">
-
-            <label for="hero-${heroNumber}-tower-health">Tower Health</label>
-            <input id="hero-${heroNumber}-tower-health" class="hero-tower-health" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-tower-damage">Tower Damage</label>
-            <input id="hero-${heroNumber}-tower-damage" class="hero-tower-damage" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-tower-range">Tower Range</label>
-            <input id="hero-${heroNumber}-tower-range" class="hero-tower-range" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-tower-rate">Tower Rate</label>
-            <input id="hero-${heroNumber}-tower-rate" class="hero-tower-rate" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-hero-health">Hero Health</label>
-            <input id="hero-${heroNumber}-hero-health" class="hero-hero-health" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-hero-damage">Hero Damage</label>
-            <input id="hero-${heroNumber}-hero-damage" class="hero-hero-damage" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-hero-speed">Hero Speed</label>
-            <input id="hero-${heroNumber}-hero-speed" class="hero-speed" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-hero-casting">Hero Casting Rate</label>
-            <input id="hero-${heroNumber}-hero-casting" class="hero-casting" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-lowest-resistance">Lowest Resistance</label>
-            <input id="hero-${heroNumber}-lowest-resistance" class="hero-lowest-resistance" type="number" max="90">
-
-            <label for="hero-${heroNumber}-ability-1">Ability 1</label>
-            <input id="hero-${heroNumber}-ability-1" class="hero-ability-1" type="number" min="0" max="10000">
-
-            <label for="hero-${heroNumber}-ability-2">Ability 2</label>
-            <input id="hero-${heroNumber}-ability-2" class="hero-ability-2" type="number" min="0" max="10000">
+    heroSlot.innerHTML = `
+        <div class="hero-slot-header">
+            <h3>Hero ${heroNumber}</h3>
+            <button class="remove-hero-button" type="button">Remove</button>
         </div>
-    </details>
-`;
 
-const removeButton = heroSlot.querySelector(".remove-hero-button");
-removeButton.addEventListener("click", removeHeroSlot);
+        <label for="hero-${heroNumber}-class">Class</label>
+        <select id="hero-${heroNumber}-class" class="hero-class">
+            ${buildOptions(heroClasses, "None")}
+        </select>
 
-const classSelect = heroSlot.querySelector(".hero-class");
-const roleSelect = heroSlot.querySelector(".hero-role");
+        <label for="hero-${heroNumber}-role">Role</label>
+        <select id="hero-${heroNumber}-role" class="hero-role">
+            <option value="">Choose a class first</option>
+        </select>
 
-classSelect.addEventListener("change", () => {
-    const currentHeroNumber = heroSlot.dataset.heroNumber;
-    updateRoleOptions(currentHeroNumber);
-});
+        <label class="hero-ignore-control" for="hero-${heroNumber}-ignore">
+            <input id="hero-${heroNumber}-ignore" class="hero-ignore" type="checkbox">
+            Ignore this hero in recommendations
+        </label>
 
-roleSelect.addEventListener("change", () => {
-    const currentHeroNumber = heroSlot.dataset.heroNumber;
-    updateRoleHint(currentHeroNumber);
-});
+        <details id="hero-${heroNumber}-role-hint" class="role-stat-hint">
+            <summary>Show Stat Priority</summary>
+            <p id="hero-${heroNumber}-role-hint-text">
+                Choose a role to see stat priority.
+            </p>
+        </details>
 
-return heroSlot;
+        <details class="hero-stat-details">
+            <summary>Show / Hide Hero Stats</summary>
 
+            <div class="hero-stat-grid">
+                <label for="hero-${heroNumber}-level">Level</label>
+                <input id="hero-${heroNumber}-level" class="hero-level" type="number" min="0" max="100">
+
+                <label for="hero-${heroNumber}-tower-health">Tower Health</label>
+                <input id="hero-${heroNumber}-tower-health" class="hero-tower-health" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-tower-damage">Tower Damage</label>
+                <input id="hero-${heroNumber}-tower-damage" class="hero-tower-damage" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-tower-range">Tower Range</label>
+                <input id="hero-${heroNumber}-tower-range" class="hero-tower-range" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-tower-rate">Tower Rate</label>
+                <input id="hero-${heroNumber}-tower-rate" class="hero-tower-rate" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-hero-health">Hero Health</label>
+                <input id="hero-${heroNumber}-hero-health" class="hero-hero-health" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-hero-damage">Hero Damage</label>
+                <input id="hero-${heroNumber}-hero-damage" class="hero-hero-damage" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-hero-speed">Hero Speed</label>
+                <input id="hero-${heroNumber}-hero-speed" class="hero-speed" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-hero-casting">Hero Casting Rate</label>
+                <input id="hero-${heroNumber}-hero-casting" class="hero-casting" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-lowest-resistance">Lowest Resistance</label>
+                <input id="hero-${heroNumber}-lowest-resistance" class="hero-lowest-resistance" type="number" max="90">
+
+                <label for="hero-${heroNumber}-ability-1">Ability 1</label>
+                <input id="hero-${heroNumber}-ability-1" class="hero-ability-1" type="number" min="0" max="10000">
+
+                <label for="hero-${heroNumber}-ability-2">Ability 2</label>
+                <input id="hero-${heroNumber}-ability-2" class="hero-ability-2" type="number" min="0" max="10000">
+            </div>
+        </details>
+    `;
+
+    const removeButton = heroSlot.querySelector(".remove-hero-button");
+    removeButton.addEventListener("click", removeHeroSlot);
+
+    const classSelect = heroSlot.querySelector(".hero-class");
+    const roleSelect = heroSlot.querySelector(".hero-role");
+
+    classSelect.addEventListener("change", () => {
+        const currentHeroNumber = heroSlot.dataset.heroNumber;
+        updateRoleOptions(currentHeroNumber);
+    });
+
+    roleSelect.addEventListener("change", () => {
+        const currentHeroNumber = heroSlot.dataset.heroNumber;
+        updateRoleHint(currentHeroNumber);
+    });
+
+    return heroSlot;
 }
+
 
 function addHeroSlot() {
-const heroRosterGrid = document.querySelector("#hero-roster-grid");
+    const heroRosterGrid = document.querySelector("#hero-roster-grid");
 
-if (!heroRosterGrid) {
-    return;
+    if (!heroRosterGrid) {
+        return;
+    }
+
+    const currentHeroCount = heroRosterGrid.querySelectorAll(".hero-slot").length;
+    const nextHeroNumber = currentHeroCount + 1;
+    const heroSlot = createHeroSlot(nextHeroNumber);
+
+    heroRosterGrid.appendChild(heroSlot);
+    updateAddHeroButton();
 }
 
-const currentHeroCount = heroRosterGrid.querySelectorAll(".hero-slot").length;
-const nextHeroNumber = currentHeroCount + 1;
-const heroSlot = createHeroSlot(nextHeroNumber);
-
-heroRosterGrid.appendChild(heroSlot);
-updateAddHeroButton();
-
-}
 
 function initializeHeroRoster() {
-const addHeroButton = document.querySelector("#add-hero-button");
+    const addHeroButton = document.querySelector("#add-hero-button");
 
-addHeroSlot();
-addHeroSlot();
-addHeroSlot();
+    addHeroSlot();
+    addHeroSlot();
+    addHeroSlot();
 
-if (addHeroButton) {
-    addHeroButton.addEventListener("click", addHeroSlot);
+    if (addHeroButton) {
+        addHeroButton.addEventListener("click", addHeroSlot);
+    }
+
+    updateAddHeroButton();
 }
 
-updateAddHeroButton();
-
-}
 
 /* =========================================================
-6. Build Account Object From Form
+   6. Build Account Object From Form
 ========================================================= */
 
 function buildHeroRosterFromForm() {
-const heroes = [];
-const heroSlots = document.querySelectorAll(".hero-slot");
+    const heroes = [];
+    const heroSlots = document.querySelectorAll(".hero-slot");
 
-heroSlots.forEach((slot) => {
-    const heroNumber = slot.dataset.heroNumber;
-    const name = (slot.dataset.heroName || "").trim();
-    const imported = slot.dataset.imported === "true";
+    heroSlots.forEach((slot) => {
+        const heroNumber = slot.dataset.heroNumber;
+        const name = (slot.dataset.heroName || "").trim();
+        const imported = slot.dataset.imported === "true";
+        const ignored = document.querySelector(`#hero-${heroNumber}-ignore`)?.checked || false;
 
-    const className = document.querySelector(
-        `#hero-${heroNumber}-class`
-    ).value;
+        const className = document.querySelector(`#hero-${heroNumber}-class`)?.value || "";
+        const role = document.querySelector(`#hero-${heroNumber}-role`)?.value || "";
+        const level = getNumberValue(`#hero-${heroNumber}-level`);
+        const towerHealth = getNumberValue(`#hero-${heroNumber}-tower-health`);
+        const towerDamage = getNumberValue(`#hero-${heroNumber}-tower-damage`);
+        const towerRange = getNumberValue(`#hero-${heroNumber}-tower-range`);
+        const towerRate = getNumberValue(`#hero-${heroNumber}-tower-rate`);
+        const heroHealth = getNumberValue(`#hero-${heroNumber}-hero-health`);
+        const heroDamage = getNumberValue(`#hero-${heroNumber}-hero-damage`);
+        const heroSpeed = getNumberValue(`#hero-${heroNumber}-hero-speed`);
+        const heroCasting = getNumberValue(`#hero-${heroNumber}-hero-casting`);
+        const lowestResistance = getNumberValue(`#hero-${heroNumber}-lowest-resistance`);
+        const ability1 = getNumberValue(`#hero-${heroNumber}-ability-1`);
+        const ability2 = getNumberValue(`#hero-${heroNumber}-ability-2`);
 
-    const role = document.querySelector(
-        `#hero-${heroNumber}-role`
-    ).value;
+        if (
+            name !== "" ||
+            className !== "" ||
+            role !== "" ||
+            ignored ||
+            level > 0 ||
+            towerHealth > 0 ||
+            towerDamage > 0 ||
+            towerRange > 0 ||
+            towerRate > 0 ||
+            heroHealth > 0 ||
+            heroDamage > 0 ||
+            heroSpeed > 0 ||
+            heroCasting !== 0 ||
+            lowestResistance !== 0 ||
+            ability1 > 0 ||
+            ability2 > 0
+        ) {
+            heroes.push({
+                number: Number(heroNumber),
+                name: name,
+                imported: imported,
+                ignored: ignored,
+                className: className,
+                role: role,
+                level: level,
+                towerHealth: towerHealth,
+                towerDamage: towerDamage,
+                towerRange: towerRange,
+                towerRate: towerRate,
+                heroHealth: heroHealth,
+                heroDamage: heroDamage,
+                heroSpeed: heroSpeed,
+                heroCasting: heroCasting,
+                lowestResistance: lowestResistance,
+                ability1: ability1,
+                ability2: ability2
+            });
+        }
+    });
 
-    const level = getNumberValue(
-        `#hero-${heroNumber}-level`
-    );
-
-    const towerHealth = getNumberValue(
-        `#hero-${heroNumber}-tower-health`
-    );
-
-    const towerDamage = getNumberValue(
-        `#hero-${heroNumber}-tower-damage`
-    );
-
-    const towerRange = getNumberValue(
-        `#hero-${heroNumber}-tower-range`
-    );
-
-    const towerRate = getNumberValue(
-        `#hero-${heroNumber}-tower-rate`
-    );
-
-    const heroHealth = getNumberValue(
-        `#hero-${heroNumber}-hero-health`
-    );
-
-    const heroDamage = getNumberValue(
-        `#hero-${heroNumber}-hero-damage`
-    );
-
-    const heroSpeed = getNumberValue(
-        `#hero-${heroNumber}-hero-speed`
-    );
-
-    const heroCasting = getNumberValue(
-        `#hero-${heroNumber}-hero-casting`
-    );
-
-    const lowestResistance = getNumberValue(
-        `#hero-${heroNumber}-lowest-resistance`
-    );
-
-    const ability1 = getNumberValue(
-        `#hero-${heroNumber}-ability-1`
-    );
-
-    const ability2 = getNumberValue(
-        `#hero-${heroNumber}-ability-2`
-    );
-
-    if (
-        name !== "" ||
-        className !== "" ||
-        role !== "" ||
-        level > 0 ||
-        towerHealth > 0 ||
-        towerDamage > 0 ||
-        towerRange > 0 ||
-        towerRate > 0 ||
-        heroHealth > 0 ||
-        heroDamage > 0 ||
-        heroSpeed > 0 ||
-        heroCasting !== 0 ||
-        lowestResistance !== 0 ||
-        ability1 > 0 ||
-        ability2 > 0
-    ) {
-        heroes.push({
-            number: Number(heroNumber),
-            name: name,
-            imported: imported,
-            className: className,
-            role: role,
-            level: level,
-            towerHealth: towerHealth,
-            towerDamage: towerDamage,
-            towerRange: towerRange,
-            towerRate: towerRate,
-            heroHealth: heroHealth,
-            heroDamage: heroDamage,
-            heroSpeed: heroSpeed,
-            heroCasting: heroCasting,
-            lowestResistance: lowestResistance,
-            ability1: ability1,
-            ability2: ability2
-        });
-    }
-});
-
-return heroes;
-
+    return heroes;
 }
+
+
+function getActiveHeroes(heroes) {
+    return heroes.filter((hero) => !hero.ignored);
+}
+
 
 function getHighestHeroLevel(heroes, fallbackLevel) {
-let highestLevel = fallbackLevel;
+    let highestLevel = fallbackLevel;
 
-heroes.forEach((hero) => {
-    if (hero.level > highestLevel) {
-        highestLevel = hero.level;
-    }
-});
+    heroes.forEach((hero) => {
+        if (hero.level > highestLevel) {
+            highestLevel = hero.level;
+        }
+    });
 
-return highestLevel;
-
+    return highestLevel;
 }
+
 
 function getBestBuilderDamage(heroes, fallbackTowerDamage) {
-let bestTowerDamage = fallbackTowerDamage;
+    let bestTowerDamage = fallbackTowerDamage;
 
-heroes.forEach((hero) => {
-    const role = hero.role.toLowerCase();
+    const builderRoles = [
+        "builder",
+        "waller",
+        "waller summoner",
+        "hybrid",
+        "aura monk",
+        "beam ev",
+        "minion summoner",
+        "trap huntress"
+    ];
 
-    if (
-        role === "builder" ||
-        role === "waller" ||
-        role === "waller summoner" ||
-        role === "hybrid" ||
-        role === "aura monk" ||
-        role === "beam ev" ||
-        role === "minion summoner" ||
-        role === "trap huntress"
-    ) {
-        if (hero.towerDamage > bestTowerDamage) {
+    heroes.forEach((hero) => {
+        const role = String(hero.role || "").toLowerCase();
+
+        if (
+            builderRoles.includes(role) &&
+            hero.towerDamage > bestTowerDamage
+        ) {
             bestTowerDamage = hero.towerDamage;
         }
-    }
-});
+    });
 
-return bestTowerDamage;
-
+    return bestTowerDamage;
 }
+
 
 function getBestDpsDamage(heroes) {
-let bestHeroDamage = 0;
+    let bestHeroDamage = 0;
+    const dpsRoles = ["dps", "damage summoner", "hybrid"];
 
-heroes.forEach((hero) => {
-    const role = hero.role.toLowerCase();
+    heroes.forEach((hero) => {
+        const role = String(hero.role || "").toLowerCase();
 
-    if (role === "dps" || role === "hybrid") {
-        if (hero.heroDamage > bestHeroDamage) {
+        if (
+            dpsRoles.includes(role) &&
+            hero.heroDamage > bestHeroDamage
+        ) {
             bestHeroDamage = hero.heroDamage;
         }
-    }
-});
+    });
 
-return bestHeroDamage;
-
+    return bestHeroDamage;
 }
+
 
 function buildAccountFromForm() {
-const heroes = buildHeroRosterFromForm();
+    const heroes = buildHeroRosterFromForm();
+    const activeHeroes = getActiveHeroes(heroes);
 
-const level = getHighestHeroLevel(heroes, 0);
-const towerDamage = getBestBuilderDamage(heroes, 0);
-const bestDpsDamage = getBestDpsDamage(heroes);
+    const level = getHighestHeroLevel(activeHeroes, 0);
+    const towerDamage = getBestBuilderDamage(activeHeroes, 0);
+    const bestDpsDamage = getBestDpsDamage(activeHeroes);
 
-return {
-    level: level,
-    towerDamage: towerDamage,
-    bestDpsDamage: bestDpsDamage,
-    heroes: heroes,
-    experiencedPlayer: determineExperience(level),
-    mainGoal: document.querySelector("#main-goal").value,
-    hasGenie: document.querySelector("#has-genie").checked,
-    hasFish: document.querySelector("#has-fish").checked,
-    hasSeahorse: document.querySelector("#has-seahorse").checked,
-    hasHarpoonPet: document.querySelector("#has-harpoon-pet").checked,
-    hasPropellerCat: document.querySelector("#has-propeller-cat").checked
-};
-
+    return {
+        level: level,
+        towerDamage: towerDamage,
+        bestDpsDamage: bestDpsDamage,
+        heroes: heroes,
+        activeHeroes: activeHeroes,
+        experiencedPlayer: determineExperience(level),
+        mainGoal: document.querySelector("#main-goal").value,
+        hasGenie: document.querySelector("#has-genie").checked,
+        hasFish: document.querySelector("#has-fish").checked,
+        hasSeahorse: document.querySelector("#has-seahorse").checked,
+        hasHarpoonPet: document.querySelector("#has-harpoon-pet").checked,
+        hasPropellerCat: document.querySelector("#has-propeller-cat").checked
+    };
 }
+
 
 /* =========================================================
    7. Temporary Demo Fill Tools
@@ -577,6 +572,12 @@ function setDemoHero(heroNumber, hero) {
     setHeroField(heroNumber, "lowest-resistance", hero.lowestResistance);
     setHeroField(heroNumber, "ability-1", hero.ability1);
     setHeroField(heroNumber, "ability-2", hero.ability2);
+
+    const ignoreField = document.querySelector(`#hero-${heroNumber}-ignore`);
+
+    if (ignoreField) {
+        ignoreField.checked = hero.ignored || false;
+    }
 }
 
 
@@ -753,6 +754,10 @@ function renderHeroSummary(account) {
             hero.role || "No role"
         );
 
+        const ignoredText = hero.ignored
+            ? " <span class=\"hero-ignored-label\">(Ignored)</span>"
+            : "";
+
         return `
             <div class="hero-result-detail">
                 <h4>
@@ -760,7 +765,7 @@ function renderHeroSummary(account) {
                     —
                     ${className}
                     —
-                    ${role}
+                    ${role}${ignoredText}
                 </h4>
 
                 <p>
@@ -791,6 +796,11 @@ function renderHeroSummary(account) {
             <p>
                 <strong>Heroes Added:</strong>
                 ${account.heroes.length}
+            </p>
+
+            <p>
+                <strong>Heroes Used for Recommendations:</strong>
+                ${account.activeHeroes.length}
             </p>
 
             <p>
