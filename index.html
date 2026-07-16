@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dungeon Defenders Progression Hub</title>
+    <link rel="preload" as="image" href="images/logo.webp" type="image/webp" fetchpriority="high">
+    <link rel="preload" as="image" href="images/progression-card.webp" type="image/webp">
     <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/performance-fixes.css">
 </head>
-
 <body>
     <div class="site-shell">
         <header class="topbar">
             <a class="logo-wrap" href="index.html">
-                <img src="images/IMG_8478.png" alt="Dungeon Defenders Progression Guide logo">
+                <img src="images/logo.webp" alt="Dungeon Defenders Progression Guide logo" width="380" height="380" decoding="async" fetchpriority="high">
             </a>
 
             <nav class="main-nav">
@@ -27,63 +29,69 @@
         <main>
             <section class="hero panel">
                 <h1>Dungeon Defenders Progression Hub!</h1>
+
                 <p>
                     Optimize your Dungeon Defenders progression with step-by-step guides,
                     achievement routes, useful tools, and powerful planning resources.
                 </p>
+
                 <a class="cta-button" href="optimizer.html">Start Progression Optimizer</a>
             </section>
 
             <section class="card-section">
                 <a class="guide-card" href="progression.html">
                     <div class="card-images">
-                        <img src="images/IMG_1601.png" alt="Chiku Progression Guide">
+                        <img src="images/progression-card.webp" alt="Chiku Progression Guide" width="600" height="400" decoding="async" fetchpriority="high">
                     </div>
+
                     <div class="card-content">
                         <h2>Chiku Progression Guide</h2>
                         <p>Step-by-step path from early game to late game.</p>
                     </div>
                 </a>
-                
+
                 <a class="guide-card" href="completion-guide.html">
                     <div class="card-image">
-                        <img src="images/IMG_0484.png" alt="100% Completion Guide">
+                        <img src="images/completion-card.webp" alt="100% Completion Guide" width="600" height="400" decoding="async" loading="lazy">
                     </div>
+
                     <div class="card-content">
                         <h2>100% Completion Guide</h2>
                         <p>Roadmap for Steam 100%, Ultimate Defender, Eternal Defender, and cleanup goals.</p>
                     </div>
                 </a>
-                
-                <a class="guide-card" href="https://dundef.gg/" target="_blank">
+
+                <a class="guide-card" href="https://dundef.gg/" target="_blank" rel="noopener">
                     <div class="card-image">
-                        <img src="images/IMG_3400.png" alt="Dundef.gg gear optimizer and Dungeon Defenders tools">
+                        <img src="images/gear-card.webp" alt="Dundef.gg gear optimizer and Dungeon Defenders tools" width="600" height="400" decoding="async" loading="lazy">
                     </div>
+
                     <div class="card-content">
                         <h2>Gear Optimizer</h2>
                         <p>Find the best possible stat setup for each hero and plan stronger gear builds.</p>
                     </div>
                 </a>
             </section>
-            
+
             <div class="divider">
                 <span class="gem"></span>
             </div>
-            
+
             <section class="planner panel">
                 <h2>Dungeon Defenders Build Planner</h2>
+
                 <p>
                     Create character builds, plan loot runs, and optimize your gear in Dungeon Defenders.
                 </p>
-                
+
                 <div class="planner-image-wrap">
-                    <img src="images/IMG_7892.png" alt="Dungeon Defenders Build Planner">
+                    <img src="images/planner-preview.webp" alt="Dungeon Defenders Build Planner" width="900" height="600" loading="lazy" decoding="async">
                 </div>
 
-                <a class="cta-button" href="https://www.dundefplanner.com/" target="_blank">Launch Build Planner</a>
+                <a class="cta-button" href="https://www.dundefplanner.com/" target="_blank" rel="noopener">Launch Build Planner</a>
             </section>
         </main>
-        
+
         <footer class="footer">
             <p>
                 Website, layout, rewritten guide pages, and checklist system created by Jacob Lewis.
@@ -100,6 +108,6 @@
         ↑
     </button>
 
-<script src="scripts/main.js"></script>
+    <script src="scripts/main.js"></script>
 </body>
 </html>

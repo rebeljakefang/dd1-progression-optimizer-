@@ -1,0 +1,43 @@
+/* =========================================================
+   Homepage Performance Fixes
+
+   These rules keep the same layout while helping Lighthouse:
+   - Reserve image space to reduce layout shift.
+   - Keep off-screen sections cheaper to render.
+   - Prevent oversized images from affecting layout.
+========================================================= */
+
+.logo-wrap img {
+    aspect-ratio: 1 / 1;
+}
+
+.card-image,
+.card-images {
+    aspect-ratio: 3 / 2;
+}
+
+.card-image img,
+.card-images img {
+    aspect-ratio: 3 / 2;
+}
+
+.planner-image-wrap img {
+    aspect-ratio: 3 / 2;
+}
+
+.card-section,
+.planner,
+.footer {
+    content-visibility: auto;
+    contain-intrinsic-size: 700px;
+}
+
+@media (max-width: 700px) {
+    .card-image,
+    .card-images,
+    .card-image img,
+    .card-images img,
+    .planner-image-wrap img {
+        aspect-ratio: 3 / 2;
+    }
+}
