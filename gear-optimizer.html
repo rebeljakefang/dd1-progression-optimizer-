@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="View Dungeon Defenders 1 heroes, equipped items, CSV gear rows, and early gear scoring from a DunDefHeroes.dun save file or gear export.">
+    <title>Gear Optimizer | DD1 Progression Hub</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/performance-fixes.css">
+    <link rel="stylesheet" href="styles/gear-optimizer.css">
+    <script src="scripts/main.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" defer></script>
+    <script src="scripts/optimizer-save-import.js" defer></script>
+    <script src="scripts/gear-item-model.js" defer></script>
+    <script src="scripts/gear-scoring.js" defer></script>
+    <script src="scripts/gear-save-reader.js" defer></script>
+    <script src="scripts/gear-optimizer.js" defer></script>
+</head>
+<body>
+    <div class="site-shell">
+        <header class="topbar">
+            <a class="skip-link" href="#main-content">Skip to content</a>
+
+            <div class="logo-wrap">
+                <a href="index.html" aria-label="DD1 Progression Hub home">
+                    <img src="images/logo.webp" alt="Dungeon Defenders Progression Hub logo" width="190" height="190" decoding="async">
+                </a>
+            </div>
+
+            <nav class="main-nav" aria-label="Main navigation">
+                <a href="index.html">Home</a>
+                <a href="progression.html">Progression</a>
+                <a href="optimizer.html">Progression Optimizer</a>
+                <a href="gear-optimizer.html" aria-current="page">Gear Optimizer</a>
+                <a href="completion-checklist.html">Checklist</a>
+                <a href="resources.html">Resources</a>
+            </nav>
+        </header>
+
+        <main id="main-content" class="gear-page">
+            <section class="gear-hero-panel" aria-labelledby="gear-title">
+                <div>
+                    <p class="eyebrow">New long-term tool</p>
+                    <h1 id="gear-title">Gear Optimizer</h1>
+                    <p>
+                        Upload your <strong>DunDefHeroes.dun</strong> file or a gear CSV export to view heroes and items.
+                        This version supports click upload, drag and drop, CSV test data, role scoring, filters, and CSV export while the full item-box parser is being ported.
+                    </p>
+                </div>
+
+                <div class="gear-upload-card">
+                    <label for="gear-save-file-input">Choose or drag your file</label>
+
+                    <div id="gear-drop-zone" class="gear-drop-zone" tabindex="0">
+                        <p class="gear-drop-title">Drop your <strong>.dun</strong> save file or <strong>.csv</strong> gear export here</p>
+                        <p class="gear-drop-hint">You can also use the normal file picker below.</p>
+                        <input id="gear-save-file-input" type="file" accept=".dun,.csv">
+                    </div>
+
+                    <div class="gear-button-row">
+                        <button id="gear-use-session-file" class="gear-button" type="button">Use Session Save File</button>
+                        <button id="gear-clear-page" class="gear-button gear-button-secondary" type="button">Clear Page</button>
+                    </div>
+
+                    <p id="gear-status" class="gear-status" role="status">No save file loaded yet.</p>
+                </div>
+            </section>
+
+            <section class="gear-summary-grid" aria-label="Save summary">
+                <article>
+                    <span id="gear-summary-heroes">0</span>
+                    <p>Heroes</p>
+                </article>
+
+                <article>
+                    <span id="gear-summary-items">0</span>
+                    <p>Items Read</p>
+                </article>
+
+                <article>
+                    <span id="gear-summary-inventory">Pending</span>
+                    <p>Data Source</p>
+                </article>
+
+                <article>
+                    <span id="gear-summary-role">Builder Damage</span>
+                    <p>Current Scoring Mode</p>
+                </article>
+            </section>
+
+            <section class="gear-controls" aria-labelledby="gear-controls-title">
+                <h2 id="gear-controls-title">Filters and scoring</h2>
+
+                <div class="gear-control-grid">
+                    <label>
+                        Role scoring
+                        <select id="gear-role-filter"></select>
+                    </label>
+
+                    <label>
+                        Hero
+                        <select id="gear-hero-filter">
+                            <option value="all">All heroes</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Item type
+                        <select id="gear-type-filter">
+                            <option value="all">All types</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Armor set
+                        <select id="gear-set-filter">
+                            <option value="all">All sets</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Search
+                        <input id="gear-search-filter" type="search" placeholder="Name, quality, hero, stat...">
+                    </label>
+
+                    <label>
+                        Sort by
+                        <select id="gear-sort-filter">
+                            <option value="score-desc">Score: high to low</option>
+                            <option value="score-asc">Score: low to high</option>
+                            <option value="hero-asc">Hero name</option>
+                            <option value="type-asc">Item type</option>
+                            <option value="level-desc">Max upgrade level</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
+
+            <section class="gear-layout">
+                <section class="gear-card" aria-labelledby="hero-panel-title">
+                    <h2 id="hero-panel-title">Heroes</h2>
+
+                    <div id="gear-hero-list" class="gear-hero-list">
+                        <p class="gear-empty">Load a save file to see heroes.</p>
+                    </div>
+                </section>
+
+                <section class="gear-card" aria-labelledby="recommendation-title">
+                    <h2 id="recommendation-title">Gear notes</h2>
+
+                    <div id="gear-recommendations" class="gear-recommendations">
+                        <p class="gear-empty">Load a save file and pick a scoring role to see early gear notes.</p>
+                    </div>
+                </section>
+            </section>
+
+            <section class="gear-card gear-table-card" aria-labelledby="item-table-title">
+                <div class="gear-table-header">
+                    <div>
+                        <h2 id="item-table-title">Items</h2>
+                        <p id="gear-table-count">No items loaded.</p>
+                    </div>
+
+                    <button id="gear-export-csv" class="gear-button gear-button-secondary" type="button">Export CSV</button>
+                </div>
+
+                <div class="gear-table-wrap">
+                    <table class="gear-item-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Score</th>
+                                <th scope="col">Hero</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Set</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Quality</th>
+                                <th scope="col">Lvl</th>
+                                <th scope="col">Tower</th>
+                                <th scope="col">Hero</th>
+                                <th scope="col">Resists</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="gear-item-table-body">
+                            <tr>
+                                <td colspan="10">Load a .dun save file or gear CSV to view items.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="gear-card gear-roadmap" aria-labelledby="gear-roadmap-title">
+                <h2 id="gear-roadmap-title">Next build steps</h2>
+
+                <ol>
+                    <li>Port the full DDGO item-box reader so this page can show every inventory item directly from the .dun save file.</li>
+                    <li>Add gear slot matching so helmets only compare to helmets, boots only compare to boots, and so on.</li>
+                    <li>Add role-based replacement recommendations such as waller gear, tower damage gear, DPS gear, and Summoner gear.</li>
+                </ol>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; <span id="currentyear"></span> DD1 Progression Hub</p>
+        </footer>
+    </div>
+</body>
+</html>
