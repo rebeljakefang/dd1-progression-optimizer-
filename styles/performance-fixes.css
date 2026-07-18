@@ -1,10 +1,5 @@
 /* =========================================================
    Homepage Performance Fixes
-
-   These rules keep the same layout while helping Lighthouse:
-   - Reserve image space to reduce layout shift.
-   - Keep off-screen sections cheaper to render.
-   - Prevent oversized images from affecting layout.
 ========================================================= */
 
 .logo-wrap img {
