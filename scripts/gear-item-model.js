@@ -8,6 +8,10 @@
 (() => {
     "use strict";
 
+    /* =========================================================
+       1. Gear Stat Constants
+    ========================================================= */
+
     const statIndexes = {
         heroHealth: 1,
         heroSpeed: 2,
@@ -70,6 +74,10 @@
         "Torn"
     ];
 
+    /* =========================================================
+       2. Text Helpers
+    ========================================================= */
+
     function cleanText(value) {
         if (value === null || value === undefined) {
             return "";
@@ -102,6 +110,10 @@
             return lowerText.includes(word.toLowerCase());
         });
     }
+
+    /* =========================================================
+       3. Item Guessing Helpers
+    ========================================================= */
 
     function guessQuality(equipment) {
         const text = getCombinedItemText(equipment);
@@ -191,6 +203,10 @@
         return "Equipment";
     }
 
+    /* =========================================================
+       4. Stat + Resist Normalization
+    ========================================================= */
+
     function readStatArray(equipment) {
         const rawStats = Array.isArray(equipment.statModifiers)
             ? equipment.statModifiers
@@ -237,6 +253,10 @@
         }).join(" / ");
     }
 
+    /* =========================================================
+       5. Gear Row Creation
+    ========================================================= */
+
     function buildItemRow(equipment, hero, equipmentIndex) {
         const name = cleanText(equipment.name) || "Unnamed Equipment";
         const template = cleanText(equipment.template) || "Unknown Template";
@@ -277,6 +297,10 @@
         };
     }
 
+    /* =========================================================
+       6. Save Data Conversion
+    ========================================================= */
+
     function buildRowsFromSaveData(saveData) {
         if (!saveData || !Array.isArray(saveData.heroes)) {
             return [];
@@ -312,6 +336,10 @@
         });
     }
 
+    /* =========================================================
+       7. Sorting / Filtering Helpers
+    ========================================================= */
+
     function getUniqueSortedValues(rows, key) {
         return [...new Set(rows.map((row) => {
             return row[key] || "Unknown";
@@ -319,6 +347,10 @@
             return first.localeCompare(second);
         });
     }
+
+    /* =========================================================
+       8. Public API
+    ========================================================= */
 
     window.dd1GearItemModel = {
         statLabels: statLabels,
