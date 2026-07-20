@@ -1,268 +1,643 @@
 /* =========================================================
-   DD1 Gear Scoring
+DD1 Gear Scoring
 
-   Early role-based scoring for gear rows. This does not replace
-   a full item-box optimizer yet. It gives the new gear page useful
-   sorting and early gear review notes.
+Rating archetypes for gear-optimizer.html.
+This file does not read the save file. It only scores rows
+that were already created by gear-save-reader.js.
 ========================================================= */
 
 (() => {
-    "use strict";
+"use strict";
 
-    const roleDefinitions = {
-        builderDamage: {
-            label: "Builder Damage",
-            description: "Prioritizes Tower Damage, then Tower Rate and Tower Range.",
-            weights: {
-                towerDamage: 1.25,
-                towerRate: 0.75,
-                towerRange: 0.55,
-                towerHealth: 0.35,
-                heroCasting: 0.15
-            },
-            resistWeight: 0.05
-        },
-        waller: {
-            label: "Waller",
-            description: "Prioritizes Tower Health with a small value for Tower Rate and resistances.",
-            weights: {
-                towerHealth: 1.4,
-                towerRate: 0.3,
-                towerDamage: 0.15,
-                heroHealth: 0.1
-            },
-            resistWeight: 0.1
-        },
-        auraTrap: {
-            label: "Aura / Trap Builder",
-            description: "Balances Tower Damage, Tower Range, Tower Rate, and Tower Health.",
-            weights: {
-                towerDamage: 1.0,
-                towerRange: 0.9,
-                towerRate: 0.8,
-                towerHealth: 0.65,
-                heroCasting: 0.1
-            },
-            resistWeight: 0.04
-        },
-        boostMonk: {
-            label: "Boost Monk",
-            description: "Values Hero Damage, abilities, health, and casting for active play.",
-            weights: {
-                heroDamage: 1.0,
-                ability1: 0.9,
-                ability2: 0.9,
-                heroHealth: 0.45,
-                heroCasting: 0.3,
-                heroSpeed: 0.15
-            },
-            resistWeight: 0.18
-        },
-        dps: {
-            label: "DPS",
-            description: "Prioritizes Hero Damage, Hero Health, Casting, and resistances.",
-            weights: {
-                heroDamage: 1.25,
-                heroHealth: 0.55,
-                heroCasting: 0.35,
-                ability1: 0.3,
-                ability2: 0.3,
-                heroSpeed: 0.1
-            },
-            resistWeight: 0.2
-        },
-        abilityDps: {
-            label: "Ability DPS",
-            description: "Prioritizes Ability 1, Ability 2, Hero Damage, and survivability.",
-            weights: {
-                ability1: 1.0,
-                ability2: 1.0,
-                heroDamage: 0.65,
-                heroHealth: 0.35,
-                heroCasting: 0.3,
-                heroSpeed: 0.1
-            },
-            resistWeight: 0.16
-        },
-        guardianSummoner: {
-            label: "Guardian Summoner",
-            description: "Prioritizes survivability and resistances for a Summoner used to hold guardians.",
-            weights: {
-                heroHealth: 1.0,
-                heroCasting: 0.25,
-                heroSpeed: 0.15,
-                towerHealth: 0.1
-            },
-            resistWeight: 0.45
-        },
-        balanced: {
-            label: "Balanced Review",
-            description: "General-purpose score for mixed gear review.",
-            weights: {
-                towerDamage: 0.65,
-                towerHealth: 0.55,
-                towerRate: 0.45,
-                towerRange: 0.45,
-                heroDamage: 0.45,
-                heroHealth: 0.35,
-                ability1: 0.25,
-                ability2: 0.25,
-                heroCasting: 0.25
-            },
-            resistWeight: 0.08
+const autoRoleOption = {
+    value: "auto",
+    label: "Auto by Hero Archetype",
+    description: "Each hero is scored using its guessed or manually selected archetype."
+};
+
+const roles = {
+    builderDamage: {
+        label: "Builder Damage",
+        shortLabel: "Builder",
+        description: "Scores general tower gear using tower damage, tower rate, tower range, and tower health.",
+        weights: {
+            towerDamage: 4,
+            towerRate: 3,
+            towerRange: 1.5,
+            towerHealth: 1.2,
+            allResists: 0.08
         }
-    };
+    },
 
-    function getRoleOptions() {
-        return Object.entries(roleDefinitions).map(([value, role]) => {
+    builderApp: {
+        label: "Builder App",
+        shortLabel: "App",
+        description: "Scores Apprentice-style builder gear with strong tower damage and useful tower rate/range.",
+        weights: {
+            towerDamage: 4.2,
+            towerRate: 3,
+            towerRange: 1.6,
+            towerHealth: 1,
+            allResists: 0.05
+        }
+    },
+
+    builderHermit: {
+        label: "Builder Hermit",
+        shortLabel: "Hermit",
+        description: "Scores Hermit builder gear with a balanced focus on tower damage, rate, range, and health.",
+        weights: {
+            towerDamage: 3.8,
+            towerRate: 2.6,
+            towerRange: 1.7,
+            towerHealth: 1.5,
+            allResists: 0.05
+        }
+    },
+
+    builderTrange: {
+        label: "Builder TRange",
+        shortLabel: "TRange",
+        description: "Scores range-focused builder gear for heroes that care more about tower range.",
+        weights: {
+            towerRange: 4,
+            towerDamage: 2.5,
+            towerRate: 2,
+            towerHealth: 1,
+            allResists: 0.05
+        }
+    },
+
+    builderEv: {
+        label: "Builder EV",
+        shortLabel: "EV",
+        description: "Scores EV builder gear with strong tower health, tower damage, and tower rate.",
+        weights: {
+            towerHealth: 3.4,
+            towerDamage: 2.8,
+            towerRate: 2.2,
+            towerRange: 0.8,
+            allResists: 0.05
+        }
+    },
+
+    builderSummoner: {
+        label: "Builder Summoner",
+        shortLabel: "Summoner",
+        description: "Scores Summoner builder gear with tower damage, tower rate, and tower health.",
+        weights: {
+            towerDamage: 3.6,
+            towerRate: 2.8,
+            towerHealth: 2,
+            towerRange: 1,
+            allResists: 0.05
+        }
+    },
+
+    waller: {
+        label: "Waller",
+        shortLabel: "Waller",
+        description: "Scores waller gear mostly by tower health.",
+        weights: {
+            towerHealth: 6,
+            towerRate: 0.4,
+            towerDamage: 0.3,
+            towerRange: 0.2,
+            allResists: 0.05
+        }
+    },
+
+    wallerSummoner: {
+        label: "Waller Summoner",
+        shortLabel: "Waller Summoner",
+        description: "Scores Summoner waller gear mostly by tower health.",
+        weights: {
+            towerHealth: 6,
+            towerRate: 0.5,
+            towerDamage: 0.4,
+            towerRange: 0.2,
+            allResists: 0.05
+        }
+    },
+
+    builderGuardian: {
+        label: "Builder Guardian",
+        shortLabel: "Guardian",
+        description: "Scores Guardian-style support gear with tower damage/rate plus survivability.",
+        weights: {
+            towerDamage: 2.8,
+            towerRate: 2.4,
+            towerHealth: 1.5,
+            towerRange: 1,
+            heroHealth: 0.8,
+            allResists: 0.18
+        }
+    },
+
+    pureDps: {
+        label: "Pure DPS",
+        shortLabel: "DPS",
+        description: "Scores DPS gear using hero damage, hero health, casting, and resistances.",
+        weights: {
+            heroDamage: 4.2,
+            heroHealth: 1.4,
+            heroCasting: 0.8,
+            allResists: 0.35
+        }
+    },
+
+    hybridDps: {
+        label: "Hybrid DPS",
+        shortLabel: "Hybrid",
+        description: "Scores hybrid gear using hero damage, tower damage, casting, health, and resistances.",
+        weights: {
+            heroDamage: 3,
+            towerDamage: 2.2,
+            heroHealth: 1,
+            heroCasting: 0.8,
+            towerRate: 0.8,
+            allResists: 0.25
+        }
+    },
+
+    ability1Only: {
+        label: "AB1 Only",
+        shortLabel: "AB1",
+        description: "Scores ability gear mostly by Ability 1, hero damage, casting, and survivability.",
+        weights: {
+            ability1: 5,
+            heroDamage: 1.7,
+            heroCasting: 1,
+            heroHealth: 0.8,
+            allResists: 0.25
+        }
+    },
+
+    dpsAbility1: {
+        label: "DPS AB1",
+        shortLabel: "DPS AB1",
+        description: "Scores DPS gear with extra weight for Ability 1.",
+        weights: {
+            heroDamage: 3.5,
+            ability1: 3,
+            heroCasting: 0.9,
+            heroHealth: 0.8,
+            allResists: 0.3
+        }
+    },
+
+    dpsAbility2: {
+        label: "DPS AB2",
+        shortLabel: "DPS AB2",
+        description: "Scores DPS gear with extra weight for Ability 2.",
+        weights: {
+            heroDamage: 3.5,
+            ability2: 3,
+            heroCasting: 0.9,
+            heroHealth: 0.8,
+            allResists: 0.3
+        }
+    },
+
+    gunwitch: {
+        label: "Gunwitch",
+        shortLabel: "Gunwitch",
+        description: "Scores Gunwitch gear by hero damage, ability stats, casting, and resistances.",
+        weights: {
+            heroDamage: 3.8,
+            ability1: 1.6,
+            ability2: 1.6,
+            heroCasting: 1,
+            heroHealth: 0.8,
+            allResists: 0.3
+        }
+    },
+
+    needleGunwitch: {
+        label: "Needle Gunwitch",
+        shortLabel: "Needle",
+        description: "Scores Needle Gunwitch gear with heavy hero damage and casting value.",
+        weights: {
+            heroDamage: 4.5,
+            heroCasting: 1.4,
+            ability1: 1,
+            ability2: 1,
+            heroHealth: 0.7,
+            allResists: 0.28
+        }
+    },
+
+    boostMonk: {
+        label: "Boost Monk",
+        shortLabel: "Boost Monk",
+        description: "Scores Monk support gear using ability stats, hero damage, casting, and survivability.",
+        weights: {
+            ability1: 3.5,
+            ability2: 3.5,
+            heroDamage: 1,
+            heroCasting: 1,
+            heroHealth: 0.8,
+            allResists: 0.25
+        }
+    },
+
+    boostSummoner: {
+        label: "Boost Summoner",
+        shortLabel: "Boost Summoner",
+        description: "Scores Summoner support gear using hero health, casting, and resistances.",
+        weights: {
+            heroHealth: 2.4,
+            heroCasting: 2,
+            allResists: 0.45,
+            towerHealth: 0.7,
+            towerDamage: 0.5
+        }
+    }
+};
+
+const roleOrder = [
+    "builderApp",
+    "builderHermit",
+    "builderTrange",
+    "builderEv",
+    "builderSummoner",
+    "builderGuardian",
+    "waller",
+    "wallerSummoner",
+    "ability1Only",
+    "dpsAbility1",
+    "dpsAbility2",
+    "hybridDps",
+    "pureDps",
+    "gunwitch",
+    "needleGunwitch",
+    "boostMonk",
+    "boostSummoner",
+    "builderDamage"
+];
+
+const roleAliases = {
+    auto: "auto",
+    builder: "builderDamage",
+    "builder damage": "builderDamage",
+    damagebuilder: "builderDamage",
+    "builder app": "builderApp",
+    app: "builderApp",
+    apprentice: "builderApp",
+    adept: "builderApp",
+    hermit: "builderHermit",
+    "builder hermit": "builderHermit",
+    trange: "builderTrange",
+    "builder trange": "builderTrange",
+    range: "builderTrange",
+    ev: "builderEv",
+    "builder ev": "builderEv",
+    "series ev": "builderEv",
+    summoner: "builderSummoner",
+    "builder summoner": "builderSummoner",
+    waller: "waller",
+    "waller summoner": "wallerSummoner",
+    guardian: "builderGuardian",
+    "builder guardian": "builderGuardian",
+    dps: "pureDps",
+    "pure dps": "pureDps",
+    hybrid: "hybridDps",
+    "hybrid dps": "hybridDps",
+    ab1: "ability1Only",
+    "ab1 only": "ability1Only",
+    "dps ab1": "dpsAbility1",
+    "dps ab2": "dpsAbility2",
+    gunwitch: "gunwitch",
+    "needle gunwitch": "needleGunwitch",
+    monk: "boostMonk",
+    boost: "boostMonk",
+    "boost monk": "boostMonk",
+    "boost summoner": "boostSummoner"
+};
+
+function normalizeText(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[-_]/g, " ")
+        .replace(/\s+/g, " ");
+}
+
+function normalizeRoleKey(value) {
+    const rawValue = String(value || "").trim();
+
+    if (roles[rawValue] || rawValue === "auto") {
+        return rawValue;
+    }
+
+    const normalized = normalizeText(rawValue);
+
+    if (roleAliases[normalized]) {
+        return roleAliases[normalized];
+    }
+
+    if (normalized.includes("waller") && normalized.includes("summoner")) {
+        return "wallerSummoner";
+    }
+
+    if (normalized.includes("waller")) {
+        return "waller";
+    }
+
+    if (normalized.includes("summoner") && normalized.includes("boost")) {
+        return "boostSummoner";
+    }
+
+    if (normalized.includes("summoner")) {
+        return "builderSummoner";
+    }
+
+    if (normalized.includes("guardian")) {
+        return "builderGuardian";
+    }
+
+    if (normalized.includes("dps") && normalized.includes("ab1")) {
+        return "dpsAbility1";
+    }
+
+    if (normalized.includes("dps") && normalized.includes("ab2")) {
+        return "dpsAbility2";
+    }
+
+    if (normalized.includes("dps")) {
+        return "pureDps";
+    }
+
+    if (normalized.includes("ev")) {
+        return "builderEv";
+    }
+
+    if (normalized.includes("builder")) {
+        return "builderDamage";
+    }
+
+    return "builderDamage";
+}
+
+function getRole(roleKey) {
+    const normalizedRoleKey = normalizeRoleKey(roleKey);
+
+    if (normalizedRoleKey === "auto") {
+        return autoRoleOption;
+    }
+
+    return roles[normalizedRoleKey] || roles.builderDamage;
+}
+
+function getRoleOptions(includeAuto = false) {
+    const options = roleOrder.map((roleKey) => {
+        return {
+            value: roleKey,
+            label: roles[roleKey].label,
+            description: roles[roleKey].description
+        };
+    });
+
+    if (includeAuto) {
+        return [
+            autoRoleOption,
+            ...options
+        ];
+    }
+
+    return options;
+}
+
+function getStat(row, statName) {
+    if (!row) {
+        return 0;
+    }
+
+    if (row.stats && Number.isFinite(Number(row.stats[statName]))) {
+        return Number(row.stats[statName]);
+    }
+
+    if (Number.isFinite(Number(row[statName]))) {
+        return Number(row[statName]);
+    }
+
+    return 0;
+}
+
+function getResist(row, resistName) {
+    if (!row) {
+        return 0;
+    }
+
+    if (row.resists && Number.isFinite(Number(row.resists[resistName]))) {
+        return Number(row.resists[resistName]);
+    }
+
+    if (Number.isFinite(Number(row[resistName]))) {
+        return Number(row[resistName]);
+    }
+
+    return 0;
+}
+
+function getAllResists(row) {
+    return (
+        getResist(row, "generic") +
+        getResist(row, "poison") +
+        getResist(row, "fire") +
+        getResist(row, "lightning")
+    );
+}
+
+function calculateScore(row, roleKey) {
+    const role = getRole(roleKey);
+    const weights = role.weights || {};
+    let score = 0;
+
+    Object.entries(weights).forEach(([statName, weight]) => {
+        if (statName === "allResists") {
+            score += getAllResists(row) * weight;
+            return;
+        }
+
+        score += getStat(row, statName) * weight;
+    });
+
+    return Math.round(score);
+}
+
+function getStrongestStats(row, roleKey) {
+    const role = getRole(roleKey);
+    const weights = role.weights || {};
+
+    const entries = Object.entries(weights)
+        .filter(([statName]) => {
+            return statName !== "allResists";
+        })
+        .map(([statName, weight]) => {
+            const value = getStat(row, statName);
+
             return {
+                statName: statName,
                 value: value,
-                label: role.label,
-                description: role.description
+                contribution: value * weight
             };
+        })
+        .filter((entry) => {
+            return entry.value !== 0;
+        })
+        .sort((first, second) => {
+            return second.contribution - first.contribution;
+        });
+
+    if (weights.allResists) {
+        entries.push({
+            statName: "allResists",
+            value: getAllResists(row),
+            contribution: getAllResists(row) * weights.allResists
         });
     }
 
-    function getRole(roleName) {
-        return roleDefinitions[roleName] || roleDefinitions.builderDamage;
-    }
+    return entries.slice(0, 3);
+}
 
-    function getResistScore(row) {
-        if (!row || !row.resists) {
-            return 0;
-        }
+function scoreRow(row, roleKey) {
+    const normalizedRoleKey = normalizeRoleKey(roleKey);
+    const role = getRole(normalizedRoleKey);
 
-        return Number(row.resists.generic || 0) +
-            Number(row.resists.poison || 0) +
-            Number(row.resists.fire || 0) +
-            Number(row.resists.lightning || 0);
-    }
-
-    function scoreItem(row, roleName) {
-        const role = getRole(roleName);
-        const stats = row.stats || {};
-        let score = 0;
-
-        Object.entries(role.weights).forEach(([statName, weight]) => {
-            score += Number(stats[statName] || 0) * weight;
-        });
-
-        score += getResistScore(row) * Number(role.resistWeight || 0);
-
-        if (row.itemType === "Accessory") {
-            score *= 0.9;
-        }
-
-        if (row.itemType === "Pet" || row.itemType === "Weapon") {
-            score *= 0.65;
-        }
-
-        return Math.round(score);
-    }
-
-    function getStrongestStats(row, roleName, limit = 3) {
-        const role = getRole(roleName);
-        const stats = row.stats || {};
-
-        return Object.keys(role.weights)
-            .map((statName) => {
-                return {
-                    statName: statName,
-                    value: Number(stats[statName] || 0),
-                    weighted: Number(stats[statName] || 0) * Number(role.weights[statName] || 0)
-                };
-            })
-            .filter((entry) => {
-                return entry.value !== 0;
-            })
-            .sort((first, second) => {
-                return second.weighted - first.weighted;
-            })
-            .slice(0, limit);
-    }
-
-    function scoreRows(rows, roleName) {
-        return rows.map((row) => {
-            return {
-                ...row,
-                score: scoreItem(row, roleName),
-                strongestStats: getStrongestStats(row, roleName)
-            };
-        });
-    }
-
-    function findGearNotes(rows, roleName, heroName = "all") {
-        const scoredRows = scoreRows(rows, roleName);
-        const role = getRole(roleName);
-        const filteredRows = heroName === "all"
-            ? scoredRows
-            : scoredRows.filter((row) => {
-                return row.equippedHero === heroName;
-            });
-
-        if (filteredRows.length === 0) {
-            return [
-                {
-                    type: "empty",
-                    title: "No matching gear yet",
-                    text: "Load a save file or adjust the filters to see gear notes."
-                }
-            ];
-        }
-
-        const lowestRows = [...filteredRows]
-            .sort((first, second) => {
-                return first.score - second.score;
-            })
-            .slice(0, 5);
-
-        const highestRows = [...filteredRows]
-            .sort((first, second) => {
-                return second.score - first.score;
-            })
-            .slice(0, 3);
-
-        const notes = [];
-
-        notes.push({
-            type: "info",
-            title: role.label,
-            text: role.description
-        });
-
-        lowestRows.forEach((row) => {
-            notes.push({
-                type: "warning",
-                title: `${row.equippedHero}: review ${row.itemType}`,
-                text: `${row.name} has a ${role.label} score of ${row.score}. This is one of the lower-scoring equipped items in the current view.`
-            });
-        });
-
-        if (highestRows.length > 0) {
-            notes.push({
-                type: "success",
-                title: "Strongest equipped pieces in this view",
-                text: highestRows.map((row) => {
-                    return `${row.equippedHero} ${row.itemType}: ${row.name} (${row.score})`;
-                }).join(" | ")
-            });
-        }
-
-        notes.push({
-            type: "todo",
-            title: "Next optimizer step",
-            text: "After the item-box reader is ported, these low-scoring equipped pieces can be compared against unequipped inventory items for real replacement recommendations."
-        });
-
-        return notes;
-    }
-
-    window.dd1GearScoring = {
-        getRoleOptions: getRoleOptions,
-        getRole: getRole,
-        scoreItem: scoreItem,
-        scoreRows: scoreRows,
-        findGearNotes: findGearNotes,
-        getStrongestStats: getStrongestStats
+    return {
+        ...row,
+        score: calculateScore(row, normalizedRoleKey),
+        scoreRole: normalizedRoleKey,
+        scoreRoleLabel: role.label,
+        strongestStats: getStrongestStats(row, normalizedRoleKey)
     };
+}
+
+function scoreRows(rows, roleKey) {
+    return rows.map((row) => {
+        return scoreRow(row, roleKey);
+    });
+}
+
+function getHeroStat(hero, statName) {
+    if (!hero || !hero.totalStats) {
+        return 0;
+    }
+
+    return Number(hero.totalStats[statName] || 0);
+}
+
+function guessRoleForHero(hero) {
+    const className = normalizeText(hero && hero.className);
+    const heroName = normalizeText(hero && hero.name);
+    const suggestedRole = normalizeText(hero && hero.suggestedRole);
+
+    if (suggestedRole.includes("waller") && className.includes("summoner")) {
+        return "wallerSummoner";
+    }
+
+    if (suggestedRole.includes("waller")) {
+        return "waller";
+    }
+
+    if (suggestedRole.includes("guardian")) {
+        return "builderGuardian";
+    }
+
+    if (suggestedRole.includes("dps")) {
+        if (className.includes("gunwitch")) {
+            return "gunwitch";
+        }
+
+        return "pureDps";
+    }
+
+    if (suggestedRole.includes("summoner")) {
+        return "builderSummoner";
+    }
+
+    if (suggestedRole.includes("builder")) {
+        if (className.includes("ev")) {
+            return "builderEv";
+        }
+
+        if (className.includes("summoner")) {
+            return "builderSummoner";
+        }
+
+        if (className.includes("apprentice") || className.includes("adept")) {
+            return "builderApp";
+        }
+
+        if (className.includes("hermit")) {
+            return "builderHermit";
+        }
+
+        if (className.includes("huntress") || className.includes("ranger")) {
+            return "builderTrange";
+        }
+
+        return "builderDamage";
+    }
+
+    if (heroName.includes("waller") || heroName.includes("wall")) {
+        if (className.includes("summoner")) {
+            return "wallerSummoner";
+        }
+
+        return "waller";
+    }
+
+    if (heroName.includes("boost") && className.includes("summoner")) {
+        return "boostSummoner";
+    }
+
+    if (heroName.includes("boost") || className.includes("monk") || className.includes("initiate")) {
+        return "boostMonk";
+    }
+
+    if (className.includes("ev")) {
+        return "builderEv";
+    }
+
+    if (className.includes("summoner")) {
+        if (getHeroStat(hero, "towerHealth") > getHeroStat(hero, "towerDamage") * 1.5) {
+            return "wallerSummoner";
+        }
+
+        return "builderSummoner";
+    }
+
+    if (className.includes("apprentice") || className.includes("adept")) {
+        return "builderApp";
+    }
+
+    if (className.includes("hermit")) {
+        return "builderHermit";
+    }
+
+    if (className.includes("huntress") || className.includes("ranger")) {
+        return "builderTrange";
+    }
+
+    if (
+        getHeroStat(hero, "heroDamage") > getHeroStat(hero, "towerDamage") &&
+        getHeroStat(hero, "heroDamage") > 500
+    ) {
+        return "pureDps";
+    }
+
+    return "builderDamage";
+}
+
+window.dd1GearScoring = {
+    getRole: getRole,
+    getRoleOptions: getRoleOptions,
+    normalizeRoleKey: normalizeRoleKey,
+    guessRoleForHero: guessRoleForHero,
+    scoreRow: scoreRow,
+    scoreRows: scoreRows
+};
+
 })();

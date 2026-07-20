@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="View Dungeon Defenders 1 heroes, equipped items, CSV gear rows, and early gear scoring from a DunDefHeroes.dun save file or gear export.">
     <title>Gear Optimizer | DD1 Progression Hub</title>
+
     <link rel="stylesheet" href="styles/style.css">
     <link rel="stylesheet" href="styles/performance-fixes.css">
     <link rel="stylesheet" href="styles/gear-optimizer.css">
+
     <script src="scripts/main.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js" defer></script>
     <script src="scripts/optimizer-save-import.js" defer></script>
@@ -16,6 +18,7 @@
     <script src="scripts/gear-save-reader.js" defer></script>
     <script src="scripts/gear-optimizer.js" defer></script>
 </head>
+
 <body>
     <div class="site-shell">
         <header class="topbar">
@@ -44,7 +47,7 @@
                     <h1 id="gear-title">Gear Optimizer</h1>
                     <p>
                         Upload your <strong>DunDefHeroes.dun</strong> file or a gear CSV export to view heroes and items.
-                        This version supports click upload, drag and drop, CSV test data, role scoring, filters, and CSV export while the full item-box parser is being ported.
+                        This page scores each hero by an archetype, lets you manually change that archetype, and shows the focused hero's gear while the full item-box parser is being ported.
                     </p>
                 </div>
 
@@ -83,52 +86,52 @@
                 </article>
 
                 <article>
-                    <span id="gear-summary-role">Builder Damage</span>
+                    <span id="gear-summary-role">Auto by Hero Archetype</span>
                     <p>Current Scoring Mode</p>
                 </article>
             </section>
 
             <section class="gear-controls" aria-labelledby="gear-controls-title">
-                <h2 id="gear-controls-title">Filters and scoring</h2>
+                <h2 id="gear-controls-title">Hero focus and archetype scoring</h2>
 
                 <div class="gear-control-grid">
                     <label>
-                        Role scoring
+                        Default archetype
                         <select id="gear-role-filter"></select>
                     </label>
 
                     <label>
-                        Hero
+                        Focus hero
                         <select id="gear-hero-filter">
-                            <option value="all">All heroes</option>
+                            <option value="">Load a save file first</option>
                         </select>
                     </label>
 
                     <label>
-                        Item type
+                        Focused gear type
                         <select id="gear-type-filter">
                             <option value="all">All types</option>
                         </select>
                     </label>
 
                     <label>
-                        Armor set
+                        Focused armor set
                         <select id="gear-set-filter">
                             <option value="all">All sets</option>
                         </select>
                     </label>
 
                     <label>
-                        Search
-                        <input id="gear-search-filter" type="search" placeholder="Name, quality, hero, stat...">
+                        Search heroes or focused gear
+                        <input id="gear-search-filter" type="search" placeholder="Hero, class, role, item, stat...">
                     </label>
 
                     <label>
-                        Sort by
+                        Sort focused gear by
                         <select id="gear-sort-filter">
+                            <option value="slot-asc">Slot order</option>
                             <option value="score-desc">Score: high to low</option>
                             <option value="score-asc">Score: low to high</option>
-                            <option value="hero-asc">Hero name</option>
                             <option value="type-asc">Item type</option>
                             <option value="level-desc">Max upgrade level</option>
                         </select>
@@ -149,7 +152,7 @@
                     <h2 id="recommendation-title">Gear notes</h2>
 
                     <div id="gear-recommendations" class="gear-recommendations">
-                        <p class="gear-empty">Load a save file and pick a scoring role to see early gear notes.</p>
+                        <p class="gear-empty">Load a save file and choose a focused hero to see gear notes.</p>
                     </div>
                 </section>
             </section>
@@ -157,11 +160,11 @@
             <section class="gear-card gear-table-card" aria-labelledby="item-table-title">
                 <div class="gear-table-header">
                     <div>
-                        <h2 id="item-table-title">Items</h2>
+                        <h2 id="item-table-title">Focused Hero Items</h2>
                         <p id="gear-table-count">No items loaded.</p>
                     </div>
 
-                    <button id="gear-export-csv" class="gear-button gear-button-secondary" type="button">Export CSV</button>
+                    <button id="gear-export-csv" class="gear-button gear-button-secondary" type="button">Export Focused CSV</button>
                 </div>
 
                 <div class="gear-table-wrap">
@@ -183,7 +186,7 @@
 
                         <tbody id="gear-item-table-body">
                             <tr>
-                                <td colspan="10">Load a .dun save file or gear CSV to view items.</td>
+                                <td colspan="10">Load a .dun save file or gear CSV to view focused hero items.</td>
                             </tr>
                         </tbody>
                     </table>

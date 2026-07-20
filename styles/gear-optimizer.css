@@ -506,3 +506,133 @@ flex-direction: column;
     color: rgba(255, 255, 255, 0.78);
     font-size: 0.95rem;
 }
+/* =========================================================
+Hero-Focused Archetype Update
+========================================================= */
+
+.gear-hero-card.is-active {
+border-color: #e18a32;
+box-shadow:
+0 0 0 2px rgba(225, 138, 50, 0.35) inset,
+0 0 18px rgba(225, 138, 50, 0.2);
+}
+
+.gear-hero-card-top {
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+gap: 14px;
+}
+
+.gear-mini-button {
+flex-shrink: 0;
+padding: 7px 10px;
+color: #fff1d5;
+background: linear-gradient(to bottom, #7b2a13, #451509);
+border: 1px solid #e18a32;
+font-family: Georgia, "Times New Roman", serif;
+font-size: 0.9rem;
+font-weight: 700;
+cursor: pointer;
+}
+
+.gear-mini-button:hover {
+filter: brightness(1.12);
+}
+
+.gear-hero-role-control {
+display: grid;
+gap: 6px;
+margin: 12px 0;
+color: #ffdc9b;
+font-weight: 700;
+}
+
+.gear-hero-role-control select {
+width: 100%;
+min-height: 40px;
+padding: 8px 10px;
+color: #f6ead2;
+background: rgba(10, 6, 4, 0.85);
+border: 2px solid #6d4a31;
+font-family: Georgia, "Times New Roman", serif;
+font-weight: 700;
+}
+
+.gear-hero-role-control select:focus {
+outline: none;
+border-color: #e18a32;
+box-shadow: 0 0 0 2px rgba(225, 138, 50, 0.25);
+}
+
+.gear-weak-piece {
+display: grid;
+gap: 4px;
+margin-top: 14px;
+padding: 12px;
+background: rgba(113, 32, 14, 0.3);
+border-left: 4px solid #e18a32;
+color: #f2dfbf;
+line-height: 1.4;
+}
+
+.gear-weak-piece strong {
+color: #ffdc9b;
+}
+
+.gear-slot-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+gap: 10px;
+margin-top: 14px;
+}
+
+.gear-slot-pill {
+padding: 10px;
+background: rgba(10, 6, 4, 0.52);
+border: 1px solid rgba(255, 220, 155, 0.22);
+}
+
+.gear-slot-pill-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 8px;
+margin-bottom: 6px;
+}
+
+.gear-slot-pill-header strong {
+color: #ffdc9b;
+}
+
+.gear-slot-pill-header span {
+color: #d9b981;
+font-size: 0.85rem;
+white-space: nowrap;
+}
+
+.gear-slot-pill p {
+margin: 0 0 4px;
+color: #fff1d6;
+line-height: 1.35;
+}
+
+.gear-slot-pill small {
+color: #d9b981;
+line-height: 1.35;
+}
+
+@media (max-width: 700px) {
+.gear-hero-card-top {
+flex-direction: column;
+}
+
+.gear-mini-button {
+    width: 100%;
+}
+
+.gear-slot-grid {
+    grid-template-columns: 1fr;
+}
+
+}
