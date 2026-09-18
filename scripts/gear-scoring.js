@@ -680,20 +680,29 @@
                 .filter((statName, index, list) => list.indexOf(statName) === index)
                 .filter((statName) => Number(stats[statName] || 0) !== 0)
                 .map((statName) => upgradeStatLabels[statName] || statName);
+            const isHeroBoostPet = itemType === "pet" && row && row.pet && row.pet.kind === "heroBoost";
 
             if (upgradesAvailable > 0) {
                 steps.push(`This ${itemType} has ${upgradesAvailable} upgrade level${upgradesAvailable === 1 ? "" : "s"} left.`);
             }
 
-            if (usefulStats.length > 0) {
-                steps.push(`For ${role.label}, preserve and prioritize these useful role stats when the game allows a stat upgrade: ${usefulStats.join(", ")}.`);
-            }
+            if (isHeroBoostPet) {
+                steps.push(`This is a buffer pet, not a damage pet. Its pet-specific values are Boost Intensity ${Number(row.pet.boostIntensity || 0)}, Boost Range ${Number(row.pet.boostRange || 0)}, and ${Number(row.pet.heroesToBoost || 0)} hero${Number(row.pet.heroesToBoost || 0) === 1 ? "" : "es"} to boost.`);
 
-            steps.push(
-                itemType === "weapon"
-                    ? "Weapon damage, projectile count/speed, attack rate, charge, and other weapon-specific upgrades follow separate in-game rules. Use the weapon's damage path for a damage weapon; this optimizer will not invent an exact max-damage projection yet."
-                    : "Pet attack damage and pet-specific upgrades follow separate in-game rules. Keep the role stats you need, but do not treat the projected archetype score as an exact max-pet result yet."
-            );
+                if (upgradesAvailable > 0) {
+                    steps.push("Prioritize Boost Intensity when the game offers a pet-specific upgrade. Use Boost Range or the number of heroes boosted only when those options are available and useful for the build. Exact support-pet breakpoints are not simulated yet.");
+                }
+            } else {
+                if (usefulStats.length > 0) {
+                    steps.push(`For ${role.label}, preserve and prioritize these useful role stats when the game allows a stat upgrade: ${usefulStats.join(", ")}.`);
+                }
+
+                steps.push(
+                    itemType === "weapon"
+                        ? "Weapon damage, projectile count/speed, attack rate, charge, and other weapon-specific upgrades follow separate in-game rules. Use the weapon's damage path for a damage weapon; this optimizer will not invent an exact max-damage projection yet."
+                        : "Pet attack damage and pet-specific upgrades follow separate in-game rules. Keep the role stats you need, but do not treat the projected archetype score as an exact max-pet result yet."
+                );
+            }
 
             return {
                 roleKey: normalizedRoleKey,

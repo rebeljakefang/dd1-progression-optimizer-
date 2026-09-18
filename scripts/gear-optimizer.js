@@ -596,6 +596,7 @@
         const stats = item && item.stats ? item.stats : {};
         const resists = item && item.resists ? item.resists : {};
         const weapon = item && item.weapon ? item.weapon : {};
+        const pet = item && item.pet ? item.pet : {};
         const slot = normalizeSlot(item && item.itemType);
 
         const groups = [
@@ -633,7 +634,21 @@
             }
         ];
 
-        if (["Weapon", "Secondary", "Pet"].includes(slot)) {
+        if (slot === "Pet" && pet.kind === "heroBoost") {
+            const boostEntries = getNonZeroEntries([
+                { label: "Boost Intensity", value: pet.boostIntensity },
+                { label: "Boost Range", value: pet.boostRange },
+                { label: "Heroes to Boost", value: pet.heroesToBoost }
+            ]);
+
+            if (boostEntries.length > 0) {
+                groups.unshift({
+                    key: "pet-boost",
+                    title: "Pet boost stats",
+                    entries: boostEntries
+                });
+            }
+        } else if (["Weapon", "Secondary", "Pet"].includes(slot)) {
             const weaponEntries = getNonZeroEntries([
                 { label: "Weapon Damage", value: weapon.damage },
                 { label: "Elemental Damage", value: weapon.additionalDamage },
@@ -651,7 +666,7 @@
             if (weaponEntries.length > 0) {
                 groups.unshift({
                     key: "weapon",
-                    title: slot === "Pet" ? "Pet / attack stats" : "Weapon stats",
+                    title: slot === "Pet" ? "Pet attack stats" : "Weapon stats",
                     entries: weaponEntries
                 });
             }
@@ -809,7 +824,7 @@
                                 <span>${escapeText(itemCountText)}</span>
                             </div>
                             <small class="gear-slot-score">
-                                Score ${formatNumber(item ? item.score : 0)}
+                                ${item && item.pet && item.pet.kind === "heroBoost" ? "Role stat score" : "Score"} ${formatNumber(item ? item.score : 0)}
                                 ${item ? ` • ${escapeText(item.quality)}` : ""}
                             </small>
                             ${item ? renderItemStats(item) : ""}

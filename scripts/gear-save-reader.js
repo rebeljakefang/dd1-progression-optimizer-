@@ -1353,6 +1353,34 @@
         };
     }
 
+    function buildPetData(equipment, itemType, itemName) {
+        if (itemType !== "Pet") {
+            return null;
+        }
+
+        const templateText = normalizeText(equipment.equipmentTemplate);
+        const nameText = normalizeText(itemName);
+        const isPropellerCat = (
+            templateText.includes("skycity_weapons.pet.skycitypetequipment") ||
+            nameText.includes("propeller cat")
+        );
+
+        if (isPropellerCat) {
+            return {
+                kind: "heroBoost",
+                label: "Hero Boost",
+                boostIntensity: Number(equipment.weaponClipAmmoBonus || 0),
+                boostRange: Number(equipment.weaponReloadSpeedBonus || 0) - 127,
+                heroesToBoost: Number(equipment.weaponNumberOfProjectilesBonus || 0) - 127
+            };
+        }
+
+        return {
+            kind: "attack",
+            label: "Attack Pet"
+        };
+    }
+
     function buildRowFromEquipment(equipment, index) {
         const stats = getStatsFromArray(equipment.statModifiers || []);
         const resists = {
@@ -1400,6 +1428,7 @@
             folderId: Number(equipment.folderId || -1),
             storedMana: Number(equipment.storedMana || 0),
             userSellPrice: Number(equipment.userSellPrice || 0),
+            pet: buildPetData(equipment, itemType, name),
             weapon: {
                 /*
                    DD1 stores several byte-sized weapon bonuses with a +127
