@@ -1073,16 +1073,54 @@
 
     function guessItemType(equipment) {
         const text = getCombinedItemText(equipment);
+        const lowerText = normalizeText(text);
+
+        const isAccessoryTemplate = (
+            lowerText.includes("accessoryequipment") ||
+            lowerText.includes("dundefaccessories") ||
+            lowerText.includes(".equipment.acc.") ||
+            lowerText.includes(".acc.")
+        );
+
+        /*
+           Accessory templates must be checked before armor keywords.
+           Many accessories contain words such as "hat" or "head", which
+           would otherwise be mistaken for an armor helmet.
+        */
+        if (isAccessoryTemplate) {
+            if (includesAny(text, ["bracer", "bracers"])) {
+                return "Bracers";
+            }
+
+            if (includesAny(text, ["brooch"])) {
+                return "Brooch";
+            }
+
+            if (includesAny(text, ["mask"])) {
+                return "Mask";
+            }
+
+            if (includesAny(text, ["shield"])) {
+                return "Shield";
+            }
+
+            /*
+               If the template is clearly an accessory but its exact slot
+               is not known yet, keep it separate from armor. This avoids
+               recommending an accessory as a helmet/chest replacement.
+            */
+            return "Accessory";
+        }
 
         if (includesAny(text, ["helmet", "helm", "hat", "cap", "head"])) {
             return "Helmet";
         }
 
-        if (includesAny(text, ["torso", "chest", "vest", "shirt", "tunic", "armor"])
-            && !includesAny(text, ["accessory"])) {
-            return "Torso";
-        }
-
+        /*
+           Check gauntlets and boots before torso. Armor templates often
+           contain the generic word "armor", so using that word as a torso
+           test would incorrectly classify gloves and boots as chest armor.
+        */
         if (includesAny(text, ["gauntlet", "glove", "hand"])) {
             return "Gauntlet";
         }
@@ -1091,20 +1129,8 @@
             return "Boots";
         }
 
-        if (includesAny(text, ["bracer", "bracers"])) {
-            return "Bracers";
-        }
-
-        if (includesAny(text, ["brooch"])) {
-            return "Brooch";
-        }
-
-        if (includesAny(text, ["mask"])) {
-            return "Mask";
-        }
-
-        if (includesAny(text, ["shield"])) {
-            return "Shield";
+        if (includesAny(text, ["torso", "chest", "vest", "shirt", "tunic"])) {
+            return "Torso";
         }
 
         if (includesAny(text, ["familiar", "pet", "guardian", "cat", "genie", "dragon", "seahorse", "propeller", "fairy", "tiger", "griffin", "donkey", "horse", "imp", "hawk", "chicken"])) {

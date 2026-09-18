@@ -305,7 +305,58 @@
     };
 
     /* =========================================================
-       4. Role Normalization
+       4. Upgrade Priority Plans
+
+       These priorities follow the same general approach used by
+       DDGO: required resistances first for DPS-style armor, then
+       the main rating stats, then useful side stats.
+    ========================================================= */
+
+    const upgradePlans = {
+        builderDamage: { primary: ["towerDamage", "towerRate", "towerRange"], secondary: ["towerHealth"], requireResists: false },
+        builderApp: { primary: ["towerDamage", "towerRate", "towerRange"], secondary: ["towerHealth"], requireResists: false },
+        builderHermit: { primary: ["towerDamage", "towerRange", "towerHealth"], secondary: ["towerRate"], requireResists: false },
+        builderTrange: { primary: ["towerRange"], secondary: ["towerHealth", "towerDamage", "towerRate"], requireResists: false },
+        builderEv: { primary: ["towerDamage"], secondary: ["towerHealth", "towerRate", "towerRange"], requireResists: false },
+        builderSummoner: { primary: ["towerHealth"], secondary: ["towerDamage", "towerRate", "towerRange"], requireResists: false },
+        waller: { primary: ["towerHealth"], secondary: ["towerRate", "towerDamage", "towerRange"], requireResists: false },
+        wallerSummoner: { primary: ["towerHealth"], secondary: ["towerDamage", "towerRate", "towerRange"], requireResists: false },
+        builderGuardian: { primary: ["towerHealth", "towerRate", "towerRange"], secondary: ["towerDamage"], requireResists: false },
+        ability1Only: { primary: ["ability1"], secondary: ["heroHealth", "heroDamage", "heroCasting"], requireResists: true },
+        dpsAbility1: { primary: ["heroDamage", "ability1"], secondary: ["heroHealth"], requireResists: true },
+        dpsAbility2: { primary: ["heroDamage", "ability2"], secondary: ["heroHealth"], requireResists: true },
+        hybridDps: { primary: ["heroDamage", "ability1", "ability2"], secondary: ["heroHealth"], requireResists: true },
+        pureDps: { primary: ["heroDamage"], secondary: ["heroHealth", "ability1", "ability2"], requireResists: true },
+        gunwitch: { primary: ["heroDamage", "towerDamage", "towerRate"], secondary: ["heroHealth"], requireResists: true },
+        needleGunwitch: { primary: ["towerRange"], secondary: ["heroDamage", "towerDamage", "towerRate", "heroHealth"], requireResists: true },
+        boostMonk: { primary: ["ability1", "ability2"], secondary: ["heroHealth", "heroDamage", "heroCasting"], requireResists: true },
+        boostSummoner: { primary: ["heroHealth"], secondary: ["ability2", "heroCasting"], requireResists: true }
+    };
+
+    const upgradeStatLabels = {
+        heroHealth: "Hero HP",
+        heroSpeed: "Hero Speed",
+        heroDamage: "Hero Damage",
+        heroCasting: "Hero Casting",
+        ability1: "Ability 1",
+        ability2: "Ability 2",
+        towerHealth: "Tower HP",
+        towerDamage: "Tower Damage",
+        towerRange: "Tower Range",
+        towerRate: "Tower Rate"
+    };
+
+    const resistRequirements = [
+        42, 42, 42, 41, 41, 41, 40, 40, 40,
+        39, 39, 38, 38, 37, 37, 36, 36, 35, 34,
+        33, 32, 31, 30, 29, 28, 27, 26, 25, 24,
+        23, 23, 22, 21, 20, 19, 18, 17, 16, 15,
+        14, 13, 12, 11, 10, 9, 9, 8, 8, 7,
+        7, 6, 5, 6, 5, 4, 3, 2, 1, 0, -1, -2
+    ];
+
+    /* =========================================================
+       5. Role Normalization
     ========================================================= */
 
     function normalizeText(value) {
@@ -399,7 +450,7 @@
     }
 
     /* =========================================================
-       5. Stat Reading + Score Calculation
+       6. Stat Reading + Score Calculation
     ========================================================= */
 
     function getStat(row, statName) {
@@ -504,7 +555,258 @@
     }
 
     /* =========================================================
-       6. Hero Role Guessing
+       7. Upgrade Simulation + Text Guide Data
+    ========================================================= */
+
+    function getUpgradePlan(roleKey) {
+        const normalizedRoleKey = normalizeRoleKey(roleKey);
+
+        return upgradePlans[normalizedRoleKey] || upgradePlans.builderDamage;
+    }
+
+    function getQualityUpgradeRules(quality, isArmor) {
+        const normalized = normalizeText(quality).replace(/\s+/g, "");
+        let setBonus = 1.25;
+        let resistanceTarget = 31;
+        let maxStat = 300;
+
+        if (normalized === "ult++" || normalized === "ultimate++") {
+            setBonus = 1.4;
+            resistanceTarget = 29;
+            maxStat = 999;
+        } else if (normalized === "ult+" || normalized === "ultimate+") {
+            setBonus = 1.4;
+            resistanceTarget = 29;
+            maxStat = 700;
+        } else if (normalized === "ult93" || normalized === "ult90" || normalized === "ultimate") {
+            setBonus = 1.4;
+            resistanceTarget = 29;
+            maxStat = 600;
+        } else if (normalized === "supreme") {
+            setBonus = 1.36;
+            resistanceTarget = 30;
+            maxStat = 500;
+        } else if (normalized === "trans" || normalized === "transcendent") {
+            setBonus = 1.33;
+            resistanceTarget = 31;
+            maxStat = 420;
+        } else if (normalized === "mythic" || normalized === "mythical") {
+            setBonus = 1.3;
+            resistanceTarget = 31;
+            maxStat = 360;
+        }
+
+        if (!isArmor) {
+            setBonus = 1;
+            resistanceTarget = 0;
+        }
+
+        return { setBonus, resistanceTarget, maxStat };
+    }
+
+    function isArmorRow(row) {
+        const type = normalizeText(row && row.itemType);
+
+        return ["helmet", "chest", "torso", "gloves", "gauntlet", "boots"].includes(type);
+    }
+
+    function getUpgradesRequiredForResists(target, resists) {
+        const values = [resists.generic, resists.poison, resists.fire, resists.lightning];
+        const delta = target - 29;
+
+        return values.reduce((total, rawValue) => {
+            const value = Number(rawValue || 0);
+            let required = 0;
+
+            if (value >= -29 && value < 31) {
+                required = resistRequirements[value + 29] + delta;
+            }
+
+            return total + Math.max(0, required);
+        }, 0);
+    }
+
+    function cloneStats(stats) {
+        return {
+            heroHealth: Number(stats && stats.heroHealth || 0),
+            heroSpeed: Number(stats && stats.heroSpeed || 0),
+            heroDamage: Number(stats && stats.heroDamage || 0),
+            heroCasting: Number(stats && stats.heroCasting || 0),
+            ability1: Number(stats && stats.ability1 || 0),
+            ability2: Number(stats && stats.ability2 || 0),
+            towerHealth: Number(stats && stats.towerHealth || 0),
+            towerDamage: Number(stats && stats.towerDamage || 0),
+            towerRange: Number(stats && stats.towerRange || 0),
+            towerRate: Number(stats && stats.towerRate || 0)
+        };
+    }
+
+    function cloneResists(resists) {
+        return {
+            generic: Number(resists && resists.generic || 0),
+            poison: Number(resists && resists.poison || 0),
+            fire: Number(resists && resists.fire || 0),
+            lightning: Number(resists && resists.lightning || 0)
+        };
+    }
+
+    function simulateItemUpgrades(row, roleKey) {
+        const normalizedRoleKey = normalizeRoleKey(roleKey);
+        const role = getRole(normalizedRoleKey);
+        const plan = getUpgradePlan(normalizedRoleKey);
+        const currentLevel = Number(row && row.currentLevel || 0);
+        const maxLevel = Number(row && row.maxLevel || 0);
+        const upgradesAvailable = Math.max(0, maxLevel - currentLevel);
+        const stats = cloneStats(row && row.stats);
+        const resists = cloneResists(row && row.resists);
+        const isArmor = isArmorRow(row);
+        const itemType = normalizeText(row && row.itemType);
+        const rules = getQualityUpgradeRules(row && row.quality, isArmor);
+        const steps = [];
+        let levelsLeft = upgradesAvailable;
+        let resistanceLevelsUsed = 0;
+        let resistStatus = "not-required";
+
+        const currentScore = calculateScore(row, normalizedRoleKey);
+
+        if (upgradesAvailable <= 0) {
+            return {
+                roleKey: normalizedRoleKey,
+                roleLabel: role.label,
+                currentScore,
+                projectedScore: currentScore,
+                scoreGain: 0,
+                upgradesAvailable: 0,
+                levelsLeft: 0,
+                steps: [],
+                projectedStats: stats,
+                projectedResists: resists,
+                resistStatus: "maxed",
+                supported: true
+            };
+        }
+
+        if (itemType === "weapon" || itemType === "pet") {
+            return {
+                roleKey: normalizedRoleKey,
+                roleLabel: role.label,
+                currentScore,
+                projectedScore: currentScore,
+                scoreGain: 0,
+                upgradesAvailable,
+                levelsLeft: upgradesAvailable,
+                steps: ["Weapon and pet damage upgrades use separate rules; stat-only max-upgrade simulation is not enabled for this slot yet."],
+                projectedStats: stats,
+                projectedResists: resists,
+                resistStatus: "not-applicable",
+                supported: false
+            };
+        }
+
+        if (isArmor && plan.requireResists) {
+            const resistValues = [resists.generic, resists.poison, resists.fire, resists.lightning];
+            const hasAllResists = resistValues.every((value) => value !== 0);
+
+            if (!hasAllResists) {
+                resistStatus = "missing";
+                steps.push("This armor is missing at least one resistance type, so it cannot follow the normal DPS resistance-cap plan.");
+            } else {
+                const required = getUpgradesRequiredForResists(rules.resistanceTarget, resists);
+                const overcapSlotsLeft = Math.floor(maxLevel / 10) - Math.floor(currentLevel / 10);
+                const overcapSlotsNeeded = resistValues.reduce((total, value) => {
+                    return total + Math.max(0, rules.resistanceTarget - Math.max(value, 23));
+                }, 0);
+
+                if (required <= levelsLeft && overcapSlotsLeft >= overcapSlotsNeeded) {
+                    resistanceLevelsUsed = required;
+                    levelsLeft -= required;
+                    resists.generic = Math.max(resists.generic, rules.resistanceTarget);
+                    resists.poison = Math.max(resists.poison, rules.resistanceTarget);
+                    resists.fire = Math.max(resists.fire, rules.resistanceTarget);
+                    resists.lightning = Math.max(resists.lightning, rules.resistanceTarget);
+                    resistStatus = required > 0 ? "cap-planned" : "already-capped";
+
+                    if (required > 0) {
+                        steps.push(`Spend about ${required} upgrade level${required === 1 ? "" : "s"} getting all four resistances to the ${rules.resistanceTarget} raw target first.`);
+                    }
+                } else {
+                    resistStatus = "cannot-cap";
+                    steps.push("There are not enough remaining upgrade levels/10-level resistance bumps to reach the normal resistance target. Treat this as a lower-priority DPS piece unless the rest of the stats are exceptional.");
+                }
+            }
+        }
+
+        function investIntoStats(statNames, label) {
+            const investments = [];
+
+            statNames.forEach((statName) => {
+                if (levelsLeft <= 0) {
+                    return;
+                }
+
+                const currentValue = Number(stats[statName] || 0);
+
+                if (currentValue === 0) {
+                    return;
+                }
+
+                const room = Math.max(0, rules.maxStat - currentValue);
+                const amount = Math.max(0, Math.min(room, levelsLeft));
+
+                if (amount <= 0) {
+                    return;
+                }
+
+                stats[statName] = currentValue + amount;
+                levelsLeft -= amount;
+                investments.push({ statName, amount });
+            });
+
+            if (investments.length > 0) {
+                const text = investments.map(({ statName, amount }) => {
+                    return `${upgradeStatLabels[statName] || statName} +${amount}`;
+                }).join(", ");
+
+                steps.push(`${label}: ${text}.`);
+            }
+        }
+
+        investIntoStats(plan.primary, "Then prioritize the main archetype stat(s)");
+        investIntoStats(plan.secondary, "Use remaining levels on useful side stat(s)");
+
+        if (levelsLeft > 0) {
+            steps.push(`${levelsLeft} upgrade level${levelsLeft === 1 ? "" : "s"} remain after the modeled priorities; use those on a useful nonzero tertiary stat or the item's special weapon/pet stat if applicable.`);
+        }
+
+        const projectedRow = {
+            ...row,
+            stats,
+            resists
+        };
+        const projectedScore = calculateScore(projectedRow, normalizedRoleKey);
+
+        return {
+            roleKey: normalizedRoleKey,
+            roleLabel: role.label,
+            currentScore,
+            projectedScore,
+            scoreGain: projectedScore - currentScore,
+            upgradesAvailable,
+            levelsLeft,
+            resistanceLevelsUsed,
+            steps,
+            projectedStats: stats,
+            projectedResists: resists,
+            resistStatus,
+            maxStat: rules.maxStat,
+            resistanceTarget: rules.resistanceTarget,
+            setBonus: rules.setBonus,
+            supported: true
+        };
+    }
+
+    /* =========================================================
+       8. Hero Role Guessing
     ========================================================= */
 
     function getHeroStat(hero, statName) {
@@ -612,7 +914,7 @@
     }
 
     /* =========================================================
-       7. Public API
+       9. Public API
     ========================================================= */
 
     window.dd1GearScoring = {
@@ -620,6 +922,10 @@
         getRoleOptions: getRoleOptions,
         normalizeRoleKey: normalizeRoleKey,
         guessRoleForHero: guessRoleForHero,
+        getUpgradePlan: getUpgradePlan,
+        getQualityUpgradeRules: getQualityUpgradeRules,
+        getUpgradesRequiredForResists: getUpgradesRequiredForResists,
+        simulateItemUpgrades: simulateItemUpgrades,
         scoreRow: scoreRow,
         scoreRows: scoreRows
     };

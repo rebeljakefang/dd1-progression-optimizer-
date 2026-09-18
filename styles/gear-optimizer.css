@@ -443,6 +443,15 @@
     border-left: 4px solid #74d680;
 }
 
+.gear-note-upgrade {
+    border-left: 4px solid #e18a32;
+    background: rgba(225, 138, 50, 0.1);
+}
+
+.gear-note-upgrade h3 {
+    color: #ffdc9b;
+}
+
 .gear-note-todo {
     border-left: 4px solid #cc9bff;
 }
@@ -571,7 +580,106 @@
 }
 
 /* =========================================================
-   13. Large / Medium Responsive Layout
+   13. Item Stats + Upgrade Guides
+========================================================= */
+
+.gear-slot-item-name {
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+}
+
+.gear-slot-score {
+    margin-bottom: 0.55rem;
+    color: #d9b86f;
+}
+
+.gear-item-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem 0.45rem;
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gear-item-stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.45rem;
+    min-width: 0;
+    padding: 0.22rem 0.35rem;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.22);
+    font-size: 0.78rem;
+}
+
+.gear-item-stat strong {
+    color: #d9b86f;
+}
+
+.gear-item-stat span {
+    text-align: right;
+}
+
+.gear-item-no-stats {
+    margin: 0.55rem 0 0;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.8rem;
+}
+
+.gear-item-level-status {
+    margin-top: 0.55rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f0d391;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.gear-item-level-status.is-maxed {
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.gear-upgrade-guide {
+    margin-top: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid rgba(217, 184, 111, 0.28);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.gear-upgrade-guide summary {
+    color: #f0d391;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.gear-upgrade-guide ol,
+.gear-note-upgrade-guide ol {
+    margin: 0.55rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.gear-upgrade-guide li,
+.gear-note-upgrade-guide li {
+    margin-bottom: 0.35rem;
+    line-height: 1.4;
+}
+
+.gear-note-upgrade-guide {
+    margin-top: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border-left: 3px solid #d9b86f;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.gear-note-upgrade-guide strong {
+    color: #f0d391;
+}
+
+/* =========================================================
+   14. Large / Medium Responsive Layout
 ========================================================= */
 
 @media (max-width: 1000px) {
@@ -596,7 +704,7 @@
 }
 
 /* =========================================================
-   14. Small Screen Layout
+   15. Small Screen Layout
 ========================================================= */
 
 @media (max-width: 700px) {

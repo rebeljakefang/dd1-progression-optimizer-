@@ -62,6 +62,24 @@
         allResists: "All Resists"
     };
 
+    const replacementEligibleSlots = new Set([
+        "Helmet",
+        "Chest",
+        "Gloves",
+        "Boots",
+        "Bracers",
+        "Brooch",
+        "Mask",
+        "Shield"
+    ]);
+
+    const armorReplacementSlots = new Set([
+        "Helmet",
+        "Chest",
+        "Gloves",
+        "Boots"
+    ]);
+
     /* =========================================================
        2. DOM Element Cache
     ========================================================= */
@@ -485,7 +503,94 @@
     }
 
     /* =========================================================
-       9. Hero Card Rendering
+       9. Item Stat Display + Upgrade Guide Helpers
+    ========================================================= */
+
+    function getItemStatEntries(item) {
+        const stats = item && item.stats ? item.stats : {};
+        const resists = item && item.resists ? item.resists : {};
+        const entries = [
+            ["THP", stats.towerHealth],
+            ["TDMG", stats.towerDamage],
+            ["TRNG", stats.towerRange],
+            ["TRATE", stats.towerRate],
+            ["HHP", stats.heroHealth],
+            ["HDMG", stats.heroDamage],
+            ["HSPD", stats.heroSpeed],
+            ["CAST", stats.heroCasting],
+            ["AB1", stats.ability1],
+            ["AB2", stats.ability2],
+            ["GEN", resists.generic],
+            ["POI", resists.poison],
+            ["FIRE", resists.fire],
+            ["LIT", resists.lightning]
+        ];
+
+        return entries.filter(([, value]) => Number(value || 0) !== 0);
+    }
+
+    function renderItemStats(item) {
+        const entries = getItemStatEntries(item);
+
+        if (entries.length === 0) {
+            return `<p class="gear-item-no-stats">No readable stat bonuses.</p>`;
+        }
+
+        return `
+            <div class="gear-item-stat-grid" aria-label="${escapeText(item.name)} stats">
+                ${entries.map(([label, value]) => `
+                    <span class="gear-item-stat">
+                        <strong>${escapeText(label)}</strong>
+                        <span>${formatNumber(value)}</span>
+                    </span>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    function getUpgradeProjection(item, heroName) {
+        if (!item || !heroName) {
+            return null;
+        }
+
+        const roleKey = getHeroEffectiveRole(heroName);
+        return window.dd1GearScoring.simulateItemUpgrades(item, roleKey);
+    }
+
+    function renderItemUpgradeGuide(item, heroName) {
+        const projection = getUpgradeProjection(item, heroName);
+
+        if (!projection) {
+            return "";
+        }
+
+        if (projection.upgradesAvailable <= 0) {
+            return `
+                <div class="gear-item-level-status is-maxed">
+                    Level ${formatNumber(item.currentLevel)} / ${formatNumber(item.maxLevel)} • No upgrades remaining
+                </div>
+            `;
+        }
+
+        const projectedText = projection.supported
+            ? `Projected ${formatNumber(projection.currentScore)} → ${formatNumber(projection.projectedScore)} (+${formatNumber(projection.scoreGain)})`
+            : "Weapon/pet upgrade simulation not modeled yet";
+
+        return `
+            <div class="gear-item-level-status">
+                Level ${formatNumber(item.currentLevel)} / ${formatNumber(item.maxLevel)} • ${formatNumber(projection.upgradesAvailable)} upgrades left
+            </div>
+            <details class="gear-upgrade-guide">
+                <summary>Upgrade guide • ${escapeText(projectedText)}</summary>
+                ${projection.steps.length > 0
+                    ? `<ol>${projection.steps.map((step) => `<li>${escapeText(step)}</li>`).join("")}</ol>`
+                    : `<p>No additional stat upgrades are needed for the modeled priorities.</p>`}
+            </details>
+        `;
+    }
+
+    /* =========================================================
+       10. Hero Card Rendering
     ========================================================= */
 
     function renderHeroRoleSelect(hero) {
@@ -509,7 +614,7 @@
         `;
     }
 
-    function renderHeroSlotGroups(heroItems) {
+    function renderHeroSlotGroups(heroItems, heroName) {
         if (heroItems.length === 0) {
             return `<p class="gear-empty">No equipped gear rows found for this hero.</p>`;
         }
@@ -528,11 +633,13 @@
                                 <strong>${escapeText(slot)}</strong>
                                 <span>${escapeText(itemCountText)}</span>
                             </div>
-                            <p>${escapeText(strongest ? strongest.name : "No item")}</p>
-                            <small>
+                            <p class="gear-slot-item-name">${escapeText(strongest ? strongest.name : "No item")}</p>
+                            <small class="gear-slot-score">
                                 Score ${formatNumber(strongest ? strongest.score : 0)}
                                 ${strongest ? ` • ${escapeText(strongest.quality)}` : ""}
                             </small>
+                            ${strongest ? renderItemStats(strongest) : ""}
+                            ${strongest ? renderItemUpgradeGuide(strongest, heroName) : ""}
                         </article>
                     `;
                 }).join("")}
@@ -603,17 +710,229 @@
                     </dl>
 
                     ${renderWeakPiece(heroItems, hero.name)}
-                    ${renderHeroSlotGroups(heroItems)}
+                    ${renderHeroSlotGroups(heroItems, hero.name)}
                 </article>
             `;
         }).join("");
     }
 
     /* =========================================================
-       10. Gear Notes Rendering
+       11. Inventory Replacement Recommendations
     ========================================================= */
 
-    function buildRecommendationNotes(filteredItems) {
+    function isInventoryCandidate(row) {
+        if (!row) {
+            return false;
+        }
+
+        if (row.isEquipped || row.source === "equipped") {
+            return false;
+        }
+
+        const slot = normalizeSlot(row.itemType);
+
+        return replacementEligibleSlots.has(slot);
+    }
+
+    function getEquippedReplacementTargets(heroName) {
+        const bySlot = new Map();
+
+        getHeroItems(heroName).forEach((item) => {
+            const slot = normalizeSlot(item.itemType);
+
+            if (!replacementEligibleSlots.has(slot)) {
+                return;
+            }
+
+            const previous = bySlot.get(slot);
+
+            if (!previous || item.score < previous.score) {
+                bySlot.set(slot, item);
+            }
+        });
+
+        return [...bySlot.values()];
+    }
+
+    function getCompleteArmorSet(heroName) {
+        const armorBySlot = new Map();
+
+        getHeroItems(heroName).forEach((item) => {
+            const slot = normalizeSlot(item.itemType);
+
+            if (!armorReplacementSlots.has(slot)) {
+                return;
+            }
+
+            if (!armorBySlot.has(slot)) {
+                armorBySlot.set(slot, item);
+            }
+        });
+
+        if (armorBySlot.size !== armorReplacementSlots.size) {
+            return "";
+        }
+
+        const sets = [...armorBySlot.values()].map((item) => {
+            return String(item.armorSet || "Unknown").trim();
+        });
+
+        const firstSet = sets[0];
+
+        if (!firstSet || firstSet === "Unknown") {
+            return "";
+        }
+
+        return sets.every((armorSet) => armorSet === firstSet)
+            ? firstSet
+            : "";
+    }
+
+    function getInventoryCandidatesForItem(currentItem, heroName) {
+        const roleKey = getHeroEffectiveRole(heroName);
+        const slot = normalizeSlot(currentItem.itemType);
+        const completeArmorSet = getCompleteArmorSet(heroName);
+
+        return state.items
+            .filter((candidate) => {
+                if (!isInventoryCandidate(candidate)) {
+                    return false;
+                }
+
+                if (normalizeSlot(candidate.itemType) !== slot) {
+                    return false;
+                }
+
+                if (
+                    armorReplacementSlots.has(slot) &&
+                    completeArmorSet &&
+                    candidate.armorSet !== completeArmorSet
+                ) {
+                    return false;
+                }
+
+                return true;
+            })
+            .map((candidate) => {
+                const scoredCandidate = window.dd1GearScoring.scoreRow(candidate, roleKey);
+                const upgradeProjection = window.dd1GearScoring.simulateItemUpgrades(scoredCandidate, roleKey);
+
+                return {
+                    ...scoredCandidate,
+                    upgradeProjection: upgradeProjection,
+                    projectedScore: upgradeProjection.supported
+                        ? upgradeProjection.projectedScore
+                        : scoredCandidate.score
+                };
+            })
+            .sort((first, second) => {
+                return second.projectedScore - first.projectedScore;
+            });
+    }
+
+    function getPositiveUpgradeStatChanges(currentItem, candidate, roleKey, limit = 3) {
+        const role = window.dd1GearScoring.getRole(roleKey);
+        const weights = role.weights || {};
+        const changes = [];
+
+        Object.entries(weights).forEach(([statName, weight]) => {
+            if (statName === "allResists") {
+                const currentTotal = Object.values(currentItem.resists || {}).reduce((total, value) => {
+                    return total + Number(value || 0);
+                }, 0);
+
+                const candidateTotal = Object.values(candidate.resists || {}).reduce((total, value) => {
+                    return total + Number(value || 0);
+                }, 0);
+
+                const delta = candidateTotal - currentTotal;
+
+                if (delta > 0) {
+                    changes.push({
+                        label: "All Resists",
+                        delta: delta,
+                        contribution: delta * Number(weight || 0)
+                    });
+                }
+
+                return;
+            }
+
+            const currentValue = Number((currentItem.stats || {})[statName] || 0);
+            const candidateValue = Number((candidate.stats || {})[statName] || 0);
+            const delta = candidateValue - currentValue;
+
+            if (delta > 0) {
+                changes.push({
+                    label: statLabels[statName] || statName,
+                    delta: delta,
+                    contribution: delta * Number(weight || 0)
+                });
+            }
+        });
+
+        return changes
+            .sort((first, second) => second.contribution - first.contribution)
+            .slice(0, limit);
+    }
+
+    function buildUpgradeChangeText(currentItem, candidate, roleKey) {
+        const changes = getPositiveUpgradeStatChanges(currentItem, candidate, roleKey);
+
+        if (changes.length === 0) {
+            return "Higher total archetype score.";
+        }
+
+        return changes.map((change) => {
+            return `${change.label} +${formatNumber(change.delta)}`;
+        }).join(" / ");
+    }
+
+    function getReplacementRecommendations(heroName, limit = 5) {
+        const roleKey = getHeroEffectiveRole(heroName);
+        const completeArmorSet = getCompleteArmorSet(heroName);
+
+        return getEquippedReplacementTargets(heroName)
+            .map((currentItem) => {
+                const candidates = getInventoryCandidatesForItem(currentItem, heroName);
+                const bestCandidate = candidates[0];
+                const currentProjection = window.dd1GearScoring.simulateItemUpgrades(currentItem, roleKey);
+                const currentProjectedScore = currentProjection.supported
+                    ? currentProjection.projectedScore
+                    : currentItem.score;
+
+                if (!bestCandidate || bestCandidate.projectedScore <= currentProjectedScore) {
+                    return null;
+                }
+
+                const candidateProjection = bestCandidate.upgradeProjection;
+                const needsUpgradesFirst = bestCandidate.score <= currentItem.score && bestCandidate.projectedScore > currentProjectedScore;
+
+                return {
+                    slot: normalizeSlot(currentItem.itemType),
+                    currentItem: currentItem,
+                    candidate: bestCandidate,
+                    currentProjection: currentProjection,
+                    candidateProjection: candidateProjection,
+                    currentProjectedScore: currentProjectedScore,
+                    candidateProjectedScore: bestCandidate.projectedScore,
+                    scoreGain: bestCandidate.projectedScore - currentProjectedScore,
+                    currentScoreGain: bestCandidate.score - currentItem.score,
+                    needsUpgradesFirst: needsUpgradesFirst,
+                    changeText: buildUpgradeChangeText(currentItem, bestCandidate, roleKey),
+                    completeArmorSet: completeArmorSet
+                };
+            })
+            .filter(Boolean)
+            .sort((first, second) => second.scoreGain - first.scoreGain)
+            .slice(0, limit);
+    }
+
+    /* =========================================================
+       12. Gear Notes Rendering
+    ========================================================= */
+
+    function buildRecommendationNotes() {
         const focusedHero = getHeroByName(state.focusedHero);
 
         if (!focusedHero) {
@@ -629,13 +948,16 @@
         const roleKey = getHeroEffectiveRole(focusedHero.name);
         const role = window.dd1GearScoring.getRole(roleKey);
         const roleSource = getHeroRoleSource(focusedHero.name);
+        const equippedItems = getHeroItems(focusedHero.name);
+        const replacementRecommendations = getReplacementRecommendations(focusedHero.name);
+        const completeArmorSet = getCompleteArmorSet(focusedHero.name);
 
-        if (filteredItems.length === 0) {
+        if (equippedItems.length === 0) {
             return [
                 {
                     type: "empty",
-                    title: `${focusedHero.name}: no matching gear`,
-                    text: "This focused hero has no gear rows that match the current type, set, and search filters."
+                    title: `${focusedHero.name}: no equipped gear found`,
+                    text: "The save parser did not find equipped gear rows for this hero."
                 }
             ];
         }
@@ -648,46 +970,102 @@
             }
         ];
 
-        getWeakestItems(filteredItems, 4).forEach((row) => {
-            notes.push({
-                type: "warning",
-                title: `Review ${row.itemType}: ${row.name}`,
-                text: `Score ${row.score}. Main useful stats for ${role.label}: ${getStatText(row.strongestStats)}.`
-            });
-        });
+        if (replacementRecommendations.length > 0) {
+            replacementRecommendations.forEach((recommendation) => {
+                const currentItem = recommendation.currentItem;
+                const candidate = recommendation.candidate;
+                const setNote = (
+                    armorReplacementSlots.has(recommendation.slot) &&
+                    recommendation.completeArmorSet
+                )
+                    ? ` Preserves the ${recommendation.completeArmorSet} armor set.`
+                    : "";
 
-        const strongest = getStrongestItems(filteredItems, 3);
+                const currentLevelText = `${formatNumber(candidate.currentLevel)} / ${formatNumber(candidate.maxLevel)}`;
+                const upgradeLead = recommendation.needsUpgradesFirst
+                    ? "Potential upgrade after leveling"
+                    : "Upgrade";
+                const scoreText = recommendation.candidateProjection && recommendation.candidateProjection.supported
+                    ? `Projected ${role.label} score ${formatNumber(recommendation.candidateProjectedScore)} vs. ${formatNumber(recommendation.currentProjectedScore)} for the current piece (+${formatNumber(recommendation.scoreGain)}).`
+                    : `+${formatNumber(recommendation.scoreGain)} ${role.label} score.`;
+
+                notes.push({
+                    type: "upgrade",
+                    title: `${upgradeLead} ${recommendation.slot}: ${currentItem.name} → ${candidate.name}`,
+                    text: `${scoreText} Candidate level ${currentLevelText}. ${recommendation.changeText} Found in ${candidate.location || candidate.source || "inventory"}.${setNote}`,
+                    guide: recommendation.candidateProjection && recommendation.candidateProjection.upgradesAvailable > 0
+                        ? recommendation.candidateProjection.steps
+                        : []
+                });
+            });
+        } else {
+            const weakest = getWeakestItems(
+                equippedItems.filter((item) => {
+                    return replacementEligibleSlots.has(normalizeSlot(item.itemType));
+                }),
+                3
+            );
+
+            notes.push({
+                type: "success",
+                title: "No direct inventory upgrade found",
+                text: completeArmorSet
+                    ? `No higher projected same-slot replacement was found while preserving the complete ${completeArmorSet} armor set.`
+                    : "No higher projected same-slot replacement was found in the unequipped inventory for the supported gear slots."
+            });
+
+            weakest.forEach((row) => {
+                const projection = window.dd1GearScoring.simulateItemUpgrades(row, roleKey);
+                const projectionText = projection.upgradesAvailable > 0 && projection.supported
+                    ? ` It has ${formatNumber(projection.upgradesAvailable)} upgrades left and projects to ${formatNumber(projection.projectedScore)} if upgraded for this archetype.`
+                    : "";
+
+                notes.push({
+                    type: "warning",
+                    title: `Still worth reviewing ${normalizeSlot(row.itemType)}: ${row.name}`,
+                    text: `Current ${role.label} score ${formatNumber(row.score)}. Main useful stats: ${getStatText(row.strongestStats)}.${projectionText}`,
+                    guide: projection.upgradesAvailable > 0 ? projection.steps : []
+                });
+            });
+        }
+
+        const strongest = getStrongestItems(equippedItems, 3);
 
         if (strongest.length > 0) {
             notes.push({
                 type: "success",
-                title: "Strongest focused pieces",
-                text: strongest.map((row) => `${row.itemType}: ${row.name} (${row.score})`).join(" | ")
+                title: "Strongest equipped pieces",
+                text: strongest.map((row) => {
+                    return `${normalizeSlot(row.itemType)}: ${row.name} (${formatNumber(row.score)})`;
+                }).join(" | ")
             });
         }
 
         notes.push({
             type: "todo",
-            title: "Next optimizer step",
-            text: "This reviews equipped gear for the focused hero. The next update can compare weak pieces against item-box gear and recommend exact replacements."
+            title: "Recommendation scope",
+            text: "These are single-slot recommendations. Armor/accessory candidates are compared using projected stat-upgrade score when possible, equipped items on other heroes are not stolen, and a complete matching armor set is preserved. Weapon/pet upgrade simulation and multi-piece set rebuilding still come later."
         });
 
         return notes;
     }
 
-    function renderRecommendations(filteredItems) {
-        const notes = buildRecommendationNotes(filteredItems);
+    function renderRecommendations() {
+        const notes = buildRecommendationNotes();
 
         elements.recommendations.innerHTML = notes.map((note) => `
             <article class="gear-note gear-note-${escapeText(note.type)}">
                 <h3>${escapeText(note.title)}</h3>
                 <p>${escapeText(note.text)}</p>
+                ${Array.isArray(note.guide) && note.guide.length > 0
+                    ? `<div class="gear-note-upgrade-guide"><strong>How to upgrade it:</strong><ol>${note.guide.map((step) => `<li>${escapeText(step)}</li>`).join("")}</ol></div>`
+                    : ""}
             </article>
         `).join("");
     }
 
     /* =========================================================
-       11. Focused Item Table Rendering
+       13. Focused Item Table Rendering
     ========================================================= */
 
     function renderTable(filteredItems) {
@@ -709,7 +1087,16 @@
 
         elements.tableBody.innerHTML = filteredItems.map((row) => `
             <tr>
-                <td data-label="Score"><strong>${formatNumber(row.score)}</strong><br><small>${escapeText(row.scoreRoleLabel)}</small></td>
+                <td data-label="Score">
+                    <strong>${formatNumber(row.score)}</strong><br>
+                    <small>${escapeText(row.scoreRoleLabel)}</small>
+                    ${(() => {
+                        const projection = window.dd1GearScoring.simulateItemUpgrades(row, getHeroEffectiveRole(row.equippedHero));
+                        return projection.supported && projection.upgradesAvailable > 0
+                            ? `<br><small>Projected ${formatNumber(projection.projectedScore)}</small>`
+                            : "";
+                    })()}
+                </td>
                 <td data-label="Hero">${escapeText(row.equippedHero)}<br><small>${escapeText(row.equippedHeroClass)}</small></td>
                 <td data-label="Type">${escapeText(row.itemType)}</td>
                 <td data-label="Set">${escapeText(row.armorSet)}</td>
@@ -731,12 +1118,12 @@
 
         renderSummary();
         renderHeroList();
-        renderRecommendations(filteredItems);
+        renderRecommendations();
         renderTable(filteredItems);
     }
 
     /* =========================================================
-       12. File Loading + Clearing
+       13. File Loading + Clearing
     ========================================================= */
 
     async function loadFile(file) {
@@ -822,7 +1209,7 @@
     }
 
     /* =========================================================
-       13. CSV Export
+       14. CSV Export
     ========================================================= */
 
     function getCsvValue(value) {
@@ -901,7 +1288,7 @@
     }
 
     /* =========================================================
-       14. Drag and Drop
+       15. Drag and Drop
     ========================================================= */
 
     function isSupportedFile(file) {
@@ -963,7 +1350,7 @@
     }
 
     /* =========================================================
-       15. Event Listeners
+       16. Event Listeners
     ========================================================= */
 
     function setupHeroCardActions() {
@@ -1064,7 +1451,7 @@
     }
 
     /* =========================================================
-       16. Page Init
+       17. Page Init
     ========================================================= */
 
     function initializeGearOptimizer() {
