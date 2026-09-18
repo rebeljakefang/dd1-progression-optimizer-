@@ -24,29 +24,6 @@
         towerRangeOrSpecial: 10
     };
 
-    const optimizerEquipmentQualityNames = [
-        "Godly",
-        "Legendary",
-        "Epic",
-        "Amazing",
-        "Powerful",
-        "Shining",
-        "Polished",
-        "Sturdy",
-        "Solid",
-        "Stocky",
-        "Worn",
-        "Torn",
-        "Cursed",
-        "Mythical",
-        "Transcendent",
-        "Supreme",
-        "Ultimate 90",
-        "Ultimate 93",
-        "Ultimate+",
-        "Ultimate++"
-    ];
-
     const optimizerHeroTemplateMap = {
         "DunDefPlayers.HeroTemplateApprentice": "Apprentice",
         "DunDefPlayers.HeroTemplateSquire": "Squire",
@@ -67,10 +44,10 @@
     };
 
     const optimizerImportedClassRoles = {
-        "Hermit": ["Builder", "DPS", "Ability DPS", "Hybrid"],
-        "Gunwitch": ["DPS", "Ability DPS", "Hybrid"],
-        "Warden": ["Builder", "DPS", "Ability DPS", "Hybrid"],
-        "Guardian": ["Builder", "Waller", "DPS", "Ability DPS", "Hybrid"]
+        "Hermit": ["Builder", "DPS", "Hybrid"],
+        "Gunwitch": ["DPS", "Hybrid"],
+        "Warden": ["Builder", "DPS", "Hybrid"],
+        "Guardian": ["Builder", "Waller", "DPS", "Hybrid"]
     };
 
     function extendOptimizerClassData() {
@@ -588,7 +565,6 @@
             return value;
         }
 
-
         readU8(label = "u8") {
             this.requireBytes(1, label);
             const value = this.view.getUint8(this.position);
@@ -905,9 +881,9 @@
             ),
 
             weaponDamageBonus: reader.readI32("weapon_damage_bonus"),
-            weaponNumberOfProjectilesBonus: reader.readI8("weapon_number_of_projectiles_bonus"),
+            weaponNumberOfProjectilesBonus: reader.readU8("weapon_number_of_projectiles_bonus"),
             weaponSpeedOfProjectilesBonus: reader.readI32("weapon_speed_of_projectiles_bonus"),
-            weaponAdditionalDamageTypeIndex: reader.readI8("weapon_additional_damage_type_index"),
+            weaponAdditionalDamageTypeIndex: reader.readU8("weapon_additional_damage_type_index"),
             weaponAdditionalDamageAmount: reader.readI32("weapon_additional_damage_amount"),
             weaponDrawScaleMultiplier: reader.readF32("weapon_draw_scale_multiplier"),
             weaponSwingSpeedMultiplier: reader.readF32("weapon_swing_speed_multiplier"),
@@ -916,13 +892,13 @@
             spawnQuality: reader.readF32("spawn_quality"),
             spawnRandomizerMultiplier: reader.readF32("spawn_randomizer_multiplier"),
 
-            weaponBlockingBonus: reader.readI8("weapon_blocking_bonus"),
+            weaponBlockingBonus: reader.readU8("weapon_blocking_bonus"),
             weaponAltDamageBonus: reader.readI32("weapon_alt_damage_bonus"),
             weaponClipAmmoBonus: reader.readI32("weapon_clip_ammo_bonus"),
-            weaponReloadSpeedBonus: reader.readI8("weapon_reload_speed_bonus"),
-            weaponKnockbackBonus: reader.readI8("weapon_knockback_bonus"),
-            weaponChargeSpeedBonus: reader.readI8("weapon_charge_speed_bonus"),
-            weaponShotsPerSecondBonus: reader.readI8("weapon_shots_per_second_bonus"),
+            weaponReloadSpeedBonus: reader.readU8("weapon_reload_speed_bonus"),
+            weaponKnockbackBonus: reader.readU8("weapon_knockback_bonus"),
+            weaponChargeSpeedBonus: reader.readU8("weapon_charge_speed_bonus"),
+            weaponShotsPerSecondBonus: reader.readU8("weapon_shots_per_second_bonus"),
 
             nameIndexBase: reader.readU8("name_index_base"),
             nameIndexDamageReduction: reader.readU8("name_index_damage_reduction"),
@@ -1017,10 +993,6 @@
         };
     }
 
-    /* =========================================================
-       11. Hero Class, Equipment, and Stat Analysis
-    ========================================================= */
-
     function getOptimizerHeroClass(template) {
         if (!template) {
             return "Unknown";
@@ -1097,106 +1069,23 @@
         return stats;
     }
 
-    function getEquipmentQuality(equipment) {
-        return optimizerEquipmentQualityNames[equipment.nameIndexQualityDescriptor] || "Unknown";
-    }
-
-    function getArmorSetFromTemplate(template) {
-        const match = String(template || "").match(
-            /(?:Helmet|Torso|Gauntlet|Boots)ArmorBase_([A-Za-z0-9]+)/i
-        );
-
-        return match ? match[1] : null;
-    }
-
-    function isArmorEquipment(equipment) {
-        return getArmorSetFromTemplate(equipment.equipmentTemplate) !== null;
-    }
-
-    function getArmorSetBonusMultiplier(equipment) {
-        const qualityIndex = equipment.nameIndexQualityDescriptor;
-
-        if (qualityIndex >= 16 && qualityIndex <= 19) {
-            return 1.4;
-        }
-
-        if (qualityIndex === 15) {
-            return 1.36;
-        }
-
-        if (qualityIndex === 14) {
-            return 1.33;
-        }
-
-        if (qualityIndex === 13) {
-            return 1.3;
-        }
-
-        return 1.25;
-    }
-
-    function hasMatchingArmorSetBonus(equipments) {
-        const armorPieces = equipments.filter(isArmorEquipment);
-
-        if (armorPieces.length < 4) {
-            return false;
-        }
-
-        const armorSets = armorPieces.map((equipment) => {
-            return getArmorSetFromTemplate(equipment.equipmentTemplate);
-        });
-
-        const firstSpecificSet = armorSets.find((armorSet) => {
-            return armorSet && armorSet.toLowerCase() !== "any";
-        });
-
-        if (!firstSpecificSet) {
-            return true;
-        }
-
-        return armorSets.every((armorSet) => {
-            return armorSet && (
-                armorSet.toLowerCase() === "any" ||
-                armorSet.toLowerCase() === firstSpecificSet.toLowerCase()
-            );
-        });
-    }
-
-    function getAdjustedEquipmentValue(equipment, value, hasArmorSetBonus) {
-        if (
-            !hasArmorSetBonus ||
-            !isArmorEquipment(equipment) ||
-            value < 0
-        ) {
-            return value;
-        }
-
-        return Math.ceil(value * getArmorSetBonusMultiplier(equipment));
-    }
-
     function getEquipmentOptimizerStats(equipments, className) {
         const stats = createEmptyOptimizerStats();
-        const hasArmorSetBonus = hasMatchingArmorSetBonus(equipments);
 
         equipments.forEach((equipment) => {
             const values = equipment.statModifiers || [];
 
-            function adjusted(statIndex) {
-                const value = values[statIndex] || 0;
-                return getAdjustedEquipmentValue(equipment, value, hasArmorSetBonus);
-            }
+            stats.heroHealth += values[optimizerEquipmentStatIndex.heroHealth] || 0;
+            stats.heroSpeed += values[optimizerEquipmentStatIndex.heroSpeed] || 0;
+            stats.heroDamage += values[optimizerEquipmentStatIndex.heroDamage] || 0;
+            stats.heroCasting += values[optimizerEquipmentStatIndex.heroCasting] || 0;
+            stats.ability1 += values[optimizerEquipmentStatIndex.ability1] || 0;
+            stats.ability2 += values[optimizerEquipmentStatIndex.ability2] || 0;
+            stats.towerHealth += values[optimizerEquipmentStatIndex.towerHealth] || 0;
+            stats.towerRate += values[optimizerEquipmentStatIndex.towerRate] || 0;
+            stats.towerDamage += values[optimizerEquipmentStatIndex.towerDamage] || 0;
 
-            stats.heroHealth += adjusted(optimizerEquipmentStatIndex.heroHealth);
-            stats.heroSpeed += adjusted(optimizerEquipmentStatIndex.heroSpeed);
-            stats.heroDamage += adjusted(optimizerEquipmentStatIndex.heroDamage);
-            stats.heroCasting += adjusted(optimizerEquipmentStatIndex.heroCasting);
-            stats.ability1 += adjusted(optimizerEquipmentStatIndex.ability1);
-            stats.ability2 += adjusted(optimizerEquipmentStatIndex.ability2);
-            stats.towerHealth += adjusted(optimizerEquipmentStatIndex.towerHealth);
-            stats.towerRate += adjusted(optimizerEquipmentStatIndex.towerRate);
-            stats.towerDamage += adjusted(optimizerEquipmentStatIndex.towerDamage);
-
-            const rangeOrSpecial = adjusted(optimizerEquipmentStatIndex.towerRangeOrSpecial);
+            const rangeOrSpecial = values[optimizerEquipmentStatIndex.towerRangeOrSpecial] || 0;
 
             if (className === "Series EV") {
                 stats.specialStat += rangeOrSpecial;
@@ -1212,62 +1101,40 @@
         const totals = createEmptyOptimizerStats();
 
         Object.keys(totals).forEach((statName) => {
-            totals[statName] = Math.max(
-                0,
-                (firstStats[statName] || 0) + (secondStats[statName] || 0)
-            );
+            totals[statName] = (firstStats[statName] || 0) + (secondStats[statName] || 0);
         });
 
         return totals;
     }
 
-    function getResistanceTotals(equipments) {
-        const rawTotals = [0, 0, 0, 0];
-        const hasArmorSetBonus = hasMatchingArmorSetBonus(equipments);
+    function getRawResistanceTotals(equipments) {
+        const totals = [0, 0, 0, 0];
 
         equipments.forEach((equipment) => {
             const values = equipment.damageReductionPercentage || [];
 
-            for (let index = 0; index < rawTotals.length; index++) {
-                const value = values[index] || 0;
-                rawTotals[index] += getAdjustedEquipmentValue(
-                    equipment,
-                    value,
-                    hasArmorSetBonus
-                );
+            for (let index = 0; index < totals.length; index++) {
+                totals[index] += values[index] || 0;
             }
-        });
-
-        const displayedTotals = rawTotals.map((value) => {
-            const nightmareValue = value < 0
-                ? Math.ceil(value * 0.55)
-                : Math.floor(value * 0.55);
-
-            return Math.min(90, nightmareValue);
         });
 
         return {
-            raw: {
-                generic: rawTotals[0],
-                poison: rawTotals[1],
-                fire: rawTotals[2],
-                lightning: rawTotals[3]
-            },
-            displayed: {
-                generic: displayedTotals[0],
-                poison: displayedTotals[1],
-                fire: displayedTotals[2],
-                lightning: displayedTotals[3]
-            }
+            generic: totals[0],
+            poison: totals[1],
+            fire: totals[2],
+            lightning: totals[3]
         };
     }
 
-    function getLowestResistance(resistances) {
-        return Math.min(
-            resistances.generic,
-            resistances.poison,
-            resistances.fire,
-            resistances.lightning
+    function getLowestRawResistance(resistances) {
+        return Math.max(
+            0,
+            Math.min(
+                resistances.generic,
+                resistances.poison,
+                resistances.fire,
+                resistances.lightning
+            )
         );
     }
 
@@ -1278,120 +1145,84 @@
             template: equipment.equipmentTemplate || "Unknown Equipment Template",
             currentUpgradeLevel: equipment.level,
             maximumUpgradeLevel: equipment.maxEquipmentLevel,
-            quality: getEquipmentQuality(equipment),
-            qualityIndex: equipment.nameIndexQualityDescriptor,
-            isArmor: isArmorEquipment(equipment),
-            armorSet: getArmorSetFromTemplate(equipment.equipmentTemplate),
-            setBonusMultiplier: isArmorEquipment(equipment)
-                ? getArmorSetBonusMultiplier(equipment)
-                : 1,
             statModifiers: [...equipment.statModifiers],
             spawnStatModifiers: [...equipment.spawnStatModifiers],
             resistances: [...equipment.damageReductionPercentage],
             isSecondary: equipment.isSecondary,
             isLocked: Boolean(equipment.isLocked),
-            equipmentIds: [equipment.equipmentId1, equipment.equipmentId2]
+            equipmentIds: [equipment.equipmentId1, equipment.equipmentId2],
+            weaponDamageBonus: equipment.weaponDamageBonus,
+            weaponNumberOfProjectilesBonus: equipment.weaponNumberOfProjectilesBonus,
+            weaponSpeedOfProjectilesBonus: equipment.weaponSpeedOfProjectilesBonus,
+            weaponAdditionalDamageTypeIndex: equipment.weaponAdditionalDamageTypeIndex,
+            weaponAdditionalDamageAmount: equipment.weaponAdditionalDamageAmount,
+            weaponBlockingBonus: equipment.weaponBlockingBonus,
+            weaponAltDamageBonus: equipment.weaponAltDamageBonus,
+            weaponClipAmmoBonus: equipment.weaponClipAmmoBonus,
+            weaponReloadSpeedBonus: equipment.weaponReloadSpeedBonus,
+            weaponKnockbackBonus: equipment.weaponKnockbackBonus,
+            weaponChargeSpeedBonus: equipment.weaponChargeSpeedBonus,
+            weaponShotsPerSecondBonus: equipment.weaponShotsPerSecondBonus,
+            weaponSwingSpeedMultiplier: equipment.weaponSwingSpeedMultiplier
         };
-    }
-
-    function stripDd1ColorTags(value) {
-        return String(value || "")
-            .replace(/<\/?color(?::[^>]*)?>/gi, "")
-            .replace(/<color[^>]*>/gi, "")
-            .trim();
-    }
-
-    function getImportedAbilityScore(stats) {
-        return Math.max(stats.ability1 || 0, stats.ability2 || 0);
     }
 
     function suggestImportedHeroRole(hero) {
         const stats = hero.totalStats;
         const towerScore = stats.towerHealth + stats.towerDamage + stats.towerRange + stats.towerRate;
-        const abilityScore = getImportedAbilityScore(stats);
-        const heroScore = stats.heroHealth + stats.heroDamage + stats.heroSpeed + stats.heroCasting + abilityScore;
-        const abilityFocused = abilityScore > stats.heroDamage * 1.25 && abilityScore > 500;
+        const heroScore = stats.heroHealth + stats.heroDamage + stats.heroSpeed + stats.ability1 + stats.ability2;
 
         switch (hero.className) {
             case "Summoner":
-                if (towerScore >= heroScore) {
-                    return stats.towerHealth > stats.towerDamage * 1.35
-                        ? "Waller Summoner"
-                        : "Minion Summoner";
-                }
-
-                return "Damage Summoner";
+                return stats.towerHealth > stats.towerDamage * 1.15
+                    ? "Waller Summoner"
+                    : "Minion Summoner";
 
             case "Series EV":
-                if (towerScore >= heroScore) {
-                    return stats.towerHealth > stats.towerDamage * 1.25
-                        ? "Waller"
-                        : "Beam EV";
-                }
-
-                return abilityFocused ? "Ability DPS" : "DPS";
+                return stats.towerHealth > stats.towerDamage * 1.25
+                    ? "Waller"
+                    : "Beam EV";
 
             case "Monk":
-                if (
-                    stats.ability1 > 500 &&
-                    stats.ability2 > 500 &&
-                    abilityScore >= stats.heroDamage
-                ) {
+                if (stats.heroDamage > stats.towerDamage && stats.ability1 + stats.ability2 > stats.towerDamage) {
                     return "Boost Monk";
                 }
 
-                if (towerScore >= heroScore) {
-                    return "Aura Monk";
-                }
-
-                return abilityFocused ? "Ability DPS" : "DPS";
+                return towerScore >= heroScore ? "Aura Monk" : "DPS";
 
             case "Initiate":
-                if (
-                    stats.heroCasting + stats.heroSpeed + abilityScore >
-                    towerScore
-                ) {
+                if (stats.heroSpeed + stats.ability1 + stats.ability2 > towerScore) {
                     return "Upgrade Initiate";
                 }
 
-                return towerScore >= heroScore
-                    ? "Aura Monk"
-                    : abilityFocused ? "Ability DPS" : "DPS";
+                return towerScore >= heroScore ? "Aura Monk" : "DPS";
 
             case "Huntress":
             case "Ranger":
-                return towerScore >= heroScore
-                    ? "Trap Huntress"
-                    : abilityFocused ? "Ability DPS" : "DPS";
+                return towerScore >= heroScore ? "Trap Huntress" : "DPS";
 
             case "Squire":
             case "Countess":
-                if (towerScore >= heroScore) {
-                    return stats.towerHealth > stats.towerDamage * 1.25
-                        ? "Waller"
-                        : "Builder";
+                if (stats.towerHealth > stats.towerDamage * 1.25) {
+                    return "Waller";
                 }
 
-                return abilityFocused ? "Ability DPS" : "DPS";
+                return towerScore >= heroScore ? "Builder" : "DPS";
 
             case "Apprentice":
             case "Adept":
             case "Hermit":
             case "Warden":
             case "Guardian":
-                return towerScore >= heroScore
-                    ? "Builder"
-                    : abilityFocused ? "Ability DPS" : "DPS";
+                return towerScore >= heroScore ? "Builder" : "DPS";
 
             case "Jester":
             case "Barbarian":
             case "Gunwitch":
-                return abilityFocused ? "Ability DPS" : "DPS";
+                return "DPS";
 
             default:
-                return towerScore >= heroScore
-                    ? "Builder"
-                    : abilityFocused ? "Ability DPS" : "DPS";
+                return towerScore >= heroScore ? "Builder" : "DPS";
         }
     }
 
@@ -1401,14 +1232,11 @@
         const baseStats = getBaseOptimizerStats(heroInfo, className);
         const equipmentStats = getEquipmentOptimizerStats(rawHero.equipments, className);
         const totalStats = addOptimizerStats(baseStats, equipmentStats);
-        const resistanceTotals = getResistanceTotals(rawHero.equipments);
-        const resistances = resistanceTotals.displayed;
-        const fallbackName = `Hero ${index + 1}`;
-        const cleanName = stripDd1ColorTags(heroInfo.heroName) || fallbackName;
+        const resistances = getRawResistanceTotals(rawHero.equipments);
 
         const hero = {
             number: index + 1,
-            name: cleanName,
+            name: heroInfo.heroName || `Hero ${index + 1}`,
             template: heroInfo.heroTemplate || "Unknown Hero Template",
             className: className,
             level: heroInfo.heroLevel,
@@ -1418,9 +1246,7 @@
             equipmentStats: equipmentStats,
             totalStats: totalStats,
             resistances: resistances,
-            rawResistances: resistanceTotals.raw,
-            lowestResistance: getLowestResistance(resistances),
-            hasArmorSetBonus: hasMatchingArmorSetBonus(rawHero.equipments),
+            lowestResistance: getLowestRawResistance(resistances),
             equipmentCount: rawHero.equipments.length,
             equipment: rawHero.equipments.map(cleanImportedEquipment),
             suggestedRole: ""
@@ -1440,6 +1266,10 @@
             warnings.push("At least one hero template is not mapped yet. That hero was imported as Unknown.");
         }
 
+        warnings.push(
+            "Imported stat totals decode DD1's +127 equipment-stat offsets. Armor set bonuses and other runtime bonuses can still make the in-game hero sheet differ from the raw save totals."
+        );
+
         return {
             fileName: fileName,
             importedAt: new Date().toISOString(),
@@ -1455,10 +1285,6 @@
             }
         };
     }
-
-    /* =========================================================
-       12. Optimizer Page Population and Import Output
-    ========================================================= */
 
     function ensureSelectOption(selectElement, value) {
         if (!selectElement || !value) {
@@ -1504,7 +1330,8 @@
 
         heroRosterGrid.innerHTML = "";
 
-        const heroesToImport = importedSaveData.heroes;
+        const slotLimit = typeof maxHeroSlots === "number" ? maxHeroSlots : 20;
+        const heroesToImport = importedSaveData.heroes.slice(0, slotLimit);
 
         heroesToImport.forEach(() => {
             addHeroSlot();
@@ -1524,12 +1351,6 @@
             setHeroField(heroNumber, "role", hero.suggestedRole);
             updateRoleHint(heroNumber);
 
-            const ignoreField = document.querySelector(`#hero-${heroNumber}-ignore`);
-
-            if (ignoreField) {
-                ignoreField.checked = false;
-            }
-
             setHeroField(heroNumber, "level", hero.level);
             setHeroField(heroNumber, "tower-health", hero.totalStats.towerHealth);
             setHeroField(heroNumber, "tower-damage", hero.totalStats.towerDamage);
@@ -1538,7 +1359,6 @@
             setHeroField(heroNumber, "hero-health", hero.totalStats.heroHealth);
             setHeroField(heroNumber, "hero-damage", hero.totalStats.heroDamage);
             setHeroField(heroNumber, "hero-speed", hero.totalStats.heroSpeed);
-            setHeroField(heroNumber, "hero-casting", hero.totalStats.heroCasting);
             setHeroField(heroNumber, "lowest-resistance", hero.lowestResistance);
             setHeroField(heroNumber, "ability-1", hero.totalStats.ability1);
             setHeroField(heroNumber, "ability-2", hero.totalStats.ability2);
@@ -1552,6 +1372,12 @@
             setImportedHeroHeading(slot, heroNumber, hero.name);
         });
 
+        if (importedSaveData.heroes.length > heroesToImport.length) {
+            importedSaveData.warnings.push(
+                `${importedSaveData.heroes.length - heroesToImport.length} heroes were not added because the optimizer currently allows ${slotLimit} hero slots.`
+            );
+        }
+
         if (typeof updateAddHeroButton === "function") {
             updateAddHeroButton();
         }
@@ -1562,9 +1388,12 @@
     }
 
     function escapeOptimizerImportHtml(value) {
-        const element = document.createElement("div");
-        element.textContent = String(value);
-        return element.innerHTML;
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
     }
 
     function buildOptimizerImportOutput(importedSaveData) {
@@ -1588,28 +1417,18 @@
                     Hero HP ${hero.totalStats.heroHealth},
                     Damage ${hero.totalStats.heroDamage},
                     Speed ${hero.totalStats.heroSpeed},
-                    Casting ${hero.totalStats.heroCasting},
                     AB1 ${hero.totalStats.ability1},
                     AB2 ${hero.totalStats.ability2},
-                    Lowest resistance ${hero.lowestResistance}%
+                    Raw lowest resist ${hero.lowestResistance}
                     <br>
                     Equipped items read: ${hero.equipmentCount}
                 </li>
             `;
         }).join("");
 
-        const warningHtml = importedSaveData.warnings.length > 0
-            ? `
-                <div class="guide-warning">
-                    <h4>Import Warning</h4>
-                    <ul>
-                        ${importedSaveData.warnings.map((warning) => {
-                            return `<li>${escapeOptimizerImportHtml(warning)}</li>`;
-                        }).join("")}
-                    </ul>
-                </div>
-            `
-            : "";
+        const warningRows = importedSaveData.warnings.map((warning) => {
+            return `<li>${escapeOptimizerImportHtml(warning)}</li>`;
+        }).join("");
 
         return `
             <div class="result-box">
@@ -1628,14 +1447,13 @@
                     <ol>${heroRows}</ol>
                 </details>
 
-                ${warningHtml}
+                <div class="guide-warning">
+                    <h4>Current Import Notes</h4>
+                    <ul>${warningRows}</ul>
+                </div>
             </div>
         `;
     }
-
-    /* =========================================================
-       13. Save File Event Handler and Startup
-    ========================================================= */
 
     async function handleOptimizerSaveFile(event) {
         const file = event.target.files && event.target.files[0];

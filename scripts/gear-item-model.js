@@ -196,7 +196,19 @@
             return "Secondary";
         }
 
-        if (includesAny(text, ["weapon", "sword", "staff", "bow", "gun", "spear", "cannon", "blade", "shooter"])) {
+        const hasWeaponData = (
+            Number(equipment.weaponDamageBonus || 0) !== 0 ||
+            Number(equipment.weaponAdditionalDamageAmount || 0) !== 0 ||
+            Number(equipment.weaponSpeedOfProjectilesBonus || 0) !== 0 ||
+            Number(equipment.weaponNumberOfProjectilesBonus || 127) !== 127 ||
+            Number(equipment.weaponShotsPerSecondBonus || 127) !== 127 ||
+            Number(equipment.weaponChargeSpeedBonus || 127) !== 127
+        );
+
+        if (
+            includesAny(text, ["weapon", "sword", "staff", "bow", "gun", "spear", "cannon", "blade", "shooter"]) ||
+            hasWeaponData
+        ) {
             return "Weapon";
         }
 
@@ -293,6 +305,21 @@
             resistTotal: resistTotal,
             isLocked: Boolean(equipment.isLocked),
             isSecondary: Boolean(equipment.isSecondary),
+            weapon: {
+                damage: Number(equipment.weaponDamageBonus || 0),
+                projectiles: Number(equipment.weaponNumberOfProjectilesBonus || 127) - 127,
+                projectileSpeed: Number(equipment.weaponSpeedOfProjectilesBonus || 0),
+                additionalDamage: Number(equipment.weaponAdditionalDamageAmount || 0),
+                additionalDamageType: Number(equipment.weaponAdditionalDamageTypeIndex || 0),
+                shotsPerSecond: Number(equipment.weaponShotsPerSecondBonus || 127) - 127,
+                chargeSpeed: Number(equipment.weaponChargeSpeedBonus || 127) - 127,
+                swingSpeed: Number(equipment.weaponSwingSpeedMultiplier || 0),
+                altDamage: Number(equipment.weaponAltDamageBonus || 0),
+                blocking: Number(equipment.weaponBlockingBonus || 127) - 127,
+                reloadSpeed: Number(equipment.weaponReloadSpeedBonus || 127) - 127,
+                knockback: Number(equipment.weaponKnockbackBonus || 127) - 127,
+                clipAmmo: Number(equipment.weaponClipAmmoBonus || 0)
+            },
             rawEquipment: equipment
         };
     }

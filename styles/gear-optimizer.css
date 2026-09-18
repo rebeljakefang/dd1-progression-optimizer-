@@ -10,9 +10,36 @@
 ========================================================= */
 
 .gear-page {
-    width: min(1180px, calc(100% - 2rem));
+    width: min(1360px, calc(100% - 2rem));
     margin: 0 auto;
     padding: 2rem 0 3rem;
+    color: #f4f6f8;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.98rem;
+    line-height: 1.45;
+}
+
+.gear-page button,
+.gear-page input,
+.gear-page select,
+.gear-page textarea {
+    font: inherit;
+}
+
+.gear-page h1,
+.gear-page h2,
+.gear-page h3,
+.gear-page h4,
+.gear-page p,
+.gear-page li,
+.gear-page dt,
+.gear-page dd,
+.gear-page table,
+.gear-page label,
+.gear-page small,
+.gear-page strong,
+.gear-page summary {
+    font-family: inherit;
 }
 
 .gear-page,
@@ -242,7 +269,7 @@
 
 .gear-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
     align-items: start;
     gap: 22px;
     margin-bottom: 1.25rem;
@@ -300,7 +327,6 @@
     color: #fff1d5;
     background: linear-gradient(to bottom, #7b2a13, #451509);
     border: 1px solid #e18a32;
-    font-family: Georgia, "Times New Roman", serif;
     font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
@@ -351,7 +377,6 @@
     color: #f6ead2;
     background: rgba(10, 6, 4, 0.85);
     border: 2px solid #6d4a31;
-    font-family: Georgia, "Times New Roman", serif;
     font-weight: 700;
 }
 
@@ -382,16 +407,17 @@
 
 .gear-slot-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
     margin-top: 14px;
 }
 
 .gear-slot-pill {
-    padding: 10px;
+    padding: 14px;
     overflow: hidden;
-    background: rgba(10, 6, 4, 0.52);
-    border: 1px solid rgba(255, 220, 155, 0.22);
+    background: linear-gradient(180deg, rgba(24, 27, 35, 0.96), rgba(14, 16, 22, 0.96));
+    border: 1px solid rgba(255, 220, 155, 0.2);
+    border-radius: 12px;
 }
 
 .gear-slot-pill-header {
@@ -557,129 +583,156 @@
 }
 
 /* =========================================================
-   12. Overflow + Long Name Protection
+   12. Item Stat Cards + Upgrade Guides
 ========================================================= */
-
-.gear-note,
-.gear-slot-pill,
-.gear-weak-piece,
-.gear-item-table td,
-.gear-item-table th {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.gear-note h3,
-.gear-note p,
-.gear-slot-pill p,
-.gear-slot-pill small {
-    display: block;
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-/* =========================================================
-   13. Item Stats + Upgrade Guides
-========================================================= */
-
-.gear-slot-item-name {
-    margin: 0 0 0.25rem;
-    font-weight: 700;
-}
 
 .gear-slot-score {
-    margin-bottom: 0.55rem;
-    color: #d9b86f;
+    display: block;
+    margin-top: 2px;
+    color: #c7ced8;
+    font-size: 0.82rem;
+}
+
+.gear-item-stat-sections {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.gear-stat-group {
+    min-width: 0;
+    padding-top: 9px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.gear-stat-group:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.gear-stat-group h4 {
+    margin: 0 0 7px;
+    color: #d7dce4;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .gear-item-stat-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.3rem 0.45rem;
-    margin-top: 0.55rem;
-    padding-top: 0.55rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 5px 12px;
 }
 
 .gear-item-stat {
     display: flex;
-    justify-content: space-between;
-    gap: 0.45rem;
     min-width: 0;
-    padding: 0.22rem 0.35rem;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.22);
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.gear-item-stat-label {
+    min-width: 0;
+    color: #aeb7c4;
     font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 
-.gear-item-stat strong {
-    color: #d9b86f;
+.gear-item-stat-value {
+    flex: 0 0 auto;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-.gear-item-stat span {
-    text-align: right;
+.gear-item-stat-value.is-positive {
+    color: #8fe39a;
+}
+
+.gear-item-stat-value.is-negative {
+    color: #ff8f8f;
+}
+
+.gear-item-stat-value.is-neutral {
+    color: #d7dce4;
 }
 
 .gear-item-no-stats {
-    margin: 0.55rem 0 0;
-    color: rgba(255, 255, 255, 0.62);
-    font-size: 0.8rem;
+    margin-top: 10px !important;
+    color: #9ea7b4 !important;
+    font-size: 0.82rem;
 }
 
 .gear-item-level-status {
-    margin-top: 0.55rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f0d391;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 10px;
+    margin-top: 12px;
+    padding-top: 9px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    color: #bdc5d0;
     font-size: 0.78rem;
-    line-height: 1.35;
+    font-variant-numeric: tabular-nums;
 }
 
 .gear-item-level-status.is-maxed {
-    color: rgba(255, 255, 255, 0.62);
+    color: #8f98a5;
 }
 
 .gear-upgrade-guide {
-    margin-top: 0.45rem;
-    padding: 0.45rem 0.55rem;
-    border: 1px solid rgba(217, 184, 111, 0.28);
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.22);
+    margin-top: 9px;
+    border: 1px solid rgba(225, 138, 50, 0.35);
+    border-radius: 9px;
+    background: rgba(225, 138, 50, 0.07);
 }
 
 .gear-upgrade-guide summary {
-    color: #f0d391;
-    font-size: 0.78rem;
-    font-weight: 700;
+    padding: 8px 9px;
+    color: #ffd69c;
+    font-size: 0.8rem;
+    font-weight: 750;
     cursor: pointer;
+    user-select: none;
 }
 
 .gear-upgrade-guide ol,
-.gear-note-upgrade-guide ol {
-    margin: 0.55rem 0 0;
-    padding-left: 1.25rem;
+.gear-upgrade-guide p {
+    margin: 0;
+    padding: 0 12px 10px 29px;
+    color: #d7dce4;
+    font-size: 0.79rem;
+    line-height: 1.5;
 }
 
-.gear-upgrade-guide li,
-.gear-note-upgrade-guide li {
-    margin-bottom: 0.35rem;
-    line-height: 1.4;
+.gear-upgrade-guide li + li {
+    margin-top: 6px;
 }
 
-.gear-note-upgrade-guide {
-    margin-top: 0.7rem;
-    padding: 0.7rem 0.8rem;
-    border-left: 3px solid #d9b86f;
-    background: rgba(0, 0, 0, 0.2);
+.gear-note,
+.gear-note h3,
+.gear-note p,
+.gear-weak-piece,
+.gear-item-table td {
+    overflow-wrap: break-word;
+    word-break: normal;
 }
 
-.gear-note-upgrade-guide strong {
-    color: #f0d391;
+.gear-slot-pill,
+.gear-slot-pill *,
+.gear-item-table th {
+    word-break: normal;
 }
 
 /* =========================================================
-   14. Large / Medium Responsive Layout
+   13. Large / Medium Responsive Layout
 ========================================================= */
 
 @media (max-width: 1000px) {
@@ -704,7 +757,7 @@
 }
 
 /* =========================================================
-   15. Small Screen Layout
+   14. Small Screen Layout
 ========================================================= */
 
 @media (max-width: 700px) {
@@ -723,7 +776,7 @@
 
 @media (max-width: 640px) {
     .gear-page {
-        width: min(100% - 1rem, 1180px);
+        width: min(100% - 1rem, 1360px);
         padding-top: 1rem;
     }
 

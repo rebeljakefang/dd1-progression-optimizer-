@@ -666,27 +666,35 @@
         let levelsLeft = upgradesAvailable;
         let resistanceLevelsUsed = 0;
         let resistStatus = "not-required";
+        let roleEligible = true;
 
         const currentScore = calculateScore(row, normalizedRoleKey);
 
-        if (upgradesAvailable <= 0) {
-            return {
-                roleKey: normalizedRoleKey,
-                roleLabel: role.label,
-                currentScore,
-                projectedScore: currentScore,
-                scoreGain: 0,
-                upgradesAvailable: 0,
-                levelsLeft: 0,
-                steps: [],
-                projectedStats: stats,
-                projectedResists: resists,
-                resistStatus: "maxed",
-                supported: true
-            };
-        }
-
+        /*
+           Weapons and pets have separate damage/projectile upgrade rules.
+           We still give a useful text plan, but do not pretend that their
+           exact fully-upgraded score is known yet.
+        */
         if (itemType === "weapon" || itemType === "pet") {
+            const usefulStats = [...plan.primary, ...plan.secondary]
+                .filter((statName, index, list) => list.indexOf(statName) === index)
+                .filter((statName) => Number(stats[statName] || 0) !== 0)
+                .map((statName) => upgradeStatLabels[statName] || statName);
+
+            if (upgradesAvailable > 0) {
+                steps.push(`This ${itemType} has ${upgradesAvailable} upgrade level${upgradesAvailable === 1 ? "" : "s"} left.`);
+            }
+
+            if (usefulStats.length > 0) {
+                steps.push(`For ${role.label}, preserve and prioritize these useful role stats when the game allows a stat upgrade: ${usefulStats.join(", ")}.`);
+            }
+
+            steps.push(
+                itemType === "weapon"
+                    ? "Weapon damage, projectile count/speed, attack rate, charge, and other weapon-specific upgrades follow separate in-game rules. Use the weapon's damage path for a damage weapon; this optimizer will not invent an exact max-damage projection yet."
+                    : "Pet attack damage and pet-specific upgrades follow separate in-game rules. Keep the role stats you need, but do not treat the projected archetype score as an exact max-pet result yet."
+            );
+
             return {
                 roleKey: normalizedRoleKey,
                 roleLabel: role.label,
@@ -695,26 +703,36 @@
                 scoreGain: 0,
                 upgradesAvailable,
                 levelsLeft: upgradesAvailable,
-                steps: ["Weapon and pet damage upgrades use separate rules; stat-only max-upgrade simulation is not enabled for this slot yet."],
+                resistanceLevelsUsed: 0,
+                steps,
                 projectedStats: stats,
                 projectedResists: resists,
                 resistStatus: "not-applicable",
+                roleEligible: true,
+                maxStat: rules.maxStat,
+                resistanceTarget: rules.resistanceTarget,
+                setBonus: rules.setBonus,
                 supported: false
             };
         }
 
         if (isArmor && plan.requireResists) {
+            const resistNames = ["Generic", "Poison", "Fire", "Lightning"];
             const resistValues = [resists.generic, resists.poison, resists.fire, resists.lightning];
-            const hasAllResists = resistValues.every((value) => value !== 0);
+            const missingResists = resistValues
+                .map((value, index) => ({ value, name: resistNames[index] }))
+                .filter((entry) => Number(entry.value || 0) === 0)
+                .map((entry) => entry.name);
 
-            if (!hasAllResists) {
+            if (missingResists.length > 0) {
                 resistStatus = "missing";
-                steps.push("This armor is missing at least one resistance type, so it cannot follow the normal DPS resistance-cap plan.");
+                roleEligible = false;
+                steps.push(`Do not build this as a normal ${role.label} armor piece first: it is missing ${missingResists.join(", ")} resistance${missingResists.length === 1 ? "" : "s"}, and a missing resistance cannot be created with upgrade levels.`);
             } else {
                 const required = getUpgradesRequiredForResists(rules.resistanceTarget, resists);
                 const overcapSlotsLeft = Math.floor(maxLevel / 10) - Math.floor(currentLevel / 10);
                 const overcapSlotsNeeded = resistValues.reduce((total, value) => {
-                    return total + Math.max(0, rules.resistanceTarget - Math.max(value, 23));
+                    return total + Math.max(0, rules.resistanceTarget - Math.max(Number(value || 0), 23));
                 }, 0);
 
                 if (required <= levelsLeft && overcapSlotsLeft >= overcapSlotsNeeded) {
@@ -727,18 +745,19 @@
                     resistStatus = required > 0 ? "cap-planned" : "already-capped";
 
                     if (required > 0) {
-                        steps.push(`Spend about ${required} upgrade level${required === 1 ? "" : "s"} getting all four resistances to the ${rules.resistanceTarget} raw target first.`);
+                        steps.push(`First use about ${required} upgrade level${required === 1 ? "" : "s"} on resistances so all four can reach the ${rules.resistanceTarget} raw resistance target. Use the every-10th-level resistance increases where needed.`);
+                    } else {
+                        steps.push(`Resistances already meet the ${rules.resistanceTarget} raw target for this quality, so no upgrade levels need to be reserved for them.`);
                     }
                 } else {
                     resistStatus = "cannot-cap";
-                    steps.push("There are not enough remaining upgrade levels/10-level resistance bumps to reach the normal resistance target. Treat this as a lower-priority DPS piece unless the rest of the stats are exceptional.");
+                    roleEligible = false;
+                    steps.push(`This piece cannot reach the normal ${rules.resistanceTarget} raw resistance target with its remaining levels and every-10th-level resistance upgrades. Treat it as a backup ${role.label} piece instead of a primary recommendation.`);
                 }
             }
         }
 
-        function investIntoStats(statNames, label) {
-            const investments = [];
-
+        function investIntoStats(statNames, prefix) {
             statNames.forEach((statName) => {
                 if (levelsLeft <= 0) {
                     return;
@@ -746,6 +765,8 @@
 
                 const currentValue = Number(stats[statName] || 0);
 
+                /* DDGO skips a stat that is exactly zero because the game
+                   cannot add a missing stat through ordinary upgrades. */
                 if (currentValue === 0) {
                     return;
                 }
@@ -757,25 +778,27 @@
                     return;
                 }
 
-                stats[statName] = currentValue + amount;
+                const projectedValue = currentValue + amount;
+                stats[statName] = projectedValue;
                 levelsLeft -= amount;
-                investments.push({ statName, amount });
+
+                steps.push(`${prefix} ${upgradeStatLabels[statName] || statName}: spend ${amount} level${amount === 1 ? "" : "s"} to move it from ${currentValue} to about ${projectedValue}.`);
             });
-
-            if (investments.length > 0) {
-                const text = investments.map(({ statName, amount }) => {
-                    return `${upgradeStatLabels[statName] || statName} +${amount}`;
-                }).join(", ");
-
-                steps.push(`${label}: ${text}.`);
-            }
         }
 
-        investIntoStats(plan.primary, "Then prioritize the main archetype stat(s)");
-        investIntoStats(plan.secondary, "Use remaining levels on useful side stat(s)");
+        investIntoStats(plan.primary, "Prioritize");
+        investIntoStats(plan.secondary, "Then improve");
 
         if (levelsLeft > 0) {
-            steps.push(`${levelsLeft} upgrade level${levelsLeft === 1 ? "" : "s"} remain after the modeled priorities; use those on a useful nonzero tertiary stat or the item's special weapon/pet stat if applicable.`);
+            const missingPrimary = plan.primary
+                .filter((statName) => Number(stats[statName] || 0) === 0)
+                .map((statName) => upgradeStatLabels[statName] || statName);
+
+            if (missingPrimary.length > 0) {
+                steps.push(`${levelsLeft} level${levelsLeft === 1 ? "" : "s"} remain, but ${missingPrimary.join(", ")} ${missingPrimary.length === 1 ? "is" : "are"} missing on the item and cannot be added. Put the leftovers into another useful non-zero stat.`);
+            } else {
+                steps.push(`${levelsLeft} upgrade level${levelsLeft === 1 ? "" : "s"} remain after the modeled priorities. Put them into another useful non-zero side stat for this build.`);
+            }
         }
 
         const projectedRow = {
@@ -783,13 +806,19 @@
             stats,
             resists
         };
-        const projectedScore = calculateScore(projectedRow, normalizedRoleKey);
+        const rawProjectedScore = calculateScore(projectedRow, normalizedRoleKey);
+        const projectedScore = roleEligible ? rawProjectedScore : 0;
+
+        if (upgradesAvailable <= 0 && steps.length === 0) {
+            steps.push("This item is already at its maximum upgrade level for the modeled stat path.");
+        }
 
         return {
             roleKey: normalizedRoleKey,
             roleLabel: role.label,
             currentScore,
             projectedScore,
+            rawProjectedScore,
             scoreGain: projectedScore - currentScore,
             upgradesAvailable,
             levelsLeft,
@@ -798,6 +827,7 @@
             projectedStats: stats,
             projectedResists: resists,
             resistStatus,
+            roleEligible,
             maxStat: rules.maxStat,
             resistanceTarget: rules.resistanceTarget,
             setBonus: rules.setBonus,

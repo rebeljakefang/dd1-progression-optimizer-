@@ -49,14 +49,14 @@
     ];
 
     const statLabels = {
-        towerHealth: "Tower HP",
-        towerDamage: "Tower DMG",
-        towerRange: "Tower RNG",
+        towerHealth: "Tower Health",
+        towerDamage: "Tower Damage",
+        towerRange: "Tower Range",
         towerRate: "Tower Rate",
-        heroHealth: "Hero HP",
-        heroDamage: "Hero DMG",
-        heroSpeed: "Hero SPD",
-        heroCasting: "Casting",
+        heroHealth: "Hero Health",
+        heroDamage: "Hero Damage",
+        heroSpeed: "Hero Speed",
+        heroCasting: "Cast Rate",
         ability1: "Ability 1",
         ability2: "Ability 2",
         allResists: "All Resists"
@@ -562,44 +562,132 @@
        9. Item Stat Display + Upgrade Guide Helpers
     ========================================================= */
 
-    function getItemStatEntries(item) {
+    function formatSignedNumber(value) {
+        const number = Number(value || 0);
+
+        if (number > 0) {
+            return `+${formatNumber(number)}`;
+        }
+
+        return formatNumber(number);
+    }
+
+    function getStatToneClass(value) {
+        const number = Number(value || 0);
+
+        if (number > 0) {
+            return "is-positive";
+        }
+
+        if (number < 0) {
+            return "is-negative";
+        }
+
+        return "is-neutral";
+    }
+
+    function getNonZeroEntries(entries) {
+        return entries.filter((entry) => {
+            return Number(entry.value || 0) !== 0;
+        });
+    }
+
+    function getItemStatGroups(item) {
         const stats = item && item.stats ? item.stats : {};
         const resists = item && item.resists ? item.resists : {};
-        const entries = [
-            ["THP", stats.towerHealth],
-            ["TDMG", stats.towerDamage],
-            ["TRNG", stats.towerRange],
-            ["TRATE", stats.towerRate],
-            ["HHP", stats.heroHealth],
-            ["HDMG", stats.heroDamage],
-            ["HSPD", stats.heroSpeed],
-            ["CAST", stats.heroCasting],
-            ["AB1", stats.ability1],
-            ["AB2", stats.ability2],
-            ["GEN", resists.generic],
-            ["POI", resists.poison],
-            ["FIRE", resists.fire],
-            ["LIT", resists.lightning]
+        const weapon = item && item.weapon ? item.weapon : {};
+        const slot = normalizeSlot(item && item.itemType);
+
+        const groups = [
+            {
+                key: "hero",
+                title: "Hero stats",
+                entries: getNonZeroEntries([
+                    { label: "Health", value: stats.heroHealth },
+                    { label: "Speed", value: stats.heroSpeed },
+                    { label: "Damage", value: stats.heroDamage },
+                    { label: "Cast Rate", value: stats.heroCasting },
+                    { label: "Ability 1", value: stats.ability1 },
+                    { label: "Ability 2", value: stats.ability2 }
+                ])
+            },
+            {
+                key: "tower",
+                title: "Tower stats",
+                entries: getNonZeroEntries([
+                    { label: "Health", value: stats.towerHealth },
+                    { label: "Rate", value: stats.towerRate },
+                    { label: "Damage", value: stats.towerDamage },
+                    { label: "Range", value: stats.towerRange }
+                ])
+            },
+            {
+                key: "resists",
+                title: "Resistances",
+                entries: getNonZeroEntries([
+                    { label: "Generic", value: resists.generic },
+                    { label: "Poison", value: resists.poison },
+                    { label: "Fire", value: resists.fire },
+                    { label: "Lightning", value: resists.lightning }
+                ])
+            }
         ];
 
-        return entries.filter(([, value]) => Number(value || 0) !== 0);
+        if (["Weapon", "Secondary", "Pet"].includes(slot)) {
+            const weaponEntries = getNonZeroEntries([
+                { label: "Weapon Damage", value: weapon.damage },
+                { label: "Elemental Damage", value: weapon.additionalDamage },
+                { label: "Projectiles", value: weapon.projectiles },
+                { label: "Projectile Speed", value: weapon.projectileSpeed },
+                { label: "Shots / Sec", value: weapon.shotsPerSecond },
+                { label: "Charge Speed", value: weapon.chargeSpeed },
+                { label: "Alt Damage", value: weapon.altDamage },
+                { label: "Blocking", value: weapon.blocking },
+                { label: "Reload Speed", value: weapon.reloadSpeed },
+                { label: "Knockback", value: weapon.knockback },
+                { label: "Clip Ammo", value: weapon.clipAmmo }
+            ]);
+
+            if (weaponEntries.length > 0) {
+                groups.unshift({
+                    key: "weapon",
+                    title: slot === "Pet" ? "Pet / attack stats" : "Weapon stats",
+                    entries: weaponEntries
+                });
+            }
+        }
+
+        return groups.filter((group) => group.entries.length > 0);
+    }
+
+    function renderStatGroup(group) {
+        return `
+            <section class="gear-stat-group gear-stat-group-${escapeText(group.key)}">
+                <h4>${escapeText(group.title)}</h4>
+                <div class="gear-item-stat-grid">
+                    ${group.entries.map((entry) => `
+                        <div class="gear-item-stat">
+                            <span class="gear-item-stat-label">${escapeText(entry.label)}</span>
+                            <strong class="gear-item-stat-value ${getStatToneClass(entry.value)}">
+                                ${escapeText(formatSignedNumber(entry.value))}
+                            </strong>
+                        </div>
+                    `).join("")}
+                </div>
+            </section>
+        `;
     }
 
     function renderItemStats(item) {
-        const entries = getItemStatEntries(item);
+        const groups = getItemStatGroups(item);
 
-        if (entries.length === 0) {
-            return `<p class="gear-item-no-stats">No readable stat bonuses.</p>`;
+        if (groups.length === 0) {
+            return `<p class="gear-item-no-stats">No non-zero item stats found.</p>`;
         }
 
         return `
-            <div class="gear-item-stat-grid" aria-label="${escapeText(item.name)} stats">
-                ${entries.map(([label, value]) => `
-                    <span class="gear-item-stat">
-                        <strong>${escapeText(label)}</strong>
-                        <span>${formatNumber(value)}</span>
-                    </span>
-                `).join("")}
+            <div class="gear-item-stat-sections" aria-label="Individual item stats">
+                ${groups.map(renderStatGroup).join("")}
             </div>
         `;
     }
@@ -620,28 +708,39 @@
             return "";
         }
 
-        if (projection.upgradesAvailable <= 0) {
-            return `
-                <div class="gear-item-level-status is-maxed">
-                    Level ${formatNumber(item.currentLevel)} / ${formatNumber(item.maxLevel)} • No upgrades remaining
-                </div>
-            `;
+        const levelText = `Level ${formatNumber(item.currentLevel)} / ${formatNumber(item.maxLevel)}`;
+        const upgradesText = projection.upgradesAvailable > 0
+            ? `${formatNumber(projection.upgradesAvailable)} upgrades left`
+            : "No upgrades remaining";
+
+        let projectedText = "Upgrade path";
+
+        if (!projection.supported) {
+            projectedText = "Special weapon / pet upgrade path";
+        } else if (projection.roleEligible === false) {
+            projectedText = `Not ready for ${projection.roleLabel}`;
+        } else if (projection.upgradesAvailable > 0) {
+            const gainPrefix = projection.scoreGain >= 0 ? "+" : "";
+            projectedText = `Projected score ${formatNumber(projection.currentScore)} → ${formatNumber(projection.projectedScore)} (${gainPrefix}${formatNumber(projection.scoreGain)})`;
+        } else {
+            projectedText = "Fully upgraded for this item";
         }
 
-        const projectedText = projection.supported
-            ? `Projected ${formatNumber(projection.currentScore)} → ${formatNumber(projection.projectedScore)} (+${formatNumber(projection.scoreGain)})`
-            : "Weapon/pet upgrade simulation not modeled yet";
+        const guideMarkup = projection.steps.length > 0
+            ? `
+                <details class="gear-upgrade-guide" ${projection.roleEligible === false ? "open" : ""}>
+                    <summary>${escapeText(projectedText)}</summary>
+                    <ol>${projection.steps.map((step) => `<li>${escapeText(step)}</li>`).join("")}</ol>
+                </details>
+            `
+            : "";
 
         return `
-            <div class="gear-item-level-status">
-                Level ${formatNumber(item.currentLevel)} / ${formatNumber(item.maxLevel)} • ${formatNumber(projection.upgradesAvailable)} upgrades left
+            <div class="gear-item-level-status ${projection.upgradesAvailable <= 0 ? "is-maxed" : ""}">
+                <span>${escapeText(levelText)}</span>
+                <span>${escapeText(upgradesText)}</span>
             </div>
-            <details class="gear-upgrade-guide">
-                <summary>Upgrade guide • ${escapeText(projectedText)}</summary>
-                ${projection.steps.length > 0
-                    ? `<ol>${projection.steps.map((step) => `<li>${escapeText(step)}</li>`).join("")}</ol>`
-                    : `<p>No additional stat upgrades are needed for the modeled priorities.</p>`}
-            </details>
+            ${guideMarkup}
         `;
     }
 

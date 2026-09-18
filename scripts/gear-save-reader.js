@@ -1078,6 +1078,7 @@
 
         const isAccessoryTemplate = (
             lowerText.includes("accessoryequipment") ||
+            lowerText.includes("accesoryequipment") ||
             lowerText.includes("dundefaccessories") ||
             lowerText.includes(".equipment.acc.") ||
             lowerText.includes(".acc.")
@@ -1142,7 +1143,21 @@
             return "Secondary";
         }
 
-        if (includesAny(text, ["weapon", "sword", "staff", "bow", "gun", "spear", "cannon", "blade", "shooter", "crossbow", "rifle", "lance", "polearm"])) {
+        const hasWeaponData = (
+            Number(equipment.weaponDamageBonus || 0) !== 0 ||
+            Number(equipment.weaponAdditionalDamageAmount || 0) !== 0 ||
+            Number(equipment.weaponSpeedOfProjectilesBonus || 0) !== 0 ||
+            Number(equipment.weaponAltDamageBonus || 0) !== 0 ||
+            Number(equipment.weaponClipAmmoBonus || 0) !== 0 ||
+            Number(equipment.weaponNumberOfProjectilesBonus || 127) !== 127 ||
+            Number(equipment.weaponShotsPerSecondBonus || 127) !== 127 ||
+            Number(equipment.weaponChargeSpeedBonus || 127) !== 127
+        );
+
+        if (
+            includesAny(text, ["weapon", "sword", "staff", "bow", "gun", "spear", "cannon", "blade", "shooter", "crossbow", "rifle", "lance", "polearm"]) ||
+            hasWeaponData
+        ) {
             return "Weapon";
         }
 
@@ -1386,14 +1401,25 @@
             storedMana: Number(equipment.storedMana || 0),
             userSellPrice: Number(equipment.userSellPrice || 0),
             weapon: {
+                /*
+                   DD1 stores several byte-sized weapon bonuses with a +127
+                   offset, just like DDGO.  Keep the decoded values here so
+                   the UI can show the same per-item weapon stats the game
+                   displays instead of hiding them behind the raw save data.
+                */
                 damage: Number(equipment.weaponDamageBonus || 0),
                 projectiles: Number(equipment.weaponNumberOfProjectilesBonus || 0) - 127,
                 projectileSpeed: Number(equipment.weaponSpeedOfProjectilesBonus || 0),
                 additionalDamage: Number(equipment.weaponAdditionalDamageAmount || 0),
+                additionalDamageType: Number(equipment.weaponAdditionalDamageTypeIndex || 0),
                 shotsPerSecond: Number(equipment.weaponShotsPerSecondBonus || 0) - 127,
                 chargeSpeed: Number(equipment.weaponChargeSpeedBonus || 0) - 127,
                 swingSpeed: Number(equipment.weaponSwingSpeedMultiplier || 0),
-                altDamage: Number(equipment.weaponAltDamageBonus || 0)
+                altDamage: Number(equipment.weaponAltDamageBonus || 0),
+                blocking: Number(equipment.weaponBlockingBonus || 0) - 127,
+                reloadSpeed: Number(equipment.weaponReloadSpeedBonus || 0) - 127,
+                knockback: Number(equipment.weaponKnockbackBonus || 0) - 127,
+                clipAmmo: Number(equipment.weaponClipAmmoBonus || 0)
             },
             rawEquipment: equipment
         });
