@@ -294,21 +294,41 @@
         return !coreDisplaySlots.has(slot) && slot !== "Currency";
     }
 
+    function sortEquippedItemsBySavedSlot(items) {
+        return [...items].sort((first, second) => {
+            const firstIndex = Number(first.equippedSlotIndex);
+            const secondIndex = Number(second.equippedSlotIndex);
+            const safeFirst = Number.isFinite(firstIndex) && firstIndex >= 0 ? firstIndex : 9999;
+            const safeSecond = Number.isFinite(secondIndex) && secondIndex >= 0 ? secondIndex : 9999;
+
+            if (safeFirst !== safeSecond) {
+                return safeFirst - safeSecond;
+            }
+
+            return Number(first.itemNumber || 0) - Number(second.itemNumber || 0);
+        });
+    }
+
     function getAccessoryItemsInSlotOrder(heroItems) {
-        return heroItems
-            .filter(isAccessoryDisplayItem)
-            .sort((first, second) => {
-                const firstIndex = Number(first.equippedSlotIndex);
-                const secondIndex = Number(second.equippedSlotIndex);
-                const safeFirst = Number.isFinite(firstIndex) && firstIndex >= 0 ? firstIndex : 9999;
-                const safeSecond = Number.isFinite(secondIndex) && secondIndex >= 0 ? secondIndex : 9999;
+        return sortEquippedItemsBySavedSlot(
+            heroItems.filter(isAccessoryDisplayItem)
+        );
+    }
 
-                if (safeFirst !== safeSecond) {
-                    return safeFirst - safeSecond;
-                }
+    function isSummonerHero(heroName, item = null) {
+        const hero = getHeroByName(heroName || (item && item.equippedHero) || "");
 
-                return Number(first.itemNumber || 0) - Number(second.itemNumber || 0);
-            });
+        if (hero && String(hero.className || "").toLowerCase() === "summoner") {
+            return true;
+        }
+
+        return String(item && item.equippedHeroClass || "").toLowerCase() === "summoner";
+    }
+
+    function getSummonerPetItemsInSlotOrder(heroItems) {
+        return sortEquippedItemsBySavedSlot(
+            (heroItems || []).filter((item) => normalizeSlot(item.itemType) === "Pet")
+        );
     }
 
     function getDisplaySlotLabel(item, heroItems) {
@@ -317,6 +337,19 @@
         }
 
         const slot = normalizeSlot(item.itemType);
+
+        /*
+           Summoner is the DD1 exception to the normal weapon layout:
+           it equips two pets instead of weapon + secondary weapon.
+           Keep both pets separate everywhere in the UI so one never
+           gets hidden by the normal same-slot grouping logic.
+        */
+        if (slot === "Pet" && isSummonerHero(item.equippedHero, item)) {
+            const petItems = getSummonerPetItemsInSlotOrder(heroItems || []);
+            const petIndex = petItems.findIndex((candidate) => candidate.id === item.id);
+
+            return `Pet Slot ${petIndex >= 0 ? petIndex + 1 : 1}`;
+        }
 
         if (!isAccessoryDisplayItem(item)) {
             return slot;
@@ -789,12 +822,39 @@
             return `<p class="gear-empty">No equipped gear rows found for this hero.</p>`;
         }
 
+        const summoner = isSummonerHero(heroName);
+        const summonerPets = summoner
+            ? getSummonerPetItemsInSlotOrder(heroItems)
+            : [];
+
         const coreGroups = groupItemsBySlot(
-            heroItems.filter((item) => !isAccessoryDisplayItem(item))
+            heroItems.filter((item) => {
+                if (isAccessoryDisplayItem(item)) {
+                    return false;
+                }
+
+                /*
+                   A normal hero has one Pet group. A Summoner gets two
+                   independent pet equipment slots and no weapon slots,
+                   so keep its pets out of the grouped Pet bucket.
+                */
+                if (summoner && normalizeSlot(item.itemType) === "Pet") {
+                    return false;
+                }
+
+                return true;
+            })
         );
         const accessoryItems = getAccessoryItemsInSlotOrder(heroItems);
 
         const displayEntries = [
+            ...summonerPets.map((item, index) => {
+                return {
+                    label: `Pet Slot ${index + 1}`,
+                    item: item,
+                    count: 1
+                };
+            }),
             ...coreGroups.map(([slot, items]) => {
                 return {
                     label: slot,
