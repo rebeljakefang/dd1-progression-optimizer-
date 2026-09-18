@@ -742,6 +742,7 @@
                 equipment.equippedHeroId = hero.guid;
                 equipment.isEquipped = true;
                 equipment.heroNumber = hero.number;
+                equipment.equippedSlotIndex = equipmentIndex;
                 equipment.equippedHeroName = cleanText(hero.name) || `Hero ${hero.number}`;
                 equipment.equippedHeroClass = hero.className;
 
@@ -1365,6 +1366,9 @@
             equippedHero: equippedHero,
             equippedHeroClass: equippedHeroClass,
             heroNumber: Number(equipment.heroNumber || 0),
+            equippedSlotIndex: Number.isFinite(Number(equipment.equippedSlotIndex))
+                ? Number(equipment.equippedSlotIndex)
+                : -1,
             itemNumber: index + 1,
             itemType: itemType,
             armorSet: armorSet,

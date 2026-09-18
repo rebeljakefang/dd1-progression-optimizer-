@@ -80,6 +80,16 @@
         "Boots"
     ]);
 
+    const coreDisplaySlots = new Set([
+        "Weapon",
+        "Helmet",
+        "Chest",
+        "Gloves",
+        "Boots",
+        "Pet",
+        "Secondary"
+    ]);
+
     /* =========================================================
        2. DOM Element Cache
     ========================================================= */
@@ -272,6 +282,52 @@
 
     function getDefaultRoleLabel() {
         return window.dd1GearScoring.getRole(state.defaultRole).label;
+    }
+
+    function isAccessoryDisplayItem(item) {
+        if (!item) {
+            return false;
+        }
+
+        const slot = normalizeSlot(item.itemType);
+
+        return !coreDisplaySlots.has(slot) && slot !== "Currency";
+    }
+
+    function getAccessoryItemsInSlotOrder(heroItems) {
+        return heroItems
+            .filter(isAccessoryDisplayItem)
+            .sort((first, second) => {
+                const firstIndex = Number(first.equippedSlotIndex);
+                const secondIndex = Number(second.equippedSlotIndex);
+                const safeFirst = Number.isFinite(firstIndex) && firstIndex >= 0 ? firstIndex : 9999;
+                const safeSecond = Number.isFinite(secondIndex) && secondIndex >= 0 ? secondIndex : 9999;
+
+                if (safeFirst !== safeSecond) {
+                    return safeFirst - safeSecond;
+                }
+
+                return Number(first.itemNumber || 0) - Number(second.itemNumber || 0);
+            });
+    }
+
+    function getDisplaySlotLabel(item, heroItems) {
+        if (!item) {
+            return "Unknown Slot";
+        }
+
+        const slot = normalizeSlot(item.itemType);
+
+        if (!isAccessoryDisplayItem(item)) {
+            return slot;
+        }
+
+        const accessoryItems = getAccessoryItemsInSlotOrder(heroItems || []);
+        const accessoryIndex = accessoryItems.findIndex((candidate) => {
+            return candidate.id === item.id;
+        });
+
+        return `Acc Slot ${accessoryIndex >= 0 ? accessoryIndex + 1 : 1}`;
     }
 
     /* =========================================================
@@ -619,27 +675,46 @@
             return `<p class="gear-empty">No equipped gear rows found for this hero.</p>`;
         }
 
-        const groups = groupItemsBySlot(heroItems);
+        const coreGroups = groupItemsBySlot(
+            heroItems.filter((item) => !isAccessoryDisplayItem(item))
+        );
+        const accessoryItems = getAccessoryItemsInSlotOrder(heroItems);
+
+        const displayEntries = [
+            ...coreGroups.map(([slot, items]) => {
+                return {
+                    label: slot,
+                    item: getStrongestItems(items, 1)[0],
+                    count: items.length
+                };
+            }),
+            ...accessoryItems.map((item, index) => {
+                return {
+                    label: `Acc Slot ${index + 1}`,
+                    item: item,
+                    count: 1
+                };
+            })
+        ];
 
         return `
             <div class="gear-slot-grid">
-                ${groups.map(([slot, items]) => {
-                    const strongest = getStrongestItems(items, 1)[0];
-                    const itemCountText = items.length === 1 ? "1 item" : `${items.length} items`;
+                ${displayEntries.map((entry) => {
+                    const itemCountText = entry.count === 1 ? "1 item" : `${entry.count} items`;
+                    const item = entry.item;
 
                     return `
                         <article class="gear-slot-pill">
                             <div class="gear-slot-pill-header">
-                                <strong>${escapeText(slot)}</strong>
+                                <strong>${escapeText(entry.label)}</strong>
                                 <span>${escapeText(itemCountText)}</span>
                             </div>
-                            <p class="gear-slot-item-name">${escapeText(strongest ? strongest.name : "No item")}</p>
                             <small class="gear-slot-score">
-                                Score ${formatNumber(strongest ? strongest.score : 0)}
-                                ${strongest ? ` • ${escapeText(strongest.quality)}` : ""}
+                                Score ${formatNumber(item ? item.score : 0)}
+                                ${item ? ` • ${escapeText(item.quality)}` : ""}
                             </small>
-                            ${strongest ? renderItemStats(strongest) : ""}
-                            ${strongest ? renderItemUpgradeGuide(strongest, heroName) : ""}
+                            ${item ? renderItemStats(item) : ""}
+                            ${item ? renderItemUpgradeGuide(item, heroName) : ""}
                         </article>
                     `;
                 }).join("")}
@@ -658,10 +733,12 @@
             return "";
         }
 
+        const displaySlot = getDisplaySlotLabel(weakest, heroItems);
+
         return `
             <div class="gear-weak-piece">
                 <strong>Weakest piece for ${escapeText(getHeroEffectiveRoleLabel(heroName))}:</strong>
-                <span>${escapeText(weakest.itemType)} — ${escapeText(weakest.name)} (${formatNumber(weakest.score)})</span>
+                <span>${escapeText(displaySlot)} (${formatNumber(weakest.score)})</span>
             </div>
         `;
     }
@@ -989,9 +1066,11 @@
                     ? `Projected ${role.label} score ${formatNumber(recommendation.candidateProjectedScore)} vs. ${formatNumber(recommendation.currentProjectedScore)} for the current piece (+${formatNumber(recommendation.scoreGain)}).`
                     : `+${formatNumber(recommendation.scoreGain)} ${role.label} score.`;
 
+                const displaySlot = getDisplaySlotLabel(currentItem, equippedItems);
+
                 notes.push({
                     type: "upgrade",
-                    title: `${upgradeLead} ${recommendation.slot}: ${currentItem.name} → ${candidate.name}`,
+                    title: `${upgradeLead} ${displaySlot}`,
                     text: `${scoreText} Candidate level ${currentLevelText}. ${recommendation.changeText} Found in ${candidate.location || candidate.source || "inventory"}.${setNote}`,
                     guide: recommendation.candidateProjection && recommendation.candidateProjection.upgradesAvailable > 0
                         ? recommendation.candidateProjection.steps
@@ -1022,7 +1101,7 @@
 
                 notes.push({
                     type: "warning",
-                    title: `Still worth reviewing ${normalizeSlot(row.itemType)}: ${row.name}`,
+                    title: `Still worth reviewing ${getDisplaySlotLabel(row, equippedItems)}`,
                     text: `Current ${role.label} score ${formatNumber(row.score)}. Main useful stats: ${getStatText(row.strongestStats)}.${projectionText}`,
                     guide: projection.upgradesAvailable > 0 ? projection.steps : []
                 });
@@ -1036,7 +1115,7 @@
                 type: "success",
                 title: "Strongest equipped pieces",
                 text: strongest.map((row) => {
-                    return `${normalizeSlot(row.itemType)}: ${row.name} (${formatNumber(row.score)})`;
+                    return `${getDisplaySlotLabel(row, equippedItems)} (${formatNumber(row.score)})`;
                 }).join(" | ")
             });
         }
@@ -1085,6 +1164,8 @@
             return;
         }
 
+        const focusedHeroItems = getHeroItems(state.focusedHero);
+
         elements.tableBody.innerHTML = filteredItems.map((row) => `
             <tr>
                 <td data-label="Score">
@@ -1098,9 +1179,9 @@
                     })()}
                 </td>
                 <td data-label="Hero">${escapeText(row.equippedHero)}<br><small>${escapeText(row.equippedHeroClass)}</small></td>
-                <td data-label="Type">${escapeText(row.itemType)}</td>
+                <td data-label="Type">${escapeText(getDisplaySlotLabel(row, focusedHeroItems))}</td>
                 <td data-label="Set">${escapeText(row.armorSet)}</td>
-                <td data-label="Name">${escapeText(row.name)}<br><small>${escapeText(row.template)}</small></td>
+                <td data-label="Name">${escapeText(row.isEquipped ? "Equipped item" : (row.location || row.source || "Inventory item"))}</td>
                 <td data-label="Quality">${escapeText(row.quality)}</td>
                 <td data-label="Lvl">${formatNumber(row.currentLevel)} / ${formatNumber(row.maxLevel)}</td>
                 <td data-label="Tower">HP ${formatNumber(row.stats.towerHealth)}<br>DMG ${formatNumber(row.stats.towerDamage)}<br>Rate ${formatNumber(row.stats.towerRate)}<br>Range ${formatNumber(row.stats.towerRange)}</td>
